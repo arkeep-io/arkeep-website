@@ -1,0 +1,146 @@
+---
+title: Notifications
+description: Email, webhook and in-app notifications, the events that trigger them, signature verification and ready-made integrations.
+---
+
+Arkeep notifies you when jobs finish and when agents go offline or come back, by **email**, **webhook** and
+**in-app** notification.
+
+## Events
+
+Turn events on or off in **Settings → Notifications**:
+
+| Event | Default |
+|---|---|
+| Job failed | on |
+| Job succeeded | on |
+| Agent went offline | on |
+| Agent came back online | off |
+
+Job events cover every job type (backups, restores, retention sweeps and integrity checks), with titles such
+as *Backup failed: web-server* (policy name) or *Retention completed: NAS* (destination name). Jobs that give up after repeated resumes
+or time out in the queue are reported as failed jobs.
+
+Each policy can override the two job events with **On success** and **On failure**: **Use global setting**,
+**Always** or **Never**. See [Policies](/docs/guides/policies/#notifications).
+
+These toggles and overrides decide what is sent by email and webhook.
+
+## Email
+
+Set up the mail server in **Settings → SMTP**:
+
+| Field | Notes |
+|---|---|
+| **Host** | Required |
+| **Port** | For example 587 |
+| **Implicit TLS** | On for SMTPS on port 465; off for STARTTLS (587) or plaintext |
+| **Authentication** | Turn on to enter **Username** and **Password**. Leave the password blank to keep the current one. |
+| **From Address** | Required |
+| **From Name** | `Arkeep` by default |
+| **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. |
+
+The same SMTP server sends [password reset](/docs/guides/users-and-2fa/#forgotten-password) emails.
+
+## Webhook
+
+In **Settings → Notifications**, turn on **Send webhook notifications** and set:
+
+- **Webhook URL**: any `http://` or `https://` endpoint. Every event is sent as a `POST` with a JSON body.
+- **Webhook Secret**: optional; when set, every request is signed (see below). Leave it blank to keep the
+  current one.
+
+The payload is described in [Webhook events](/docs/reference/webhook-events/).
+
+### Signature verification
+
+When a webhook secret is set, every request carries an `X-Arkeep-Signature` header with an HMAC-SHA256 of the
+raw request body, the same convention GitHub and Stripe use:
+
+```text
+X-Arkeep-Signature: sha256=<lowercase hex>
+```
+
+Always verify the signature **before** processing the payload.
+
+```go
+// Go
+func verifyArkeepSignature(body []byte, secret, header string) bool {
+    expected := strings.TrimPrefix(header, "sha256=")
+    mac := hmac.New(sha256.New, []byte(secret))
+    mac.Write(body)
+    actual := hex.EncodeToString(mac.Sum(nil))
+    return hmac.Equal([]byte(expected), []byte(actual))
+}
+```
+
+```python
+# Python
+import hmac, hashlib
+
+def verify_arkeep_signature(body: bytes, secret: str, header: str) -> bool:
+    expected = header.removeprefix("sha256=")
+    actual = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, actual)
+```
+
+```js
+// Node.js
+const crypto = require('crypto')
+
+function verifyArkeepSignature(body, secret, header) {
+  const expected = header.replace(/^sha256=/, '')
+  const actual = crypto.createHmac('sha256', secret).update(body).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual))
+}
+```
+
+## Delivery and retries
+
+Email and webhook deliveries are retried up to three times: immediately, after 5 minutes and after 30 minutes.
+
+## In-app notifications
+
+The bell in the interface shows the latest 20 notifications to **administrators**, with an unread counter.
+Click one to mark it read, or **Mark all as read**. In-app notifications are always created, whatever the
+event toggles say.
+
+## Integrations
+
+### Slack
+
+1. Create an [incoming webhook](https://api.slack.com/messaging/webhooks) in your workspace.
+2. Paste its URL into **Webhook URL**.
+
+Arkeep's `text` field is Slack's message body, so nothing else is needed.
+
+### Discord
+
+1. In your server, open **Channel Settings → Integrations → Webhooks** and create a webhook.
+2. Paste its URL into **Webhook URL**. For richer formatting, append `/slack`: Discord accepts
+   Slack-compatible payloads there.
+
+```text
+https://discord.com/api/webhooks/<id>/<token>/slack
+```
+
+### n8n
+
+1. Add a **Webhook** trigger node (method `POST`, respond immediately) and paste its URL into Arkeep.
+2. Optionally add a **Code** node that verifies `X-Arkeep-Signature`.
+3. Add a **Switch** node on `{{ $json.type }}`: `job_failure`, `job_success`, `agent_offline`, `agent_online`.
+4. Connect Slack, PagerDuty, Telegram, email or anything else to each branch.
+
+Fields are available as `{{ $json.payload.policy_name }}`, `{{ $json.payload.error }}` and so on.
+
+### Zapier
+
+1. Create a Zap with **Webhooks by Zapier → Catch Hook** and paste the hook URL into Arkeep.
+2. Run a backup to send a sample event.
+3. Use `type`, `title`, `text`, `payload__policy_name`, `payload__error` and `timestamp` in your actions, and a
+   **Filter** step on `type` (for example only `job_failure`).
+
+## A backup that never runs
+
+Notifications fire when a job ends, so a backup that never starts (server down, scheduler stuck, policy
+disabled by mistake) stays silent. [Healthchecks.io](/docs/guides/healthchecks/) covers that case.

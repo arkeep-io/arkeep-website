@@ -1,0 +1,213 @@
+---
+const RAW = 'https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker';
+const steps = [
+  {
+    title: 'Start the server',
+    body: 'One container or one binary, GUI included. SQLite by default, PostgreSQL when you want it.',
+    host: 'backup-server',
+    lines: [
+      ['cmd', `RAW=${RAW}`],
+      ['cmd', 'curl -O $RAW/docker-compose.yml -O $RAW/.env.example'],
+      ['cmd', 'cp .env.example .env'],
+      ['comment', '# set ARKEEP_SECRET_KEY and ARKEEP_AGENT_SECRET in .env'],
+      ['cmd', 'docker compose up -d'],
+      ['out', ' ✔ Container arkeep-server  Started'],
+      ['comment', '# GUI on http://localhost:8080'],
+    ],
+  },
+  {
+    title: 'Enroll an agent on each machine',
+    body: 'The agent dials out over gRPC and switches to mTLS on its own. No inbound port, works behind NAT.',
+    host: 'web-01',
+    lines: [
+      ['cmd', `RAW=${RAW}`],
+      ['cmd', 'curl -O $RAW/docker-compose.agent.yml'],
+      ['cmd', 'export ARKEEP_SERVER_ADDR=backup-server:9090'],
+      ['cmd', 'export ARKEEP_AGENT_SECRET=…'],
+      ['cmd', 'docker compose -f docker-compose.agent.yml up -d'],
+      ['out', ' ✔ Container arkeep-agent  Started'],
+    ],
+  },
+  {
+    title: 'Policies run everywhere, on schedule',
+    body: 'Live progress while restic runs, logs when it finishes. The repositories stay plain restic, readable without Arkeep.',
+    host: 'laptop',
+    lines: [
+      ['cmd', 'restic -r s3:s3.amazonaws.com/backups snapshots'],
+      ['out', 'ID        Time                 Host    Paths'],
+      ['out', '------------------------------------------------------'],
+      ['out', '9f2c41e7  2026-10-14 05:00:03  db-01   /var/lib/postgresql'],
+      ['out', '0b7d3a18  2026-10-14 11:00:02  db-01   /var/lib/postgresql'],
+      ['out', 'a3f9c1d2  2026-10-14 11:54:52  web-01  /srv/www'],
+      ['out', '------------------------------------------------------'],
+      ['out', '3 snapshots'],
+    ],
+  },
+] as const;
+const agents = [
+  { name: 'web-01', os: 'linux / amd64' },
+  { name: 'db-01', os: 'linux / amd64' },
+  { name: 'nas-01', os: 'linux / arm64' },
+  { name: 'pi-backup', os: 'linux / arm' },
+];
+---
+<section id="how-it-works" class="section how" data-snapshot="how-it-works" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow">How it works</p>
+      <h2 id="how-title" class="display-lg">From zero to backed up in three steps</h2>
+      <p>One server in your network, one small agent per machine. Nothing to open on the hosts you protect.</p>
+    </div>
+
+    <div class="layout" data-workflow>
+      <div class="steps" role="tablist" aria-label="Steps" aria-orientation="vertical" data-reveal>
+        {steps.map((s, i) => (
+          <button class="step" type="button" role="tab" id={`step-${i}`} aria-controls={`step-panel-${i}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+            <span class="num" aria-hidden="true">{i + 1}</span>
+            <span class="step-text">
+              <span class="step-title">{s.title}</span>
+              <span class="step-body">{s.body}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div class="ide" data-reveal style="--reveal-delay: 90ms">
+        {steps.map((s, i) => (
+          <div class="state" role="tabpanel" id={`step-panel-${i}`} aria-labelledby={`step-${i}`} data-state={i} tabindex="0">
+            <div class="terminal" data-ui>
+              <div class="bar" aria-hidden="true"><span class="lights"><i></i><i></i><i></i></span><span class="host">{s.host}</span></div>
+              <pre translate="no"><code>{s.lines.map(([kind, text]) => (
+                kind === 'cmd' ? <span class="ln"><span class="prompt">$ </span>{text}</span>
+                : <span class:list={['ln', kind]}>{text}</span>
+              ))}</code></pre>
+            </div>
+
+            <div class="agents" data-ui aria-label="Agents page in Arkeep">
+              <div class="agents-bar"><span class="agents-title">Agents</span><span class="meta">{i === 0 ? '0 online' : i === 1 ? '1 agent' : '4 online'}</span></div>
+              {i === 0 && (
+                <div class="empty">
+                  <p class="empty-title">No agents yet</p>
+                  <p class="meta">Agents show up here as they enroll.</p>
+                </div>
+              )}
+              {i > 0 && (
+                <table>
+                  <thead><tr><th>Name</th><th>OS / Arch</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {(i === 1 ? agents.slice(0, 1) : agents).map((a) => (
+                      <tr>
+                        <td>{a.name}</td><td>{a.os}</td>
+                        <td>{i === 1 ? <span class="chip connecting"><span class="c-wait">Connecting…</span><span class="c-on">Online</span></span> : <span class="chip online">Online</span>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {i === 2 && (
+                <div class="job">
+                  <p><strong>Backup running</strong> · Postgres on db-01</p>
+                  <div class="progress" role="img" aria-label="42 percent"><span style="width: 42%"></span></div>
+                  <p class="meta">42% · 7.6 of 18.0 MiB · NAS (local)</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-lg); align-items: start; }
+
+  /* DESIGN.md › workflow-step-card + workflow-step-icon */
+  .steps { display: grid; gap: var(--space-sm); }
+  .step {
+    display: flex; gap: var(--space-base); align-items: flex-start; width: 100%; padding: var(--space-md);
+    border: 1px solid transparent; border-radius: var(--radius-lg); background: transparent; color: var(--body);
+    text-align: left; cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  }
+  .step:hover { background: var(--hairline-soft); }
+  .step[aria-selected='true'] { background: var(--surface-card); border-color: var(--hairline-strong); color: var(--body); }
+  .num {
+    flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-md);
+    background: var(--surface-strong); color: var(--ink); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+  .step[aria-selected='true'] .num { background: var(--primary); color: var(--on-primary); }
+  .step-text { display: grid; gap: 4px; }
+  .step-title { font-size: 1.125rem; font-weight: 600; line-height: 1.4; color: var(--ink); }
+  .step-body { font-size: 15px; line-height: 1.5; }
+
+  /* Right: terminal (DESIGN.md › ide-mockup-card) with the GUI's Agents page docked over it. */
+  .ide { position: relative; display: grid; }
+  :global(.js) .ide .state { grid-area: 1 / 1; opacity: 0; visibility: hidden; transition: opacity 280ms ease, visibility 0s 280ms; }
+  :global(.js) .ide .state.is-active { opacity: 1; visibility: visible; transition: opacity 280ms ease; }
+  :global(html:not(.js)) .state + .state { margin-top: var(--space-lg); }
+  .state { display: grid; align-content: start; padding-bottom: 96px; }
+  .terminal { background: var(--surface-dark); color: var(--on-dark); border-radius: var(--radius-lg); overflow: hidden; min-height: 300px; }
+  :global([data-theme='dark']) .terminal { border: 1px solid var(--hairline); }
+  .bar { display: flex; align-items: center; gap: var(--space-sm); height: 36px; padding: 0 var(--space-base); background: var(--surface-dark-elevated); font-size: 12px; color: var(--on-dark-soft); }
+  .lights { display: flex; gap: 6px; }
+  .lights i { width: 10px; height: 10px; border-radius: 50%; background: #3a312c; }
+  .host { margin-inline: auto; transform: translateX(-24px); font-family: var(--font-mono); }
+  pre { margin: 0; padding: var(--space-md); font-size: 13px; line-height: 1.7; overflow-x: auto; }
+  .ln { display: block; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+  .prompt { color: var(--brand); user-select: none; }
+  .comment { color: var(--on-dark-soft); }
+  .out { color: var(--on-dark-soft); }
+
+  .agents {
+    position: absolute; right: var(--space-lg); bottom: 0; width: min(78%, 440px);
+    background: var(--surface-card); color: var(--ink); border: 1px solid var(--hairline-strong); border-radius: var(--radius-lg);
+    padding: var(--space-base) var(--space-md); display: grid; align-content: start; gap: var(--space-sm); font-size: 13px; box-shadow: var(--shadow-device);
+  }
+  :global(html:not(.js)) .state { position: relative; }
+  .agents-bar { display: flex; justify-content: space-between; align-items: baseline; }
+  .agents-title { font-size: 14px; font-weight: 600; }
+  .meta { color: var(--body); font-size: 12px; }
+  .empty { display: grid; gap: 2px; padding: var(--space-base) 0 var(--space-xs); }
+  .empty-title { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-weight: 500; color: var(--body); font-size: 12px; padding-bottom: 4px; }
+  td { padding: 5px 0; border-top: 1px solid var(--hairline); white-space: nowrap; }
+  td:first-child { font-weight: 600; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .chip.connecting::before { background: var(--warning); }
+  .c-on { display: none; }
+  /* Step 2 plays once when shown: the agent connects, then turns online. */
+  :global(.js) .is-active .c-wait { animation: hide 0s 1.4s forwards; }
+  :global(.js) .is-active .c-on { animation: show 0s 1.4s forwards; }
+  @keyframes hide { to { display: none; } }
+  @keyframes show { to { display: inline; } }
+  :global(.js) .is-active .chip.connecting::before { animation: dot-on 0s 1.4s forwards; }
+  @keyframes dot-on { to { background: var(--success); } }
+  .job { display: grid; gap: 6px; padding-top: 4px; }
+  .progress { height: 6px; background: var(--hairline-soft); border-radius: 3px; overflow: hidden; }
+  .progress span { display: block; height: 100%; background: var(--brand); transform-origin: left; }
+  :global(.js) .is-active .progress span { animation: grow 1.6s cubic-bezier(.2,.7,.2,1); }
+  @keyframes grow { from { transform: scaleX(0.2); } }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .step { flex-direction: column; }
+  }
+  @media (max-width: 767px) {
+    .steps { grid-template-columns: 1fr; }
+    .step { flex-direction: row; padding: var(--space-base); }
+    .agents { position: relative; right: auto; width: auto; margin: -48px var(--space-sm) 0; box-shadow: var(--shadow-soft); }
+    .state { padding-bottom: 0; }
+    .terminal { min-height: 0; padding-bottom: 48px; }
+    th:nth-child(2), td:nth-child(2) { display: none; }
+    .ln { word-break: break-all; }
+    pre { font-size: 12px; }
+  }
+</style>
+
+<script>
+  import '../../scripts/workflow.ts';
+</script>

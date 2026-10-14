@@ -1,0 +1,64 @@
+---
+title: Introduction
+description: What Arkeep is, why it exists, and what it does today.
+---
+
+Arkeep is an open-source infrastructure management platform with a server/agent architecture.
+Deploy the server once, install lightweight agents on every machine you want to manage,
+and handle backups, inventory, updates and recovery from a single web interface,
+built on top of [Restic](https://restic.net/) and [Rclone](https://rclone.org/).
+
+Today Arkeep manages **backups**: what to back up on each machine, where to send it, how long to
+keep it, and how to get it back. Inventory and update orchestration are on the [roadmap](/#roadmap).
+
+## Why Arkeep?
+
+Running infrastructure across multiple machines (containers, VMs, bare metal) means
+juggling separate tools for backups, inventory, and updates. There is no central view,
+no unified alerting, and no easy way to answer the question that matters most before
+touching anything in production: *do I have a verified backup I can recover from?*
+
+Arkeep is built around that question. The backup layer is the foundation everything
+else sits on: inventory tells you what you have, update orchestration makes sure you
+can recover if something goes wrong, and every operation leaves an audit trail.
+
+- **Centralized management**: one dashboard for all your servers, containers, VMs and bare metal machines.
+- **Docker-aware**: discovers containers and volumes, and adapts when you add or remove services without restarts.
+- **Multi-destination**: apply the 3-2-1 rule with several destinations per policy, each with its own retention.
+- **End-to-end encryption**: backups are encrypted by restic before they leave the machine; credentials are encrypted at rest on the server.
+- **Real-time**: live status and progress while backups run, from any device.
+- **OIDC ready**: sign in with Zitadel, Keycloak, Authentik or any standard OpenID Connect provider.
+- **No vendor lock-in**: every repository is a plain restic repository, readable without Arkeep.
+
+## What works today
+
+- Server/agent architecture with outbound-only agents (no inbound ports on your machines)
+- Web GUI (PWA, mobile-first) with light and dark themes
+- Local accounts with TOTP two-factor authentication, plus OIDC single sign-on
+- Destinations: local path, S3-compatible storage, SFTP, restic REST server, any Rclone remote
+- Sources: directories, Docker volumes, and command output streamed into restic (`pg_dump`, `mysqldump`, …)
+- Pre and post backup hooks
+- Per-destination retention and scheduled integrity checks
+- Browse, download and restore snapshot files
+- Import existing restic repositories and keep the snapshot list in sync
+- Email, webhook and Healthchecks.io notifications
+- Audit log, Prometheus metrics, health endpoints
+- Docker Compose, standalone binaries and a Helm chart
+
+## Supported destinations
+
+| Type | Notes |
+|---|---|
+| Local filesystem | A path on the agent's host |
+| S3-compatible | AWS S3, MinIO, Backblaze B2, Cloudflare R2, and more |
+| SFTP | Any SSH server, with password or SSH private key (PEM) |
+| Restic REST Server | A self-hosted [rest-server](https://github.com/restic/rest-server) |
+| Rclone | 40+ backends including Google Drive, OneDrive, Azure Blob, and more |
+
+See [Destinations](/docs/guides/destinations/) for the fields each type needs.
+
+## Next steps
+
+- [Quickstart](/docs/quickstart/): from zero to a restored file in about ten minutes.
+- [How backups work](/docs/concepts/how-backups-work/): policies, destinations, jobs and snapshots.
+- [Install with Docker Compose](/docs/installation/docker-compose/) for a real deployment.

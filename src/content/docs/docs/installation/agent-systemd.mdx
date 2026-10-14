@@ -1,0 +1,51 @@
+---
+title: Run the agent with systemd
+description: Install the Arkeep agent as a systemd service, including on ARM and MIPS boards.
+---
+
+A systemd unit file is provided at
+[`deploy/systemd/arkeep-agent.service`](https://github.com/arkeep-io/arkeep/blob/main/deploy/systemd/arkeep-agent.service).
+Download the agent binary first, as described in [Install the standalone binary](/docs/installation/binary/#agent).
+
+```bash
+# Copy the binary
+sudo cp arkeep-agent /usr/local/bin/arkeep-agent
+sudo chmod +x /usr/local/bin/arkeep-agent
+
+# Copy and edit the unit file
+sudo cp deploy/systemd/arkeep-agent.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# Create an environment file with your credentials
+sudo mkdir -p /etc/arkeep
+sudo tee /etc/arkeep/agent.env > /dev/null <<EOF
+ARKEEP_SERVER_ADDR=your-server:9090
+ARKEEP_AGENT_SECRET=your-agent-secret
+# For self-signed server certs only — leave empty for Let's Encrypt/trusted CAs:
+# ARKEEP_GRPC_TLS_CA=/etc/arkeep/ca.crt
+EOF
+sudo chmod 600 /etc/arkeep/agent.env
+
+sudo systemctl enable --now arkeep-agent
+sudo journalctl -u arkeep-agent -f
+```
+
+## ARM and MIPS boards
+
+In addition to `linux_amd64` and `linux_arm64`, the agent is also published for `linux_arm`
+(armv7, for example Raspberry Pi and similar single-board computers), `linux_mips`, and `linux_mipsle`.
+This is useful for backing up embedded systems such as DVB-S2 satellite receivers.
+
+```bash
+# armv7
+curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-agent_linux_arm.tar.gz | tar xz
+# MIPS big-endian / little-endian
+curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-agent_linux_mips.tar.gz | tar xz
+curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-agent_linux_mipsle.tar.gz | tar xz
+```
+
+:::caution
+These architectures compile and are covered by CI build checks, but are not
+exercised on real hardware by the test suite. Please report any
+hardware-specific issues you run into.
+:::

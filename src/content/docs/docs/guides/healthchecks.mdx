@@ -1,0 +1,31 @@
+---
+title: Healthchecks.io
+description: Get alerted when a backup does not run at all, with Healthchecks.io dead man's switch pings.
+---
+
+Notifications fire when a job ends, so a backup that never starts (server down, scheduler stuck, policy
+disabled by mistake) stays silent. A [Healthchecks.io](https://healthchecks.io) check covers that case: it
+alerts you when the expected ping does not arrive on time.
+
+## Set it up
+
+1. In Healthchecks (hosted or self-hosted), create a check whose schedule matches the policy's.
+2. In the policy, paste its ping URL into the **Healthchecks.io** field (admins only).
+3. Click **Send test ping**. The test lands in the check's event log without changing its status.
+
+Any ping URL works: `https://hc-ping.com/<uuid>`, ping-key and slug URLs (including `?create=1`), and
+self-hosted instances. The URL must be `http://` or `https://`.
+
+## What is pinged
+
+| Event | Ping |
+|---|---|
+| The job starts on the agent | `<ping URL>/start` |
+| The job succeeds | `<ping URL>` |
+| The job fails or is cancelled | `<ping URL>/fail` |
+
+Every ping carries the job ID as `rid`, so Healthchecks measures each run's duration correctly, and a short
+plain-text summary as body: the duration, the snapshot and size per destination, and the error message.
+
+A job interrupted by an agent disconnection sends nothing until it is resumed; if resuming gives up, the job
+pings `/fail`. Restore jobs never ping.

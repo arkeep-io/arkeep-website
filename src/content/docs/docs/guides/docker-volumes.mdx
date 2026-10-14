@@ -1,0 +1,72 @@
+---
+title: Docker volumes
+description: Back up Docker named volumes, set up the agent for it, and restore volumes in place.
+---
+
+When the agent can reach Docker, policies on it can back up **named volumes** directly: pick them from a
+list instead of hunting for their paths.
+
+## Set up the agent
+
+The agent needs two things:
+
+- the **Docker socket**, to list volumes and find their paths;
+- the **Docker volumes directory**, to read the data.
+
+With the [agent compose file](/docs/installation/docker-compose/#agent-only) both are already mounted:
+
+```yaml
+volumes:
+  - /var/run/docker.sock:/var/run/docker.sock:rw
+  - /var/lib/docker/volumes:/var/lib/docker/volumes:ro
+```
+
+The volumes path must be the same inside and outside the container, because the agent receives host
+paths from Docker. If your Docker data root is not `/var/lib/docker`, check it with
+`docker info | grep "Docker Root Dir"` and mount that path instead.
+
+The socket only needs `:ro` for listing volumes. Hooks that run `docker stop` or `docker start` need `:rw`.
+
+An agent installed as a binary needs to be in the `docker` group (or run as root) to read volume
+mountpoints.
+
+## Pick volumes in a policy
+
+**Add Source → Docker Volume** lists the volumes the agent reports. Select one or more; each becomes its
+own source. Volumes that no longer exist are marked **Not found**, and you can also type a volume name by
+hand.
+
+If the list does not load, the policy form tells you why: the agent is not connected, Docker is not
+available on the agent, or the agent did not answer within 10 seconds.
+
+## Consistency
+
+Backing up a volume while its container writes to it can capture a half-written state. For databases, use a
+[command source](/docs/guides/databases/) instead. For other services, stop the container in a pre-backup
+hook and start it again in the post-backup hook:
+
+```bash
+docker stop my-app   # pre-backup
+docker start my-app  # post-backup (runs even when the backup fails)
+```
+
+## Restore volumes
+
+**Restoring to a custom path** always works: the files land in the folder you choose on the agent's host.
+
+**Restoring to the original location** depends on how the volumes directory is mounted:
+
+| Mount | Docker volume paths |
+|---|---|
+| `:ro` (default) | Skipped, with a warning in the job log |
+| `:rw` | Restored if the container is **stopped**; skipped with a warning if it is running |
+
+To restore volumes in place:
+
+1. Change `:ro` to `:rw` on the `/var/lib/docker/volumes` mount and recreate the agent.
+2. Stop the containers whose volumes you want to restore.
+3. Run the restore with **Original location**.
+4. Start the containers again.
+
+Volumes of containers still running when the restore starts are skipped with a log entry naming the
+container; the rest of the restore completes normally.

@@ -1,0 +1,85 @@
+---
+title: Install the standalone binary
+description: Run the Arkeep server and agent as plain binaries, with auto-PKI TLS by default.
+---
+
+Pre-built binaries for Linux, macOS, and Windows are available on the
+[Releases](https://github.com/arkeep-io/arkeep/releases) page.
+
+## Server
+
+```bash
+# Download and extract the server binary for your platform
+curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-server_linux_amd64.tar.gz | tar xz
+
+# Generate secrets
+export ARKEEP_SECRET_KEY=$(openssl rand -hex 32)
+export ARKEEP_AGENT_SECRET=$(openssl rand -hex 32)
+
+./arkeep-server \
+  --db-dsn /var/lib/arkeep/arkeep.db \
+  --data-dir /var/lib/arkeep/data \
+  --http-addr :8080 \
+  --grpc-addr :9090
+```
+
+:::note[TLS (auto-PKI)]
+By default the server generates a private CA and server certificate
+under `--data-dir/grpc/` on first startup. Agents auto-enroll via
+`POST /api/v1/agents/enroll` on first run and use mTLS from then on,
+with no manual certificate management.
+
+To use an external certificate instead (for example Let's Encrypt via Caddy), pass
+`--grpc-tls-cert` and `--grpc-tls-key`. Auto-PKI is then skipped entirely.
+:::
+
+## Agent
+
+```bash
+curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-agent_linux_amd64.tar.gz | tar xz
+
+./arkeep-agent \
+  --server-addr your-server:9090 \
+  --agent-secret your-agent-secret \
+  --state-dir /var/lib/arkeep-agent
+```
+
+:::note[Auto-enrollment]
+On first run the agent calls the server's HTTP API
+(derived from `--server-addr` with port 8080 by default) to obtain its
+client certificate. The CA certificate and client certificate are stored in `--state-dir`
+and reused on every subsequent startup, with no re-enrollment unless you delete them.
+
+**Reverse proxy (Traefik, Nginx, Caddy):** if the server's HTTP API is only
+reachable via HTTPS (port 8080 is not exposed directly), set `--server-http-addr`
+to the public HTTPS URL, for example `--server-http-addr https://arkeep.example.com`.
+The agent uses this address only for the one-time enrollment request; afterwards
+the mTLS certificates in `--state-dir` are reused on every restart.
+
+Use `--grpc-tls-ca` only when connecting to a server that uses an external certificate
+(not auto-PKI) signed by a non-system CA.
+:::
+
+:::note[Embedded Linux targets]
+The agent is also published for `linux_arm` (armv7), `linux_mips` and `linux_mipsle`.
+See [ARM and MIPS boards](/docs/installation/agent-systemd/#arm-and-mips-boards).
+:::
+
+## Server and agent on the same machine
+
+If you run both binaries on the same host without a reverse proxy and do not want TLS on the loopback interface, add `--grpc-insecure` to **both**. Communication stays on loopback and is never exposed to the network.
+
+```bash
+./arkeep-server \
+  --db-dsn /var/lib/arkeep/arkeep.db \
+  --data-dir /var/lib/arkeep/data \
+  --grpc-insecure
+
+./arkeep-agent \
+  --server-addr localhost:9090 \
+  --agent-secret your-agent-secret \
+  --state-dir /var/lib/arkeep-agent \
+  --grpc-insecure
+```
+
+For any setup where the gRPC port is reachable from other machines, always use TLS (the default).

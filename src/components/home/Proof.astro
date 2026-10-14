@@ -1,0 +1,24 @@
+---
+// Ecosystem strip under the hero (DESIGN.md › ecosystem-tile): destinations set in type, no third-party logos.
+const engines = ['Restic', 'Rclone'];
+const names = ['Local disk', 'S3', 'Backblaze B2', 'Cloudflare R2', 'MinIO', 'SFTP', 'rest-server', 'Google Drive'];
+---
+<section id="ecosystem" class="ecosystem wrap" aria-labelledby="ecosystem-title">
+  <h2 id="ecosystem-title" class="eyebrow" data-reveal>Built on {engines.join(' and ')}. Writes to</h2>
+  <ul class="tiles" data-reveal style="--reveal-delay: 70ms">
+    {names.map((n) => <li>{n}</li>)}
+  </ul>
+</section>
+
+<style>
+  .ecosystem { padding-block: var(--space-xxl) 0; text-align: center; }
+  h2 { margin-bottom: var(--space-base); }
+  .tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--space-xs); }
+  .tiles li {
+    display: grid; place-items: center; min-height: 64px; padding: 0 var(--space-xs);
+    background: var(--surface-card); border: 1px solid var(--hairline); border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 500; color: var(--ink);
+  }
+  @media (max-width: 1023px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (max-width: 479px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tiles li { min-height: 52px; } }
+</style>

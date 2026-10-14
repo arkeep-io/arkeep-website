@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+
+// One piece of the GUI captured at 3x by scripts/screenshots (an element, not a whole window), shown at
+// its true CSS width so interface text stays at the size the product renders it.
+interface Props {
+  name: string;
+  alt: string;
+}
+const { name, alt } = Astro.props;
+const SCALE = 3;
+const images = import.meta.glob<{ default: ImageMetadata }>('../../assets/screens/ui-*.png', { eager: true });
+const light = images[`../../assets/screens/${name}-light.png`]?.default;
+const dark = images[`../../assets/screens/${name}-dark.png`]?.default;
+if (!light || !dark) throw new Error(`Missing screenshot pair for "${name}". Run scripts/screenshots.`);
+const width = Math.round(light.width / SCALE);
+---
+<div class="shot" data-ui style={`--shot-w: ${width}px`}>
+  <Image src={light} alt={alt} width={width} densities={[1, 2, 3]} quality={90} data-theme-img="light" loading="lazy" />
+  <Image src={dark} alt={alt} width={width} densities={[1, 2, 3]} quality={90} data-theme-img="dark" loading="lazy" />
+</div>
+
+<style>
+  .shot { width: var(--shot-w); max-width: 100%; }
+  .shot img { width: var(--shot-w); max-width: none; height: auto; }
+  /* On narrow tiles the shot keeps its true size and runs off the tile edge instead of shrinking. */
+  [data-theme-img='dark'] { display: none; }
+  :global([data-theme='dark']) [data-theme-img='light'] { display: none; }
+  :global([data-theme='dark']) [data-theme-img='dark'] { display: block; }
+</style>

@@ -1,0 +1,61 @@
+---
+title: Upgrading
+description: Upgrade the server and agents safely, for Docker Compose, binaries and Helm.
+---
+
+:::caution
+Always back up the database before upgrading. See [Backing up Arkeep itself](/docs/installation/backing-up-arkeep/).
+:::
+
+## General procedure
+
+1. Back up the database and the data directory.
+2. Pull the new image or download the new binary.
+3. Stop the server.
+4. Start the new server. Schema migrations run automatically on startup.
+5. Check that `GET /health/ready` returns `"status": "healthy"` before sending traffic.
+
+The agent is versioned independently. Upgrade agents after the server is confirmed healthy. Agents on an
+older version keep working during a rolling upgrade: the gRPC protocol is backwards-compatible within a
+major version. The **Agents** page marks agents older than the latest release with an update indicator.
+
+## Docker Compose
+
+```bash
+docker compose pull
+docker compose up -d
+docker compose logs -f arkeep-server   # watch for "migrations applied" and "server started"
+```
+
+## Standalone binary
+
+```bash
+# Replace the binary, then restart the service
+sudo systemctl stop arkeep-server
+sudo cp arkeep-server-new /usr/local/bin/arkeep-server
+sudo systemctl start arkeep-server
+sudo journalctl -u arkeep-server -f
+```
+
+## Helm
+
+From your clone of the repository:
+
+```bash
+git pull
+helm dependency build ./deploy/helm/arkeep
+helm upgrade arkeep ./deploy/helm/arkeep --reuse-values
+kubectl rollout status deployment/arkeep-server
+```
+
+## Update notifications
+
+The server checks the GitHub releases API (cached for one hour) and shows an indicator next to its
+version in the sidebar when a newer release exists, with a link to the download and changelog. Set
+`ARKEEP_UPDATE_CHECK=false` to never contact GitHub, for example on air-gapped installs.
+
+## Breaking changes
+
+| From → To | Breaking change | Action required |
+|---|---|---|
+| any → 1.0.0 | None: all migrations are additive and run automatically | None |

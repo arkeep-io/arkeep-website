@@ -1,0 +1,48 @@
+---
+import Search from 'virtual:starlight/components/Search';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+import { Image } from 'astro:assets';
+import mark from '../../assets/arkeep-mark.png';
+import { GET_STARTED_URL, isExternal, newTab, navLinks } from '../site/links';
+---
+<div class="header">
+  <a class="wordmark" href="/">
+    <Image src={mark} alt="" width={28} height={28} loading="eager" />
+    <span>Arkeep</span>
+  </a>
+  <div class="search"><Search /></div>
+  <div class="right">
+    <ul class="links">
+      {navLinks.map((l) => <li class:list={{ 'home-anchor': l.href.startsWith('/#') }}><a href={l.href} {...(isExternal(l.href) ? newTab() : {})}>{l.label}</a></li>)}
+    </ul>
+    <ThemeSelect />
+    <a class="get-started" href={GET_STARTED_URL}>Install Arkeep</a>
+  </div>
+</div>
+
+<style>
+  .header { display: flex; align-items: center; justify-content: space-between; gap: var(--sl-nav-gap); height: 100%; }
+  .wordmark { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 600; font-size: 1.0625rem; color: var(--sl-color-white); text-decoration: none; }
+  .wordmark img { border-radius: var(--radius-md); }
+  .search { flex: 1; display: flex; justify-content: center; }
+  .right { display: none; align-items: center; gap: 1rem; }
+  .links { display: flex; gap: 0.25rem; list-style: none; margin: 0; padding: 0; }
+  .links a { padding: 0.5rem 0.65rem; border-radius: var(--radius-md); color: var(--sl-color-gray-2); font-size: 0.875rem; font-weight: 500; text-decoration: none; transition: background-color 160ms ease; }
+  .links a:hover,
+  .links a[aria-current='page'] { color: var(--sl-color-white); background: var(--sl-color-gray-6); }
+  .get-started {
+    display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border-radius: var(--radius-md);
+    background: var(--primary); color: var(--on-primary); font-size: 0.875rem; font-weight: 500; text-decoration: none;
+    transition: background-color 160ms ease;
+  }
+  .get-started:hover { background: var(--primary-hover); }
+  .links a { white-space: nowrap; }
+  /* Links to homepage sections only where the header has room for them. */
+  .home-anchor { display: none; }
+  @media (min-width: 50rem) {
+    .right { display: flex; }
+  }
+  @media (min-width: 80rem) {
+    .home-anchor { display: list-item; }
+  }
+</style>

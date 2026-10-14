@@ -1,0 +1,82 @@
+---
+title: Quickstart
+description: Run Arkeep on one machine, back up a folder and restore a file, in about ten minutes.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+This quickstart runs the server and an agent on the same machine with Docker Compose, backs up a
+folder to a local path and restores a file from it. For a production setup with agents on other
+machines, follow [Install with Docker Compose](/docs/installation/docker-compose/) afterwards.
+
+You need a Linux machine (or Docker Desktop) with Docker and Docker Compose.
+
+<Steps>
+
+1. **Download the compose file and create the secrets.**
+
+   ```bash
+   mkdir arkeep && cd arkeep
+   curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/docker-compose.all.yml
+   curl -o .env https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/.env.example
+   sed -i "s|^ARKEEP_SECRET_KEY=.*|ARKEEP_SECRET_KEY=$(openssl rand -hex 32)|" .env
+   sed -i "s|^ARKEEP_AGENT_SECRET=.*|ARKEEP_AGENT_SECRET=$(openssl rand -hex 24)|" .env
+   ```
+
+   Keep `.env` safe: `ARKEEP_SECRET_KEY` encrypts every credential Arkeep stores.
+
+2. **Let the agent write to the host.** The all-in-one agent sees your host filesystem through a
+   read-only mount. This quickstart writes backups to a local folder and restores to one, so make it
+   writable: in `docker-compose.all.yml`, change `- /:/hostfs:ro` to `- /:/hostfs:rw`.
+
+   :::note
+   For a backup-only agent, keep `:ro`. See [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker).
+   :::
+
+3. **Start Arkeep.**
+
+   ```bash
+   docker compose -f docker-compose.all.yml up -d
+   ```
+
+   The all-in-one file starts the server and an agent on the same host.
+
+4. **Create the admin account.** Open `http://localhost:8080`. The first visit shows
+   **Welcome to Arkeep**: enter your name, email and a password of at least 8 characters.
+
+   :::caution
+   The setup page only works for 15 minutes after the server starts. If it has expired,
+   restart the server (`docker compose -f docker-compose.all.yml restart server`) and try again.
+   :::
+
+5. **Check the agent.** Open **Agents**. The local agent appears on its own within a few
+   seconds and shows **Online**. There is nothing to approve.
+
+6. **Add a destination.** Open **Destinations → New Destination**, choose **Local Path** and set
+   the path to `/var/backups/arkeep`. Type host paths as they are on the host: the agent translates
+   them to its mount on its own. Leave retention and the integrity check on their defaults, pick the
+   local agent as **Maintenance Agent**, and save.
+
+7. **Create a policy.** Open **Policies → New Policy**:
+   - **Agent**: the local agent.
+   - **Add Source → Directory**: for example `/etc`.
+   - **Schedule**: Daily at 02:00.
+   - **Destinations**: the one you just created.
+   - **Repository Password**: a strong password. Store it somewhere safe: restic encrypts the
+     repository with it and it cannot be recovered.
+
+8. **Run it now.** On the policy, click **Run Now**. Open the job from **Jobs** to follow its
+   progress. It ends as **Succeeded**.
+
+9. **Restore a file.** Open **Snapshots**, click the snapshot ID to browse it, download a file,
+   or select files and choose **Restore selected**. Restore to a custom path such as
+   `/tmp/arkeep-restore`, so nothing on the machine is overwritten.
+
+</Steps>
+
+## Where to go next
+
+- Add agents on your other machines: [Install with Docker Compose](/docs/installation/docker-compose/#agent-only) or [as a binary](/docs/installation/binary/#agent).
+- Send a copy off-site: add an [S3, SFTP or Rclone destination](/docs/guides/destinations/) to the policy.
+- Decide how long to keep snapshots: [Retention and integrity checks](/docs/guides/retention-and-checks/).
+- Get told when something fails: [Notifications](/docs/guides/notifications/).

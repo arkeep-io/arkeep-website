@@ -1,0 +1,79 @@
+---
+title: Reverse proxy and TLS
+description: Put the web interface behind HTTPS, choose how agents connect over gRPC, and the settings that go with it.
+---
+
+The server listens on two ports:
+
+| Port | Protocol | Used by |
+|---|---|---|
+| 8080 | HTTP | The web interface, the REST API, agent enrollment, health and metrics |
+| 9090 | gRPC | Agents, over a persistent outbound connection |
+
+## The web interface over HTTPS
+
+Put Caddy, Nginx, Traefik or another reverse proxy in front of port 8080 and let it terminate TLS.
+Then set:
+
+- `--secure-cookies` (`ARKEEP_SECURE_COOKIES=true`) so auth cookies are only sent over HTTPS.
+- `--base-url` (`ARKEEP_BASE_URL=https://arkeep.example.com`) so password reset emails link to the
+  right address. Arkeep never builds those links from request headers.
+- `--trusted-proxies` (`ARKEEP_TRUSTED_PROXIES`) to the proxy's address. Arkeep reads the client IP
+  from `X-Forwarded-For` only for trusted proxies; it is used by login rate limits and the audit log.
+  The default trusts loopback and private networks; `none` trusts no proxy.
+
+The proxy must pass WebSocket upgrades: the interface uses `/api/v1/ws` for live updates.
+
+The OIDC redirect URI is derived from the request (`X-Forwarded-Proto` and `X-Forwarded-Host`), so the
+proxy must forward those headers. See [Single sign-on](/docs/guides/oidc/).
+
+## Agents over gRPC
+
+### Default: auto-PKI with mTLS
+
+On first startup the server creates a private CA and a server certificate under `--data-dir/grpc/`.
+Each agent enrolls once through `POST /api/v1/agents/enroll`, receives a client certificate and uses
+mutual TLS from then on. No certificate management is needed.
+
+Because agents present client certificates, gRPC must reach the server **end to end**. Expose port 9090
+directly, or forward it as plain TCP (TLS passthrough). Do not terminate TLS for port 9090 in a proxy.
+
+Agents derive the enrollment address from `--server-addr`, using port 8080 over plain HTTP. When the
+HTTP API is only reachable through your HTTPS proxy, set the public URL on each agent:
+
+```bash
+arkeep-agent --server-addr arkeep.example.com:9090 \
+  --server-http-addr https://arkeep.example.com \
+  --agent-secret <secret>
+```
+
+The enrollment address is used once; afterwards the certificates in `--state-dir` are reused.
+
+:::caution
+Over plain HTTP the agent secret travels in clear during enrollment and the CA certificate cannot be
+authenticated. Prefer an `https://` enrollment address whenever the server is reachable over HTTPS.
+:::
+
+### Your own certificate
+
+Pass `--grpc-tls-cert` and `--grpc-tls-key` to the server (`ARKEEP_GRPC_TLS_CERT`, `ARKEEP_GRPC_TLS_KEY`)
+to serve gRPC with a certificate of your own, for example from Let's Encrypt. Auto-PKI is then skipped
+entirely, and agents are not bound to individual certificates.
+
+If that certificate is signed by a CA that agents do not trust by default, give them the CA with
+`--grpc-tls-ca` (`ARKEEP_GRPC_TLS_CA`).
+
+### No TLS
+
+`--grpc-insecure` on both the server and the agent disables TLS. Use it only when the connection never
+leaves the host, or a private network you trust.
+
+## Checklist
+
+- [ ] HTTPS in front of port 8080, WebSocket upgrades allowed
+- [ ] `ARKEEP_SECURE_COOKIES=true`
+- [ ] `ARKEEP_BASE_URL` set to the public URL
+- [ ] `ARKEEP_TRUSTED_PROXIES` narrowed to the proxy's address
+- [ ] Port 9090 reachable by agents without TLS termination (or your own certificate configured)
+- [ ] Agents behind the HTTPS-only setup started with `--server-http-addr https://…`
+- [ ] `/metrics` and `/health/*` restricted at the proxy, or `ARKEEP_METRICS_TOKEN` set

@@ -1,0 +1,141 @@
+/* Tokens from DESIGN.md (colors / colors-dark, typography, rounded, spacing).
+   Source of truth for colors: ../arkeep/gui/src/style.css (OKLCH). Shared with Starlight via starlight.css. */
+:root {
+  color-scheme: light;
+  --primary: #c94700;
+  --primary-hover: #b73e00;
+  --primary-active: #a43800;
+  --brand: #f66921;
+  --text-link: #c94700;
+  --text-link-secondary: #7a2c00;
+  --ink: #17100c;
+  --body: #69615d;
+  --body-strong: #17100c;
+  --muted: #958d89;
+  --muted-soft: #dbd2cc;
+  --hairline: #ebe3dd;
+  --hairline-soft: #f0eae6;
+  --hairline-strong: #dbd2cc;
+  --canvas: #fefbf9;
+  --canvas-soft: #faf6f3;
+  --surface-card: #ffffff;
+  --surface-soft: #f0eae6; /* section panels; same step as hairline-soft */
+  --surface-strong: #ebe3dd;
+  --surface-dark: #17110e;
+  --surface-dark-elevated: #201915;
+  --on-primary: #ffffff;
+  --on-dark: #ece7e3;
+  --on-dark-soft: #aba39e;
+  --accent-soft: #fae2d7;
+  --on-accent-soft: #c94700;
+  --gradient-warm-light: #fae2d7;
+  --gradient-warm-mid: #ffceb2;
+  --success: #1d7d3e;
+  --success-soft: #e3f3e7;
+  --warning: #9a6000;
+  --error: #df202e;
+  --info: #007b70;
+  --shadow-soft: 0 4px 12px rgba(23, 16, 12, 0.04);
+  --shadow-device: 0 30px 60px -20px rgba(23, 16, 12, 0.28);
+
+  /* Older names still used by the docs (starlight.css) */
+  --surface-muted: var(--hairline-soft);
+
+  --font-sans: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-xxl: 24px;
+  --radius-pill: 9999px;
+
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-base: 16px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-section: 96px;
+
+  --container: 1200px;
+  --gutter: clamp(16px, 4vw, 32px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --primary: #f66921;
+    --primary-hover: #ff8244;
+    --primary-active: #e25600;
+    --text-link: #f66921;
+    --text-link-secondary: #ffceb2;
+    --ink: #ece7e3;
+    --body: #958d89;
+    --body-strong: #ece7e3;
+    --muted: #807874;
+    --muted-soft: #2f2723;
+    --hairline: #2a221e;
+    --hairline-soft: #1f1916;
+    --hairline-strong: #2f2723;
+    --canvas: #0d0806;
+    --canvas-soft: #120d0a;
+    --surface-card: #17110e;
+    --surface-soft: #120d0a;
+    --surface-strong: #2a221e;
+    --surface-dark: #0d0806;
+    --surface-dark-elevated: #17110e;
+    --on-primary: #17100c;
+    --accent-soft: #291811;
+    --on-accent-soft: #f66921;
+    --gradient-warm-light: #291811;
+    --gradient-warm-mid: #3a2216;
+    --success: #53be70;
+    --success-soft: #142a1b;
+    --warning: #edb345;
+    --error: #ee343b;
+    --info: #00ad9d;
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-device: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --primary: #f66921;
+  --primary-hover: #ff8244;
+  --primary-active: #e25600;
+  --text-link: #f66921;
+  --text-link-secondary: #ffceb2;
+  --ink: #ece7e3;
+  --body: #958d89;
+  --body-strong: #ece7e3;
+  --muted: #807874;
+  --muted-soft: #2f2723;
+  --hairline: #2a221e;
+  --hairline-soft: #1f1916;
+  --hairline-strong: #2f2723;
+  --canvas: #0d0806;
+  --canvas-soft: #120d0a;
+  --surface-card: #17110e;
+  --surface-soft: #120d0a;
+  --surface-strong: #2a221e;
+  --surface-dark: #0d0806;
+  --surface-dark-elevated: #17110e;
+  --on-primary: #17100c;
+  --accent-soft: #291811;
+  --on-accent-soft: #f66921;
+  --gradient-warm-light: #291811;
+  --gradient-warm-mid: #3a2216;
+  --success: #53be70;
+  --success-soft: #142a1b;
+  --warning: #edb345;
+  --error: #ee343b;
+  --info: #00ad9d;
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-device: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}

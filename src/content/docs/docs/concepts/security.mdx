@@ -1,0 +1,121 @@
+---
+title: Security model
+description: How Arkeep authenticates agents and users, protects credentials and limits what each role can do.
+---
+
+## Agents
+
+Agents authenticate to the server with **mutual TLS**. On first startup the server creates a private
+certificate authority in its data directory. A new agent enrolls once over HTTP, presenting the shared
+`ARKEEP_AGENT_SECRET`: it sends a certificate request, the server signs it and the agent keeps the
+certificate in its state directory.
+
+- The server refuses to start without `ARKEEP_AGENT_SECRET`, and enrollment fails closed when it is empty.
+- Each agent is bound to the fingerprint of its certificate on first registration. Another certificate
+  presenting the same agent is refused until an admin uses **Reset identity** (see [Agents](/docs/guides/agents/#reset-identity)).
+- Enrollment is rate limited to 10 requests per minute per IP.
+
+Keep the server's data directory secure: it holds the CA private key.
+
+With an external certificate (`--grpc-tls-cert`) or `--grpc-insecure` there is no per-agent identity
+binding. Use `--grpc-insecure` only when server and agent share a private network or the same host.
+
+## Roles
+
+Arkeep has two roles.
+
+| Role | Can |
+|---|---|
+| **admin** | Everything: configure agents, destinations and policies, run and cancel jobs, browse, download and restore snapshots, manage users and settings, read the audit log. |
+| **user** | Read-only: view the dashboard, agents, destinations, policies, jobs and snapshots. |
+
+Objects have no owner, so any write would affect every agent. That is why every change, and every
+action that makes an agent do something (browsing a snapshot, listing Docker volumes, restoring,
+downloading), is reserved to admins.
+
+## Hooks and command sources
+
+Pre/post backup hooks and command sources are shell commands run by the agent on the target machine,
+with the **full privileges of the agent process**. An admin who can edit policies can therefore run
+code on every machine with a connected agent.
+
+Mitigations in place:
+
+- Only admins can set or change hooks and command sources.
+- The server rejects commands that contain command substitution (`$(...)`, backticks), path
+  traversal (`..`) or references to internal credential variables (`$RESTIC_*`, `$RCLONE_*`, `$ARKEEP_*`).
+- Commands are limited to 1024 characters.
+
+Run the agent as a dedicated low-privilege user with access only to what it needs to back up. Avoid
+root unless you need full-system backups.
+
+## Credentials at rest
+
+Repository passwords, S3 keys, SFTP passwords, OIDC client secrets, the SMTP password and the webhook
+secret are encrypted at rest with AES-256-GCM using `ARKEEP_SECRET_KEY`. They are write-only: the API
+never returns them.
+
+**What this protects against:** someone who obtains the database alone, such as a dump, a copy of the
+SQLite file, a backup of it, or a PostgreSQL server on another host. It does **not** protect against
+someone who can read both the database and `ARKEEP_SECRET_KEY`: the server must decrypt credentials
+to send them to agents, so it always holds the key.
+
+- Restrict the file that holds `ARKEEP_SECRET_KEY` (for example `.env`) to the server user (`chmod 600`).
+- Do not keep the key next to copies of the database.
+- Treat database backups as sensitive: they contain every credential that existed when they were taken.
+
+Agents never see encrypted values. They receive the plaintext environment variables a job needs, and
+drop any variable that is not on their allowlist before running restic.
+
+### Deleting destinations and policies
+
+Deleting a destination wipes its credentials and repository password; deleting a policy wipes its
+repository password. The row is kept without secrets, so history still shows its name. Restoring a
+snapshot of a deleted destination asks for the credentials again.
+
+On SQLite the database runs with `secure_delete`, so wiped values are overwritten on disk. On
+PostgreSQL old row versions stay on disk until space is reused; if that matters to you, run
+`VACUUM FULL destinations, policies;` after deleting and rotate WAL archives and backups.
+
+If a destination's credentials may have leaked, rotate them at the storage provider: deleting the
+destination in Arkeep does not invalidate them.
+
+## Sessions
+
+| Token | Lifetime | Stored in | Revocation |
+|---|---|---|---|
+| Access token (JWT) | 15 minutes | Browser memory | In-memory denylist on logout |
+| Refresh token | 7 days, rotated on use | `httpOnly` cookie | Deleted from the database |
+
+Logging out revokes both. Changing your password signs out your other sessions; resetting a forgotten
+password, an admin's 2FA reset and deactivating a user sign out every session. Access tokens already
+issued at that moment can stay valid until they expire (at most 15 minutes), and the access-token
+denylist is cleared when the server restarts.
+
+## Two-factor authentication
+
+TOTP secrets are encrypted at rest like other credentials, and recovery codes are stored hashed. A
+login challenge expires after 5 minutes and allows at most 5 wrong codes before the password step
+starts over. See [Users, roles and 2FA](/docs/guides/users-and-2fa/).
+
+## Initial setup
+
+The setup endpoint that creates the first admin is public, so it only works within **15 minutes of the
+server starting** and accepts a single account. If the window has passed, restart the server.
+
+## Exposed endpoints
+
+`/health/live`, `/health/ready` and `/metrics` are unauthenticated by default. They expose no
+credentials or backup contents, but reveal operational details. Restrict them at your reverse proxy,
+or protect `/metrics` with `ARKEEP_METRICS_TOKEN`. See [Health and metrics](/docs/reference/health-and-metrics/).
+
+## Reporting a vulnerability
+
+Do not open a public GitHub issue. Email **hello@arkeep.io** with a description, steps to reproduce,
+the potential impact and any suggested mitigation. You will receive an acknowledgement within
+**48 hours**. Security fixes are applied to the latest release only.
+
+In scope: `arkeep-server` (authentication, authorization, credential storage, API), `arkeep-agent`
+(gRPC authentication, binary extraction, restic invocation) and the published Docker images.
+Out of scope: vulnerabilities in restic or rclone themselves (report them upstream), physical access,
+social engineering, and denial of service through resource exhaustion.

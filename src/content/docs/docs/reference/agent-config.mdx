@@ -1,0 +1,40 @@
+---
+title: Agent configuration
+description: Every flag and environment variable of arkeep-agent.
+---
+
+Every option can be set with a flag or an environment variable. When both are set, the flag wins.
+
+| Flag | Environment | Default | Description |
+|---|---|---|---|
+| `--server-addr` | `ARKEEP_SERVER_ADDR` | `localhost:9090` | Server gRPC address, as `host:port` with no scheme |
+| `--agent-secret` | `ARKEEP_AGENT_SECRET` | | Shared secret; must match the server's |
+| `--state-dir` | `ARKEEP_STATE_DIR` | `~/.arkeep` | Agent state, certificates and the extracted restic and rclone binaries |
+| `--server-http-addr` | `ARKEEP_SERVER_HTTP_ADDR` | `--server-addr` host, port 8080, plain HTTP | Base URL of the server's HTTP API, used once for enrollment. **Required when the server is behind a TLS-terminating reverse proxy**, for example `https://arkeep.example.com`. |
+| `--grpc-tls-ca` | `ARKEEP_GRPC_TLS_CA` | | CA certificate for gRPC TLS, only when the server uses its own certificate signed by a CA the system does not trust |
+| `--grpc-insecure` | `ARKEEP_GRPC_INSECURE` | `false` | Disable TLS for gRPC. Same machine or trusted private network only. |
+| `--docker-socket` | `ARKEEP_DOCKER_SOCKET` | platform default | Docker socket path |
+| `--docker-host-root` | `ARKEEP_DOCKER_HOST_ROOT` | `/hostfs` inside Docker, empty otherwise | Where the host filesystem is mounted inside the agent container. Set it only for a custom mount point. |
+| `--hostname` | `ARKEEP_AGENT_HOSTNAME` | the host's hostname | Name reported to the server and recorded on snapshots. Inside Docker it is read from the host's `/etc/hostname` through the host mount. |
+| `--log-level` | `ARKEEP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+
+## Enrollment
+
+On first start the agent generates its private key, sends a certificate request to
+`<server-http-addr>/api/v1/agents/enroll` with the agent secret, and stores the CA certificate and its
+client certificate in `--state-dir`. Later starts reuse them. Delete them to enroll again (an admin may then
+need to [reset the agent's identity](/docs/guides/agents/#reset-identity)).
+
+Over plain HTTP the agent secret travels in clear and the CA certificate cannot be authenticated. Prefer an
+`https://` enrollment address whenever the server is reachable over HTTPS.
+
+## Embedded tools
+
+The agent binary embeds restic and rclone and extracts them into `--state-dir` at startup. Nothing else needs
+to be installed on the machine, except the tools your [command sources](/docs/guides/databases/) and hooks call.
+
+## Permissions
+
+The agent runs as an unprivileged user. It only needs to read what it backs up and to write where it restores.
+To back up Docker volumes it must read `/var/lib/docker/volumes`, which usually means membership of the
+`docker` group (the Docker Compose deployment handles this through its mounts).

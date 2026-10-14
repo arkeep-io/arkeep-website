@@ -1,0 +1,104 @@
+---
+title: Install with Docker Compose
+description: Run the Arkeep server, an agent, or both with Docker Compose.
+---
+
+The simplest way to get started. All images are published to both
+[GitHub Packages](https://github.com/orgs/arkeep-io/packages?repo_name=arkeep) and
+[Docker Hub](https://hub.docker.com/repositories/arkeepio).
+
+## Server only
+
+The GUI is included.
+
+```bash
+curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/docker-compose.yml
+curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/.env.example
+cp .env.example .env
+# Edit .env — at minimum set ARKEEP_SECRET_KEY and ARKEEP_AGENT_SECRET
+docker compose up -d
+```
+
+The GUI is available at `http://localhost:8080`.
+
+### gRPC TLS with Docker
+
+The server generates a private CA and server certificate on first startup (auto-PKI). Agents auto-enroll via HTTP on first run and use mTLS from that point on, with no manual certificate configuration.
+
+For the server you can alternatively use an external certificate:
+
+- **Reverse proxy (recommended):** put Caddy or Nginx in front and let it handle TLS termination for both ports. No certificate configuration inside the containers.
+- **Direct TLS:** mount a certificate and set `ARKEEP_GRPC_TLS_CERT`/`ARKEEP_GRPC_TLS_KEY` on the server container (see the commented lines in `docker-compose.yml` and `.env.example`).
+
+In the **all-in-one** file the agent reaches the server by its service name (`server:9090`) and enrolls like any other agent, so the connection uses mTLS too.
+
+## Agent only
+
+On the machines you want to back up:
+
+```bash
+curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/docker-compose.agent.yml
+# Set ARKEEP_SERVER_ADDR and ARKEEP_AGENT_SECRET in your environment or .env
+docker compose -f docker-compose.agent.yml up -d
+```
+
+## All-in-one
+
+Server and agent on the same host:
+
+```bash
+curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/docker-compose.all.yml
+curl -O https://raw.githubusercontent.com/arkeep-io/arkeep/main/deploy/docker/.env.example
+cp .env.example .env
+# Edit .env — at minimum set ARKEEP_SECRET_KEY and ARKEEP_AGENT_SECRET
+docker compose -f docker-compose.all.yml up -d
+```
+
+The agent's host mount is read-only by default. To write local destinations or restore to local paths,
+change `/:/hostfs:ro` to `/:/hostfs:rw` (see below).
+
+## Local destinations in Docker
+
+When the agent runs in Docker, it can only write to paths that are mounted into the container. Mount the entire host filesystem once at `/hostfs`: the agent detects it is inside Docker and enables path translation automatically. No environment variable is required.
+
+**Linux:** add to the agent service volumes:
+
+```yaml
+volumes:
+  - /:/hostfs:ro   # :ro for backup-only; change to :rw to also restore to local paths
+```
+
+**Windows (Docker Desktop):** one entry per drive letter:
+
+```yaml
+volumes:
+  - C:/:/hostfs/c:ro
+  - D:/:/hostfs/d:ro   # add more drives as needed
+```
+
+With this in place you can type any native host path directly in the Arkeep UI as a backup destination (for example `C:\Users\you\Downloads` or `/home/user/backups`) and the agent translates it automatically. No per-directory bind mounts are required.
+
+:::note[Advanced]
+If you mount the host filesystem at a path other than `/hostfs`, set `ARKEEP_DOCKER_HOST_ROOT` to your custom mount point.
+For binary, systemd, and Helm deployments leave it unset: paths are used as-is.
+:::
+
+## Restore in Docker
+
+**Restore to a custom path** works out of the box: enter any host path in the UI (for example `C:\Users\you\Downloads\restore`) and the agent writes the files there via the hostfs mount.
+
+**In-place restore** (original location) behaviour depends on the `/var/lib/docker/volumes` mount mode:
+
+| Mount mode | Local filesystem paths | Docker volume paths |
+|---|---|---|
+| `:ro` (default) | Restored normally | **Skipped**, the agent logs a warning. Change to `:rw` to enable. |
+| `:rw` | Restored normally | Restored if the container is **stopped**; **skipped** with a warning if running. |
+
+To restore Docker volumes in place:
+
+1. Change `:ro` to `:rw` for the `/var/lib/docker/volumes` mount in `docker-compose.yml`
+2. Stop the containers whose volumes you want to restore
+3. Run the in-place restore from the UI
+4. Restart the containers
+
+Volumes of containers that are still running when the restore starts are automatically skipped with a log entry that names the container. The rest of the restore (local paths and stopped-container volumes) completes normally.

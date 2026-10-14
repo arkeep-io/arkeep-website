@@ -1,0 +1,92 @@
+---
+title: Users, roles and 2FA
+description: The first admin, roles, managing users, passwords, password reset and two-factor authentication.
+---
+
+## The first admin
+
+On a fresh install, the first visit to the interface shows **Welcome to Arkeep**: enter a name, an email and
+a password to create the first admin account.
+
+For safety this only works within **15 minutes of the server starting**, and only once. If the window has
+passed you see *the setup window has expired*: restart the server and create the account within 15 minutes.
+
+## Roles
+
+| Role | Can |
+|---|---|
+| **Admin** | Everything, including users, settings and the audit log |
+| **User** | Read-only: the dashboard, agents, destinations, policies, jobs and snapshots |
+
+A user cannot change anything, browse or download snapshot contents, restore, or run and cancel jobs. The
+**Users**, **Settings** and **Audit Log** pages are hidden from them.
+
+## Manage users
+
+**Users → New User** (admin):
+
+- **Email** and **Display Name**.
+- **Password**: at least 8 characters.
+- **Role**: User or Admin.
+- **Active**: inactive users cannot log in.
+
+The list shows each user's role, whether two-factor authentication is on, their status and their last login.
+Actions: **Edit** (display name, role, active), **Reset 2FA** and **Delete**. Deleting a user is permanent,
+and you cannot delete yourself.
+
+Deactivating a user blocks new logins and session refreshes immediately; a session already open can last up
+to 15 more minutes.
+
+## Your profile
+
+Open **Profile** from the user menu to change your display name or your password. Changing your password
+signs out your other sessions; the current one stays. Accounts managed by an identity provider (OIDC) change
+their password there, not in Arkeep.
+
+The user menu also switches between the light and dark theme.
+
+## Forgotten password
+
+Local accounts can reset a forgotten password with **Forgot password?** on the login page. Arkeep emails a
+link, valid for one hour, and the reset signs out every session of that account.
+
+This needs two things, both set up by the operator:
+
+- an SMTP server in **Settings → SMTP**;
+- the server's public URL in `ARKEEP_BASE_URL`, so the link points to the right place.
+
+When either is missing, the page says so and asks the user to contact an administrator.
+
+The response never reveals whether an email address has an account.
+
+## Two-factor authentication
+
+Local accounts can protect their login with a time-based one-time code (TOTP) from any authenticator app:
+Google Authenticator, Aegis, 1Password, Bitwarden and others.
+
+### Turn it on
+
+1. Open **Profile → Two-Factor Authentication → Enable two-factor authentication**.
+2. Scan the QR code, or type the setup key into your app.
+3. Confirm with the 6-digit code the app shows.
+4. Save the **10 recovery codes** (copy or download them). They are not shown again.
+
+Turning it on signs out your other sessions.
+
+### Logging in
+
+After a correct password, Arkeep asks for the 6-digit code. If you do not have your app, use **Use a recovery
+code instead**: each recovery code works once. The code step expires after 5 minutes and allows 5 wrong
+codes, after which you start again from the password.
+
+### Recovery codes and turning it off
+
+From the profile you can **Regenerate recovery codes** (the old ones stop working) or turn two-factor
+authentication off. Both ask for your password.
+
+### Lost device and codes
+
+An admin can use **Reset 2FA** on the Users page. It turns two-factor authentication off for that account and
+signs out all its sessions; the user can enable it again afterwards.
+
+Two-factor authentication applies to local accounts. For OIDC accounts, use your identity provider's MFA.

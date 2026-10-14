@@ -1,0 +1,97 @@
+---
+title: Retention and integrity checks
+description: Decide how long each destination keeps snapshots, and verify that repositories stay readable.
+---
+
+Retention and integrity checks are configured **per destination**, on schedules of their own,
+independent of any policy's backup schedule. In a 3-2-1 setup each copy can keep a different history:
+a week of dailies on the NAS, a year of monthlies off-site.
+
+Both run on the destination's **Maintenance Agent**: a connected agent that can reach the repository. It
+is required as soon as retention or the integrity check is on.
+
+## Retention
+
+Turn on **Enable retention** to run a scheduled `restic forget --prune` sweep on the destination.
+
+### Schedule
+
+Pick a preset or write a cron expression:
+
+| Preset | Cron |
+|---|---|
+| Every hour | `0 * * * *` |
+| Daily at 02:00 (default) | `0 2 * * *` |
+| Daily at midnight | `0 0 * * *` |
+| Weekly (Sunday) | `0 2 * * 0` |
+| Weekly (Monday) | `0 2 * * 1` |
+| Monthly | `0 2 1 * *` |
+
+Cron expressions use the standard five fields, or descriptors such as `@daily`.
+
+### Rules
+
+| Rule | Keeps |
+|---|---|
+| **Last** | the newest *n* snapshots |
+| **Hourly** | the newest snapshot of each of the last *n* hours that have one |
+| **Daily** | the newest snapshot of each of the last *n* days |
+| **Weekly** | the newest snapshot of each of the last *n* ISO weeks |
+| **Monthly** | the newest snapshot of each of the last *n* months |
+| **Yearly** | the newest snapshot of each of the last *n* years |
+
+The defaults are 7 daily, 4 weekly, 6 monthly and 1 yearly. Set a rule to 0 to turn it off.
+
+These are restic's `forget` rules:
+
+- A snapshot kept by more than one rule is kept once.
+- A rule that still has budget when it reaches the oldest snapshot keeps that one too, so as much history
+  as possible survives.
+
+### What a sweep touches
+
+A sweep runs once for each policy attached to the destination, on that policy's snapshots only (and
+separately for each of its command sources). Snapshots without a policy, such as imported ones or
+snapshots written by other tools, are never forgotten by Arkeep.
+
+A sweep needs the repository to itself: backups on the same destination wait for it, and it waits for
+them. Jobs that wait show **waiting**.
+
+A sweep fails if no policy is attached to the destination, if the repository password is unknown, or if
+no maintenance agent is set. A scheduled sweep is skipped, without recording a job, when the maintenance
+agent is offline.
+
+**Run Retention Now**, on the destination page, starts a sweep immediately.
+
+### Append-only destinations
+
+Turn on **Append-only destination** for storage where snapshots can only be added, never deleted: S3 with
+object lock, WORM storage, rest-server in `--append-only` mode. Retention cannot run on such a
+destination; integrity checks still do.
+
+## Integrity checks
+
+Turn on **Enable integrity check** to run a scheduled `restic check`, verifying that the repository is
+intact and its data still readable. It is **on by default for new destinations**: weekly on Sunday at
+03:00, reading 5% of the data.
+
+### Check depth
+
+| Mode | What it reads |
+|---|---|
+| **Structure only** | Repository structure and metadata. Fast. |
+| **Read a subset of the data** | Structure plus a percentage of the data on each run (**Data to Read per Run**, 1–100%). Different runs read different parts. |
+| **Read all data** | Everything. Slow and, on cloud storage, billed as download traffic. |
+
+### Schedule
+
+Presets: **Daily at 03:00**, **Weekly (Sunday)** (default, `0 3 * * 0`), **Monthly** (`0 3 1 * *`), or a
+cron expression. A check with no schedule only runs when you click **Run Check Now**.
+
+### Results
+
+The destination page shows **Last check: Passed** or **Failed**, with a link to the job. A failed check adds
+an **Integrity check failed** badge on the Destinations list and a banner on the Dashboard.
+
+Checks run on append-only destinations too. A check fails if the repository password is unknown (attach a
+policy or import the repository first). A scheduled check is skipped when the maintenance agent is offline.

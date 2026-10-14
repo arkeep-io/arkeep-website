@@ -1,0 +1,153 @@
+---
+import UiShot from './UiShot.astro';
+import NotifyFragment from './NotifyFragment.astro';
+---
+<section id="features" class="section features" data-snapshot="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <p class="eyebrow">Features</p>
+      <h2 id="features-title" class="display-lg">Built for the servers you already run</h2>
+      <p>Containers, databases, NAS boxes and a few Raspberry Pis. Arkeep backs them up the same way and tells you when something is off.</p>
+    </div>
+
+    <div class="bento">
+      <article class="card card--dark tile live" data-reveal>
+        <div class="text">
+          <h3 class="title-md">Know the moment it fails</h3>
+          <p>Live progress while restic runs. Email, signed webhooks and Healthchecks.io pings on success or failure.</p>
+        </div>
+        <NotifyFragment />
+      </article>
+
+      <article class="card tile docker" data-reveal style="--reveal-delay: 70ms">
+        <div class="text">
+          <h3 class="title-md">Docker volumes, discovered</h3>
+          <p>Arkeep lists containers and volumes on each host and follows them as services come and go.</p>
+        </div>
+        <div class="ui-card" data-ui>
+          <p class="ui-head">Add source <span>· web-01</span></p>
+          <ul class="volumes">
+            <li><span class="box checked" aria-hidden="true"></span>postgres_data<span class="meta">postgres:16</span></li>
+            <li><span class="box checked" aria-hidden="true"></span>nextcloud_html<span class="meta">nextcloud:29</span></li>
+            <li><span class="box" aria-hidden="true"></span>gitea_data<span class="meta">gitea:1.22</span></li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="card tile db" data-reveal style="--reveal-delay: 140ms">
+        <div class="text">
+          <h3 class="title-md">Databases straight into restic</h3>
+          <p>Stream <code translate="no">pg_dump</code> or <code translate="no">mysqldump</code> with a command source. No temp files on disk.</p>
+        </div>
+        <div class="ui-card" data-ui>
+          <table>
+            <thead><tr><th>Type</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>command</td><td><code translate="no">pg_dump -U app appdb</code></td></tr>
+              <tr><td>directory</td><td><code translate="no">/etc/postgresql</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card tile policy" data-reveal>
+        <div class="text">
+          <h3 class="title-md">One policy, many destinations</h3>
+          <p>3-2-1 without scripts: a NAS, a bucket and an offsite box, each with its own retention.</p>
+        </div>
+        <div class="crop-dock"><UiShot name="ui-policy-destinations" alt="The Destinations card of an Arkeep policy, listing NAS (local) and Offsite copy in order" /></div>
+      </article>
+
+      <article class="card tile browse" data-reveal style="--reveal-delay: 70ms">
+        <div class="text">
+          <h3 class="title-md">Browse a snapshot, restore a file</h3>
+          <p>Open any snapshot, walk its folders, download a file or a folder as ZIP, or restore a selection.</p>
+        </div>
+        <div class="crop-dock"><UiShot name="ui-snapshot-tree" alt="Arkeep snapshot browser showing the folders and files of a Postgres snapshot, with sizes" /></div>
+      </article>
+
+      <article class="card tile auth" data-reveal>
+        <div class="text">
+          <h3 class="title-md">Your login, your rules</h3>
+          <p>Sign in with your identity provider, require two-factor for everyone, and give auditors read-only accounts.</p>
+          <ul class="tags" aria-label="Supported">
+            <li>OIDC</li><li>Keycloak</li><li>Authentik</li><li>Zitadel</li><li>TOTP 2FA</li><li>Read-only users</li><li>Audit log</li>
+          </ul>
+        </div>
+        <div class="crop-dock"><UiShot name="ui-2fa" alt="Arkeep profile setting to enable two-factor authentication" /></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Asymmetric bento: tiles differ in width and height so no row reads as three equal cards. */
+  .bento {
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-base);
+    grid-template-areas:
+      'live live live live live live live docker docker docker docker docker'
+      'live live live live live live live db db db db db'
+      'policy policy policy policy policy browse browse browse browse browse browse browse'
+      'auth auth auth auth auth auth auth auth auth auth auth auth';
+  }
+  .live { grid-area: live; }
+  .docker { grid-area: docker; }
+  .db { grid-area: db; }
+  .policy { grid-area: policy; }
+  .browse { grid-area: browse; }
+  .auth { grid-area: auth; }
+
+  .tile { display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .text { padding: var(--space-lg); display: grid; gap: var(--space-xs); align-content: start; }
+  .text p { color: var(--body); font-size: 15px; line-height: 1.55; max-width: 52ch; }
+  .card--dark .text p { color: var(--on-dark-soft); }
+  .text code { font-size: 0.88em; }
+
+  /* Product fragments dock to the card's bottom-right edge and are cropped by it. */
+  .crop-dock, .ui-card {
+    margin: auto 0 0 var(--space-lg); background: var(--surface-card);
+    border: 1px solid var(--hairline-strong); border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-md); overflow: hidden;
+  }
+  /* GUI shots sit on the GUI's own page colour, inset like a window region. */
+  .crop-dock { background: var(--canvas); padding: var(--space-base) 0 0 var(--space-base); }
+  .ui-card { padding: var(--space-base) var(--space-md); font-size: 13px; display: grid; gap: var(--space-xs); background: var(--canvas-soft); }
+  .ui-head { font-weight: 600; font-size: 13px; }
+  .ui-head span { color: var(--body); font-weight: 400; }
+  .volumes { list-style: none; margin: 0; padding: 0; display: grid; }
+  .volumes li { display: flex; align-items: center; gap: var(--space-sm); padding: 8px 0; border-top: 1px solid var(--hairline); }
+  .volumes .meta { margin-left: auto; color: var(--body); font-size: 12px; }
+  .box { width: 14px; height: 14px; border: 1px solid var(--hairline-strong); border-radius: 4px; flex: none; background: var(--surface-card); }
+  .box.checked { background: var(--brand); border-color: var(--brand); box-shadow: inset 0 0 0 3px var(--surface-card); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--body); font-weight: 500; font-size: 12px; padding-bottom: 4px; }
+  td { padding: 8px var(--space-sm) 8px 0; border-top: 1px solid var(--hairline); white-space: nowrap; }
+  td code { font-size: 12px; }
+
+  .live .text { padding-bottom: var(--space-base); }
+
+  .auth { flex-direction: row; align-items: stretch; }
+  .auth .text { flex: 0 0 40%; padding-block: var(--space-xl); }
+  .auth .crop-dock { flex: 1; margin: var(--space-xl) 0 0 0; align-self: flex-end; }
+  .tags { list-style: none; margin: var(--space-sm) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tags li { padding: 4px 10px; border-radius: var(--radius-pill); background: var(--hairline-soft); font-size: 13px; color: var(--ink); }
+
+  @media (max-width: 1023px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas: 'live live' 'docker db' 'policy browse' 'auth auth';
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .live { flex-direction: row; }
+    .live .text { flex: 0 0 38%; padding-bottom: var(--space-lg); }
+    .live :global(.notify) { flex: 1; margin: var(--space-xl) 0 0 0; align-self: flex-end; }
+  }
+  @media (max-width: 767px) {
+    .bento { grid-template-columns: 1fr; grid-template-areas: 'live' 'docker' 'db' 'browse' 'policy' 'auth'; gap: var(--space-sm); }
+    .auth { flex-direction: column; }
+    .auth .text { padding-bottom: var(--space-lg); }
+    .auth .crop-dock { display: none; }
+    .text { padding: var(--space-md); }
+    .crop-dock, .ui-card { margin-left: var(--space-md); }
+  }
+</style>

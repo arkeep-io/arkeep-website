@@ -1,0 +1,137 @@
+---
+import { formatStars } from '../../lib/release';
+import { latestRelease, repoStars } from '../../lib/github-build';
+import NewTabIcon from './NewTabIcon.astro';
+import Icon from './Icon.astro';
+import { DISCUSSIONS_URL, DOCKER_HUB_URL, GITHUB_URL, ISSUES_URL, RELEASES_URL, SPONSORS_URL, isDocs, tabAttrs } from './links';
+
+const [release, stars] = await Promise.all([latestRelease(), repoStars()]);
+const year = new Date().getFullYear();
+const releaseDate = release
+  ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${release.date}T00:00:00Z`))
+  : null;
+
+const lists = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '/#features' },
+      { label: 'How it works', href: '/#how-it-works' },
+      { label: 'Retention', href: '/#retention' },
+      { label: 'Roadmap', href: '/#roadmap' },
+      { label: 'Install', href: '/#install' },
+    ],
+  },
+  {
+    title: 'Docs',
+    links: [
+      { label: 'Quickstart', href: '/docs/quickstart/' },
+      { label: 'Installation', href: '/docs/installation/docker-compose/' },
+      { label: 'Policies', href: '/docs/guides/policies/' },
+      { label: 'Architecture', href: '/docs/concepts/architecture/' },
+      { label: 'FAQ', href: '/docs/reference/faq/' },
+    ],
+  },
+];
+---
+<footer class="footer wrap" aria-labelledby="footer-title">
+  <h2 id="footer-title" class="visually-hidden">Arkeep project</h2>
+  <div class="tiles">
+    <div class="tile statement">
+      <p class="lead">Your infra’s Ark. Back up everything, keep it yours.</p>
+      <p class="small">Open source under Apache-2.0 · © {year} Arkeep contributors</p>
+    </div>
+
+    {lists.map((l) => (
+      <nav class="tile list" aria-label={l.title}>
+        <h3 class="small">{l.title}</h3>
+        <ul>
+          {l.links.map((link) => (
+            <li><a href={link.href} {...tabAttrs(link.href)}>{link.label}{isDocs(link.href) && <NewTabIcon />}</a></li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+
+    <div class="tile stat release">
+      <p class="small">Latest release</p>
+      <a class="big" href={release?.url ?? RELEASES_URL} {...tabAttrs(RELEASES_URL)} data-gh-release-link><span data-gh-release-tag>{release?.tag ?? 'All releases'}</span></a>
+      <p class="small"><time datetime={release?.date} data-gh-release-date>{releaseDate}</time></p>
+    </div>
+
+    <a class="tile stat stars" href={GITHUB_URL} {...tabAttrs(GITHUB_URL)}>
+      <span class="small">Star on GitHub</span>
+      <span class="big"><Icon name="github" size={24} /><span data-gh-stars data-empty="GitHub">{stars === null ? 'GitHub' : formatStars(stars)}</span></span>
+      <span class="small">arkeep-io/arkeep</span>
+    </a>
+
+    <div class="tile stat downloads">
+      <p class="small">Get it</p>
+      <ul>
+        <li><a href={DOCKER_HUB_URL} {...tabAttrs(DOCKER_HUB_URL)}>Docker Hub</a></li>
+        <li><a href={RELEASES_URL} {...tabAttrs(RELEASES_URL)}>Binaries</a></li>
+        <li><a href="/docs/installation/kubernetes/" {...tabAttrs('/docs/installation/kubernetes/')}>Helm chart<NewTabIcon /></a></li>
+      </ul>
+    </div>
+
+    <div class="tile stat community">
+      <p class="small">Questions and bugs</p>
+      <a class="big" href={DISCUSSIONS_URL} {...tabAttrs(DISCUSSIONS_URL)}>Discussions</a>
+      <a href={ISSUES_URL} {...tabAttrs(ISSUES_URL)}>Open an issue</a>
+    </div>
+
+    <div class="tile wordmark" aria-hidden="true">Arkeep</div>
+    <a class="tile sponsor" href={SPONSORS_URL} {...tabAttrs(SPONSORS_URL)}>
+      <span class="lead">Sponsor the work</span>
+      <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><path d="M10 38 38 10M16 10h22v22" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="square" /></svg>
+    </a>
+  </div>
+</footer>
+
+<style>
+  .footer { padding-block: var(--space-section) var(--gutter); }
+  .tiles { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-xs); }
+  .tile {
+    display: flex; flex-direction: column; gap: var(--space-sm); min-height: 200px; padding: var(--space-lg);
+    background: var(--hairline-soft); border-radius: var(--radius-md); color: var(--ink); text-decoration: none;
+  }
+  .statement { grid-column: span 6; justify-content: space-between; }
+  .list { grid-column: span 3; }
+  .stat { grid-column: span 3; justify-content: flex-end; min-height: 180px; }
+  .lead { font-size: clamp(1.25rem, 1rem + 0.8vw, 1.625rem); font-weight: 500; line-height: 1.25; letter-spacing: -0.02em; max-width: 24ch; }
+  .small { font-size: 14px; font-weight: 400; color: var(--body); }
+  .big { display: inline-flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; font-variant-numeric: tabular-nums; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
+  .tile a { color: var(--ink); text-decoration: none; transition: color 160ms ease; }
+  /* Same feedback as the release tile: only the big line takes the link colour. */
+  .tile a:hover, .stars:hover .big { color: var(--text-link); }
+  .stars .big { transition: color 160ms ease; }
+  .wordmark {
+    grid-column: span 8; min-height: 300px; background: var(--ink); color: var(--canvas);
+    font-weight: 600; font-size: clamp(4rem, 13vw, 11rem); letter-spacing: -0.05em; line-height: 1;
+    align-items: center; justify-content: center;
+  }
+  .tile.sponsor {
+    grid-column: span 4; min-height: 300px; background: var(--primary); color: var(--on-primary);
+    justify-content: space-between; transition: background-color 160ms ease;
+  }
+  .sponsor svg { align-self: flex-end; transition: transform 200ms ease; }
+  .tile.sponsor:hover { background: var(--primary-hover); color: var(--on-primary); }
+  .sponsor:hover svg { transform: translate(4px, -4px); }
+
+  @media (max-width: 1023px) {
+    .statement { grid-column: span 12; min-height: 160px; }
+    .list { grid-column: span 6; }
+    .stat { grid-column: span 6; }
+  }
+  @media (max-width: 639px) {
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .tile { min-height: 150px; padding: var(--space-md); }
+    .statement, .wordmark, .tile.sponsor { grid-column: span 2; }
+    .list, .stat { grid-column: span 1; }
+    .wordmark { min-height: 150px; order: -2; font-size: 24vw; }
+    .tile.sponsor { min-height: 140px; order: -1; }
+    .tile li a { display: inline-flex; min-height: 40px; align-items: center; }
+    ul { gap: 0; }
+  }
+</style>

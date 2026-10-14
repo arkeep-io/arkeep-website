@@ -1,0 +1,87 @@
+---
+title: How backups work
+description: Agents, destinations, policies, jobs and snapshots, and how they fit together.
+---
+
+Arkeep has five building blocks. Knowing how they relate makes the rest of the documentation
+read naturally.
+
+## The building blocks
+
+**Agent**
+: A small process on each machine you back up. It connects out to the server, receives jobs and
+  runs restic and rclone locally. It appears in the GUI on its own the first time it connects.
+  See [Agents](/docs/guides/agents/).
+
+**Destination**
+: Where backups are stored: a local path, an S3 bucket, an SFTP server, a restic REST server or
+  an Rclone remote. Each destination holds one restic repository. Retention and integrity checks
+  are configured on the destination. See [Destinations](/docs/guides/destinations/).
+
+**Policy**
+: What to back up and when: one agent, one or more sources (directories, Docker volumes, command
+  output), a schedule, and one or more destinations in priority order. See [Policies](/docs/guides/policies/).
+
+**Job**
+: One run of something: a backup, a restore, a retention sweep or an integrity check. Jobs carry
+  a status, per-destination results, progress and logs. See [Jobs](/docs/guides/jobs/).
+
+**Snapshot**
+: A restic snapshot created by a backup (or imported from an existing repository). You can browse,
+  download and restore from it. See [Snapshots and restore](/docs/guides/snapshots-and-restore/).
+
+## What happens when a policy runs
+
+1. The scheduler creates a **backup job** when the policy's schedule fires, or when an admin clicks
+   **Run Now**. If the previous run of the same policy is still going, the scheduled run is skipped.
+2. The server sends the job to the policy's agent over its open connection. If the agent is offline,
+   the job stays **pending** and is sent as soon as the agent reconnects.
+3. If another job is using one of the destinations in a way that cannot overlap (a retention sweep
+   or an integrity check needs the repository alone), the job shows **waiting** until it is free.
+4. The agent runs the **pre-backup hook**, if any. If it fails, the backup is aborted.
+5. The agent backs up to each destination **one after the other, in priority order**: one restic
+   backup for the directory and volume sources, plus one per command source.
+6. The agent runs the **post-backup hook**, if any. Its failure is reported but does not fail the job.
+7. The job ends as **succeeded** only if every destination succeeded. If one destination fails, the
+   others are still attempted and the job ends as **failed**, with the error on that destination.
+8. Arkeep records the new snapshots, reconciles its snapshot list with each repository, and sends
+   notifications.
+
+Retention never runs as part of a backup. Each destination has its own retention schedule, so a
+slow cloud destination never holds up a local one. See [Retention and integrity checks](/docs/guides/retention-and-checks/).
+
+## Repositories and passwords
+
+Every destination holds a single restic repository, and every policy writing to it shares that
+repository. Restic encrypts the repository with the **repository password** you set on the policy,
+so all policies that write to the same destination must use the same password.
+
+When you create a policy, Arkeep checks each selected destination:
+
+- if no repository exists yet, one is created by the first backup;
+- if a repository exists, the password you entered must open it, otherwise the policy is not saved.
+
+If a destination was set up by [importing an existing repository](/docs/guides/importing-and-sync/),
+its password is already stored and new policies can reuse it with **Use the destination's existing password**.
+
+:::caution
+Keep repository passwords somewhere safe, outside Arkeep. Without the password nobody, including
+Arkeep, can read the backups.
+:::
+
+## Tags and ownership
+
+Arkeep tags each snapshot with the policy that created it (`policy:<id>`, plus
+`policy:<id>:command:<name>` for command sources). Retention sweeps work tag by tag, so a sweep only
+ever forgets snapshots that belong to policies attached to the destination. Snapshots written by
+other tools, or imported without a policy, are listed and restorable but never pruned by Arkeep.
+
+## Your data outside Arkeep
+
+The repositories are plain restic repositories. If the Arkeep server is gone, you can still list and
+restore every snapshot with the `restic` command line and the repository password:
+
+```bash
+restic -r s3:s3.amazonaws.com/my-bucket/backups snapshots
+restic -r s3:s3.amazonaws.com/my-bucket/backups restore latest --target /tmp/restore
+```
