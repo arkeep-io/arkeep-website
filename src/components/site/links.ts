@@ -7,8 +7,10 @@ export const DOCKER_HUB_URL = 'https://hub.docker.com/repositories/arkeepio';
 export const GET_STARTED_URL = '/docs/installation/docker-compose/';
 
 export const navLinks = [
-  { label: 'Docs', href: '/docs/' },
+  { label: 'Features', href: '/#features' },
+  { label: 'How it works', href: '/#how-it-works' },
   { label: 'Roadmap', href: '/#roadmap' },
+  { label: 'Docs', href: '/docs/' },
   { label: 'GitHub', href: GITHUB_URL },
 ];
 

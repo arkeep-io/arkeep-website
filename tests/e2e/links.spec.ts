@@ -41,12 +41,12 @@ test('docs: external links open in a new tab, internal links stay', async ({ pag
   for (const a of all.filter((x) => x.href.startsWith('/docs'))) expect(a.target, a.href).toBeNull();
 });
 
-test('install sentence opens the guide in a new tab', async ({ page, context }) => {
+test('install guide opens in a new tab', async ({ page, context }) => {
   await page.goto('/');
-  await page.getByLabel('Platform').selectOption('kubernetes');
+  await page.locator('#install').getByRole('radio', { name: 'Kubernetes cluster' }).click();
   const [popup] = await Promise.all([
     context.waitForEvent('page'),
-    page.getByRole('button', { name: /tonight\./ }).click(),
+    page.locator('#install').getByRole('link', { name: /Open the Kubernetes cluster guide/ }).click(),
   ]);
   await expect(popup).toHaveURL(/\/docs\/installation\/kubernetes\/$/);
 });

@@ -43,16 +43,26 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="wrap"><Nav /></header>
+    <header class="site-header" data-header><Nav /></header>
     <main id="main"><slot /></main>
     <Footer />
     <script>
       import '../scripts/reveal.ts';
+      // A hairline under the sticky nav once the page has scrolled.
+      const header = document.querySelector<HTMLElement>('[data-header]');
+      const onScroll = () => header?.classList.toggle('scrolled', scrollY > 8);
+      addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
     </script>
   </body>
 </html>
 
 <style>
-  .skip { position: absolute; left: var(--margin); top: -100px; z-index: 10; padding: var(--space-3) var(--space-4); background: var(--ink); color: var(--canvas); border-radius: var(--radius-md); }
-  .skip:focus { top: var(--space-3); }
+  .skip { position: absolute; left: var(--gutter); top: -100px; z-index: 40; padding: var(--space-sm) var(--space-base); background: var(--ink); color: var(--canvas); border-radius: var(--radius-md); }
+  .skip:focus { top: var(--space-sm); }
+  .site-header {
+    position: sticky; top: 0; z-index: 30; background: var(--canvas);
+    border-bottom: 1px solid transparent; transition: border-color 200ms ease;
+  }
+  .site-header:global(.scrolled) { border-bottom-color: var(--hairline); }
 </style>

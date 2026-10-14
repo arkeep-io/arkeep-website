@@ -1,49 +1,69 @@
 ---
 import NewTabIcon from '../site/NewTabIcon.astro';
+import Icon from '../site/Icon.astro';
+import { NEW_TAB } from '../site/links';
 import { installTargets } from '../../lib/install';
 const first = installTargets[0];
 ---
-<section id="install" class="install wrap" data-snapshot="install" aria-labelledby="install-title">
-  <h2 id="install-title" class="visually-hidden">Install Arkeep</h2>
-  <form class="sentence-form" action={first.href} method="get" target="_blank" data-install data-reveal>
-    <p class="sentence">
-      Back up your
-      <label class="visually-hidden" for="platform">Platform</label>
-      <select id="platform" name="platform">
-        {installTargets.map((t) => <option value={t.id}>{t.label}</option>)}
-      </select>
-      <button type="submit" class="tonight">tonight.<NewTabIcon /></button>
-    </p>
-  </form>
-  <div class="command" data-reveal style="--reveal-delay: 90ms">
-    <pre translate="no"><code data-install-command>{first.command}</code></pre>
-    <button type="button" class="button button--quiet copy" data-copy>Copy</button>
-    <span class="visually-hidden" data-copy-status aria-live="polite"></span>
+<section id="install" class="section install" data-snapshot="install" aria-labelledby="install-title">
+  <div class="wrap">
+    <div class="band" data-install>
+      <div class="section-head" data-reveal>
+        <h2 id="install-title" class="display-lg">Back up your first server tonight</h2>
+        <p>Pick where Arkeep runs. Every command below comes from the install guide.</p>
+      </div>
+
+      <div class="console" data-reveal style="--reveal-delay: 90ms">
+        <div class="platforms" role="radiogroup" aria-label="Platform">
+          {installTargets.map((t, i) => (
+            <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-platform={t.id}>{t.label}</button>
+          ))}
+        </div>
+        <div class="command">
+          <div class="command-bar">
+            <span>Terminal</span>
+            <button type="button" class="copy" data-copy><Icon name="copy" /><span data-copy-label>Copy</span></button>
+            <span class="visually-hidden" data-copy-status aria-live="polite"></span>
+          </div>
+          <pre translate="no"><code data-install-command>{first.command}</code></pre>
+        </div>
+        <div class="actions">
+          <a class="button button--lg" href={first.href} {...NEW_TAB} data-install-link><span>Open the <span data-install-label>{first.label}</span> guide</span><NewTabIcon /></a>
+        </div>
+      </div>
+    </div>
   </div>
-  <p class="after" data-reveal style="--reveal-delay: 150ms">The button opens the matching install guide. Every command comes from the docs.</p>
 </section>
 
 <style>
-  .install { margin-top: var(--section-gap); }
-  .sentence { font-size: clamp(1.5rem, 1rem + 1.8vw, 2.25rem); font-weight: 500; letter-spacing: -0.02em; line-height: 1.5; }
-  select, .tonight {
-    font: inherit; letter-spacing: inherit; height: 1.4em; padding: 0 0.35em; border: 0; border-radius: var(--radius-md);
-    vertical-align: baseline; cursor: pointer; margin-inline: 0.12em;
+  .band { padding: clamp(48px, 7vw, 96px) 0; }
+  .console { max-width: 760px; margin-inline: auto; display: grid; gap: var(--space-base); justify-items: center; }
+  .platforms { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; background: var(--hairline-soft); border-radius: var(--radius-md); }
+  .platforms button {
+    min-height: 36px; padding: 0 var(--space-base); border: 0; border-radius: var(--radius-sm);
+    background: transparent; color: var(--body); font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
   }
-  select {
-    appearance: none; min-width: 7em; padding-right: 1.3em; background-color: var(--surface-strong); color: var(--ink);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23958d89' stroke-width='2'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 0.4em center; background-size: 0.45em;
+  .platforms button:hover { color: var(--ink); }
+  .platforms button[aria-checked='true'] { background: var(--surface-card); color: var(--ink); box-shadow: 0 1px 2px rgba(23, 16, 12, 0.08); }
+  /* DESIGN.md › code-block, with a bar for the copy action so it never covers the command. */
+  .command { width: 100%; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-dark); color: var(--on-dark); text-align: left; }
+  :global([data-theme='dark']) .command { border: 1px solid var(--hairline); }
+  .command-bar { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 var(--space-xs) 0 var(--space-md); background: var(--surface-dark-elevated); font-size: 12px; color: var(--on-dark-soft); }
+  .command pre { margin: 0; padding: var(--space-md); min-height: 88px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .copy {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 32px; padding: 0 var(--space-sm); border: 1px solid #3a312c; border-radius: var(--radius-md);
+    background: #201915; color: #ece7e3; font-size: 13px; cursor: pointer; transition: background-color 160ms ease;
   }
-  .tonight { background: var(--primary); color: var(--on-primary); transition: background-color 160ms ease; }
-  .tonight:hover { background: var(--primary-hover); }
-  .command { margin-top: var(--space-7); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-  pre { margin: 0; padding: var(--space-3) var(--space-4); background: var(--surface-muted); border-radius: var(--radius-md); font-size: 15px; overflow-x: auto; max-width: 100%; }
-  .after { margin-top: var(--space-4); font-size: var(--step-small); color: var(--muted); }
-  @media (max-width: 700px) {
-    .sentence { font-size: 1.5rem; }
-    select { display: block; width: 100%; margin-block: 0.15em; }
-    pre { font-size: 13px; }
+  .copy:hover { background: #2a221e; }
+  .copy svg { width: 14px; height: 14px; }
+  .actions { margin-top: var(--space-xs); }
+  @media (max-width: 639px) {
+    .platforms { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .platforms button { min-height: 44px; }
+    .command pre { font-size: 12px; }
+    .actions, .actions .button { width: 100%; }
   }
 </style>
 

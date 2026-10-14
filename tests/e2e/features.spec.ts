@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('six feature cells with real screenshots that follow the theme', async ({ page }) => {
+test('six feature tiles with real screenshots that follow the theme', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
-  const cells = page.locator('#features [data-cell]');
-  await expect(cells).toHaveCount(6);
+  await expect(page.locator('#features .tile')).toHaveCount(6);
   const light = page.locator('#features img[data-theme-img="light"]').first();
   await light.scrollIntoViewIfNeeded();
   await expect(light).toBeVisible();
@@ -13,11 +12,10 @@ test('six feature cells with real screenshots that follow the theme', async ({ p
   await expect(light).toBeHidden();
 });
 
-test('proof row names destinations in text and shows the restic command', async ({ page }) => {
+test('ecosystem strip names destinations in text', async ({ page }) => {
   await page.goto('/');
-  const proof = page.locator('#proof');
+  const strip = page.locator('#ecosystem');
   for (const n of ['S3', 'Backblaze B2', 'Cloudflare R2', 'MinIO', 'SFTP', 'Google Drive']) {
-    await expect(proof.getByText(n, { exact: true })).toBeVisible();
+    await expect(strip.getByText(n, { exact: true })).toBeVisible();
   }
-  await expect(proof.locator('code')).toContainText('restic -r');
 });

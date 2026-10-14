@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('sections reveal on scroll and nothing stays hidden', async ({ page }) => {
   await page.goto('/');
-  const target = page.locator('#features h2');
+  const target = page.locator('#features .section-head');
   await target.scrollIntoViewIfNeeded();
   await expect(target).toHaveClass(/is-in/);
   await expect(target).toHaveCSS('opacity', '1');

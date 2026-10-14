@@ -70,6 +70,23 @@ for (const theme of videoOnly ? [] : ['light', 'dark']) {
   await context.close();
 }
 
+// The phone in the hero mockup: the dashboard at an iPhone viewport, 3x for a sharp crop.
+for (const theme of videoOnly ? [] : ['light', 'dark']) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: theme,
+  });
+  await context.addInitScript((t) => localStorage.setItem('arkeep:color-mode', t), theme);
+  const page = await context.newPage();
+  await login(page);
+  await page.goto(`${BASE}/dashboard`);
+  await page.waitForLoadState('networkidle');
+  // On phones the GUI only applies the stored theme once the sidebar (NavUser) mounts; apply it here.
+  await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), theme === 'dark');
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: `${OUT}mobile-dashboard-${theme}.png` });
+  await context.close();
+}
+
 // One honest moving picture: the live log of a running job. Sign in on a separate context so the
 // recording starts on the job page instead of the login screen.
 const auth = await browser.newContext({ viewport: { width: 1200, height: 750 } });

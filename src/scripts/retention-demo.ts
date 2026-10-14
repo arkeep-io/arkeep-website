@@ -4,7 +4,7 @@ const root = document.querySelector<HTMLElement>('[data-retention]');
 if (root) {
   const END = new Date('2026-10-14T18:00:00Z'); // must match Showcase.astro
   const times = timeline(END, 30, 6);
-  const dots = [...root.querySelectorAll<HTMLElement>('.timeline .dot')];
+  const dots = [...root.querySelectorAll<HTMLElement>('.timeline .cell')];
   const count = root.querySelector<HTMLElement>('[data-retention-count]')!;
   const inputs = Object.fromEntries(
     [...root.querySelectorAll<HTMLInputElement>('input[type="number"]')].map((i) => [i.name, i]),
@@ -47,13 +47,26 @@ if (root) {
   }
 
   const radios = [...root.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
-  for (const radio of radios) {
-    radio.addEventListener('click', () => {
-      current = radio.dataset.dest!;
-      for (const r of radios) r.setAttribute('aria-checked', String(r === radio));
-      load();
-    });
-  }
+  const choose = (radio: HTMLButtonElement, focus = false) => {
+    current = radio.dataset.dest!;
+    for (const r of radios) {
+      r.setAttribute('aria-checked', String(r === radio));
+      r.tabIndex = r === radio ? 0 : -1;
+    }
+    if (focus) radio.focus();
+    load();
+  };
+  for (const radio of radios) radio.addEventListener('click', () => choose(radio));
+  // Radio group keyboard: arrows move and select.
+  root.querySelector('[role="radiogroup"]')!.addEventListener('keydown', (e) => {
+    const k = (e as KeyboardEvent).key;
+    const i = radios.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    const step = k === 'ArrowRight' || k === 'ArrowDown' ? 1 : k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    choose(radios[(i + step + radios.length) % radios.length], true);
+  });
 
   const more = root.querySelector<HTMLButtonElement>('[data-more-rules]');
   more?.addEventListener('click', () => {

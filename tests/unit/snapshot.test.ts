@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLog, formatBytes, snapshotId } from '../../src/lib/snapshot';
+import { backupLog, clock, formatBytes, restoreLog, snapshotId } from '../../src/lib/snapshot';
 
 describe('formatBytes', () => {
   it.each([
@@ -31,16 +31,35 @@ describe('snapshotId', () => {
   });
 });
 
-describe('buildLog', () => {
+describe('backupLog', () => {
   const files = [
     { path: '/arkeep.io/hero.html', bytes: 2048 },
     { path: '/arkeep.io/roadmap.html', bytes: 1024 },
   ];
-  it('reports totals and the snapshot per destination', () => {
-    const log = buildLog(files, 'a3f9c1d2', ['NAS (local)', 'Backblaze B2']);
-    expect(log).toContain('Files:           2 new,     0 changed,     0 unmodified');
-    expect(log).toContain('Added to the repository: 3.0 KiB');
-    expect(log.filter((l) => l === 'snapshot a3f9c1d2 saved')).toHaveLength(2);
-    expect(log[0]).toBe('[NAS (local)] open repository');
+  const dests = [
+    { name: 'NAS (local)', type: 'local' },
+    { name: 'Backblaze B2', type: 's3' },
+  ];
+  it('has a start block, one block per destination and a closing line', () => {
+    const blocks = backupLog(files, 'a3f9c1d2', dests);
+    expect(blocks).toHaveLength(4);
+    expect(blocks[0][1].msg).toBe('resolved 2 source(s), 0 command source(s)');
+    expect(blocks[3][0].msg).toBe('backup completed successfully');
+  });
+  it('reports the snapshot and the bytes added for each destination', () => {
+    const lines = backupLog(files, 'a3f9c1d2', dests).flat().map((l) => l.msg);
+    expect(lines.filter((m) => m.includes('(snapshot: a3f9c1d2, added: 3072 bytes)'))).toHaveLength(2);
+  });
+});
+
+describe('restoreLog', () => {
+  it('names the restored file', () => {
+    expect(restoreLog('/arkeep.io/hero.html', 'a3f9c1d2').map((l) => l.msg)).toContain('restoring /arkeep.io/hero.html');
+  });
+});
+
+describe('clock', () => {
+  it('formats like the GUI', () => {
+    expect(clock(new Date('2026-10-14T11:54:50Z'), 'UTC')).toBe('11:54:50 AM');
   });
 });

@@ -2,49 +2,71 @@ import { expect, test } from '@playwright/test';
 
 test('run, break and restore the page', async ({ page }) => {
   await page.goto('/');
-  const frag = page.locator('[data-backup]');
-  await frag.getByRole('button', { name: 'Run now' }).click();
-  await expect(frag.locator('[data-log]')).toContainText(/snapshot [0-9a-f]{8} saved/);
-  await frag.getByRole('button', { name: 'Break something' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0);
-  await frag.getByRole('button', { name: 'Restore' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Backups you can');
+  const app = page.locator('[data-backup]');
+  await page.getByRole('button', { name: 'Run backup' }).click();
+  await expect(app.locator('[data-log]')).toContainText('backup completed successfully');
+  await expect(app.locator('[data-log]')).toContainText(/\(snapshot: [0-9a-f]{8}, added: \d+ bytes\)/);
+  await page.getByRole('button', { name: 'Break the headline' }).click();
+  await expect(page.locator('#hero-title')).toHaveCount(0);
+  await expect(app.locator('[data-status]')).toContainText('Data lost');
+  await page.getByRole('button', { name: 'Restore it' }).click();
+  await expect(page.locator('#hero-title')).toContainText('Backups you can');
+  await expect(app.locator('[data-status]')).toContainText('Restored');
 });
 
-test('hero fragment survives out-of-order use', async ({ page }) => {
+test('destinations go pending, running, succeeded', async ({ page }) => {
   await page.goto('/');
-  const frag = page.locator('[data-backup]');
-  await expect(frag.getByRole('button', { name: 'Restore' })).toBeDisabled();
-  await expect(frag.getByRole('button', { name: 'Break something' })).toBeDisabled();
-  await frag.getByRole('button', { name: 'Run now' }).click();
-  await expect(frag.getByRole('button', { name: 'Break something' })).toBeEnabled();
-  await frag.getByRole('button', { name: 'Break something' }).click();
-  await expect(frag.getByRole('button', { name: 'Break something' })).toBeDisabled();
-  await expect(frag.getByRole('button', { name: 'Run now' })).toBeDisabled();
-  await frag.getByRole('button', { name: 'Restore' }).click();
-  await expect(frag.getByRole('button', { name: 'Run now' })).toBeEnabled();
-  await frag.getByRole('button', { name: 'Run now' }).click();
-  await expect(frag.locator('[data-readout]')).toContainText(/Last snapshot [0-9a-f]{8}/);
+  const rows = page.locator('[data-backup] [data-dest]');
+  await page.getByRole('button', { name: 'Run backup' }).click();
+  await expect(rows.nth(1)).toContainText('Pending');
+  await expect(rows.nth(0)).toContainText('Running');
+  await expect(rows.nth(1)).toContainText('Succeeded');
+  await expect(rows.nth(0)).toContainText('Succeeded');
 });
 
-test('no-js renders static fragments', async ({ browser, baseURL }) => {
+test('hero controls survive out-of-order use', async ({ page }) => {
+  await page.goto('/');
+  const run = page.getByRole('button', { name: 'Run backup' });
+  const brk = page.getByRole('button', { name: 'Break the headline' });
+  const restore = page.getByRole('button', { name: 'Restore it' });
+  await expect(restore).toBeDisabled();
+  await expect(brk).toBeDisabled();
+  await run.click();
+  await expect(brk).toBeEnabled();
+  await brk.click();
+  await expect(brk).toBeDisabled();
+  await expect(run).toBeDisabled();
+  await restore.click();
+  await expect(run).toBeEnabled();
+  await run.click();
+  await expect(page.locator('[data-backup] [data-readout]')).toContainText(/[0-9a-f]{8} · \d+ files/);
+});
+
+test('no-js renders the completed job', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ javaScriptEnabled: false });
   const page = await ctx.newPage();
   await page.goto(`${baseURL}/`);
-  await expect(page.locator('[data-backup] [data-log]')).toContainText('snapshot a3f9c1d2 saved');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.locator('[data-backup] [data-log]')).toContainText('backup completed successfully');
+  await expect(page.locator('#hero-title')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Run backup' })).toBeHidden();
   await ctx.close();
 });
 
 test('focus moves to the next meaningful action', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard flow');
   await page.goto('/');
-  const frag = page.locator('[data-backup]');
-  await frag.getByRole('button', { name: 'Run now' }).focus();
+  await page.getByRole('button', { name: 'Run backup' }).focus();
   await page.keyboard.press('Enter');
-  await expect(frag.getByRole('button', { name: 'Break something' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Break the headline' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(frag.getByRole('button', { name: 'Restore' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Restore it' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(frag.getByRole('button', { name: 'Break something' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Break the headline' })).toBeFocused();
+});
+
+test('phone frame shows the live job page without the sidebar', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone layout');
+  await page.goto('/');
+  await expect(page.locator('[data-backup] .sidebar')).toBeHidden();
+  await expect(page.locator('[data-backup] [data-log]')).toBeVisible();
 });

@@ -3,39 +3,83 @@ import { Image } from 'astro:assets';
 import mark from '../../assets/arkeep-mark.png';
 import ThemeToggle from './ThemeToggle.astro';
 import NewTabIcon from './NewTabIcon.astro';
+import Icon from './Icon.astro';
 import { GET_STARTED_URL, isDocs, navLinks, tabAttrs } from './links';
 ---
-<nav class="nav" aria-label="Main">
+<nav class="nav wrap" aria-label="Main">
   <a class="wordmark" href="/">
-    <Image src={mark} alt="" width={32} height={32} loading="eager" />
+    <Image src={mark} alt="" width={28} height={28} loading="eager" />
     <span>Arkeep</span>
   </a>
-  <ul class="links">
-    {navLinks.map((l) => <li><a href={l.href} {...tabAttrs(l.href)}>{l.label}{isDocs(l.href) && <NewTabIcon />}</a></li>)}
+  <ul class="links" id="nav-links">
+    {navLinks.map((l) => (
+      <li><a href={l.href} {...tabAttrs(l.href)}>{l.label}{isDocs(l.href) && <NewTabIcon />}</a></li>
+    ))}
   </ul>
   <div class="actions">
+    <a class="github" href={navLinks.at(-1)!.href} {...tabAttrs(navLinks.at(-1)!.href)} aria-label="Arkeep on GitHub"><Icon name="github" size={18} /></a>
     <ThemeToggle />
-    <a class="button" href={GET_STARTED_URL} {...tabAttrs(GET_STARTED_URL)}>Install Arkeep<NewTabIcon /></a>
+    <a class="button install" href={GET_STARTED_URL} {...tabAttrs(GET_STARTED_URL)}>Install Arkeep<NewTabIcon /></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links" data-menu>
+      <span class="visually-hidden">Menu</span>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+    </button>
   </div>
 </nav>
 
 <style>
-  .nav { display: flex; align-items: center; gap: var(--space-6); min-height: 72px; }
-  .wordmark { display: inline-flex; align-items: center; gap: var(--space-3); font-weight: 600; font-size: var(--step-body); letter-spacing: -0.01em; text-decoration: none; }
-  .wordmark img { width: 32px; height: 32px; border-radius: var(--radius-md); }
-  .links { display: flex; gap: var(--space-2); list-style: none; margin: 0 0 0 auto; padding: 0; }
-  .links a { color: var(--ink); display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-3); border-radius: var(--radius-md); font-size: var(--step-small); font-weight: 500; text-decoration: none; transition: background-color 160ms ease; }
-  .links a:hover { background: var(--surface-muted); }
-  .actions { display: flex; align-items: center; gap: var(--space-2); }
-  @media (max-width: 720px) {
-    .nav { gap: var(--space-3); }
-    .links li:nth-child(2) { display: none; }
-    .links { gap: 0; }
-    .links a { padding: 0 var(--space-2); }
-    .actions .button { padding: 0 var(--space-3); }
+  .nav { display: flex; align-items: center; gap: var(--space-xl); height: 64px; }
+  .wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; text-decoration: none; flex: none; }
+  .wordmark img { width: 28px; height: 28px; border-radius: var(--radius-sm); }
+  .links { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+  .links a {
+    display: inline-flex; align-items: center; min-height: 36px; white-space: nowrap; padding: 0 var(--space-sm);
+    border-radius: var(--radius-md); color: var(--body); font-size: 14px; font-weight: 500; text-decoration: none;
+    transition: color 160ms ease, background-color 160ms ease;
   }
-  @media (max-width: 420px) {
-    .links li:nth-child(3) { display: none; }
+  .links a:hover { color: var(--ink); background: var(--hairline-soft); }
+  /* GitHub sits as an icon in the actions on desktop. */
+  .links li:last-child { display: none; }
+  .actions { display: flex; align-items: center; gap: var(--space-xxs); margin-left: auto; }
+  .github, .menu {
+    display: inline-grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: var(--radius-md);
+    background: transparent; color: var(--ink); cursor: pointer; transition: background-color 160ms ease;
+  }
+  .github:hover, .menu:hover { background: var(--hairline-soft); }
+  .install { margin-left: var(--space-xs); }
+  .menu { display: none; }
+
+  @media (max-width: 1023px) {
+    .nav { gap: var(--space-sm); position: relative; }
+    .github { display: none; }
+    .menu { display: inline-grid; }
+    .install { padding-inline: 14px; }
+    .links {
+      display: none; position: absolute; top: 64px; left: var(--gutter); right: var(--gutter); z-index: 20;
+      flex-direction: column; padding: var(--space-xs); gap: 0;
+      background: var(--surface-card); border: 1px solid var(--hairline-strong); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+    .links.open { display: flex; }
+    .links li:last-child { display: block; }
+    .links a { width: 100%; min-height: 44px; font-size: 15px; color: var(--ink); }
+  }
+  @media (max-width: 400px) {
     .wordmark span { display: none; }
   }
 </style>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('[data-menu]');
+  const list = document.getElementById('nav-links');
+  if (btn && list) {
+    const set = (open: boolean) => {
+      btn.setAttribute('aria-expanded', String(open));
+      list.classList.toggle('open', open);
+    };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    list.addEventListener('click', (e) => { if ((e.target as Element).closest('a')) set(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
+    document.addEventListener('click', (e) => { if (!(e.target as Element).closest('.nav')) set(false); });
+  }
+</script>

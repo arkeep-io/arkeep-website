@@ -10,10 +10,22 @@ test('roadmap tabs switch with click and keyboard', async ({ page }) => {
   await expect(tabs.nth(3)).toHaveAttribute('aria-selected', 'true');
 });
 
-test('install sentence leads to the matching page', async ({ page }) => {
+test('install platform changes the command and the guide link', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Platform').selectOption('kubernetes');
-  await expect(page.locator('[data-install-command]')).toContainText('helm install');
-  const [popup] = await Promise.all([page.context().waitForEvent('page'), page.getByRole('button', { name: /tonight\./ }).click()]);
-  await expect(popup).toHaveURL(/\/docs\/installation\/kubernetes\/$/);
+  const install = page.locator('#install');
+  await install.getByRole('radio', { name: 'Kubernetes cluster' }).click();
+  await expect(install.locator('[data-install-command]')).toContainText('helm install');
+  const link = install.getByRole('link', { name: /Open the Kubernetes cluster guide/ });
+  await expect(link).toHaveAttribute('href', '/docs/installation/kubernetes/');
+  await expect(link).toHaveAttribute('target', '_blank');
+});
+
+test('install platforms move with arrow keys', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard flow');
+  await page.goto('/');
+  const radios = page.locator('#install').getByRole('radio');
+  await radios.first().click();
+  await page.keyboard.press('ArrowRight');
+  await expect(radios.nth(1)).toBeFocused();
+  await expect(radios.nth(1)).toHaveAttribute('aria-checked', 'true');
 });

@@ -21,105 +21,116 @@ const rules: { key: keyof RetentionPolicy; label: string; phone: boolean }[] = [
 ];
 const word = (key: string) => (key === 'last' ? 'last' : key);
 ---
-<section id="retention" class="showcase wrap" data-snapshot="showcase" aria-labelledby="retention-title">
-  <h2 id="retention-title" data-reveal>Retention you can see</h2>
-  <p class="intro" data-reveal style="--reveal-delay: 75ms">Pick what to keep per destination. Arkeep forgets the rest with restic’s own rules.</p>
-
-  <div class="panel" data-ui data-retention data-reveal style="--reveal-delay: 150ms">
-    <div class="demo">
-      <div class="dests" role="radiogroup" aria-label="Destination">
-        {Object.entries(DESTINATION_PRESETS).map(([key, d], i) => (
-          <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} data-dest={key}>{d.label}</button>
-        ))}
+<section id="retention" class="section" data-snapshot="retention" aria-labelledby="retention-title">
+  <div class="wrap">
+    <div class="band">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow">Retention</p>
+        <h2 id="retention-title" class="display-lg">See what you keep before you keep it</h2>
+        <p>Pick rules per destination. Arkeep applies them with restic’s own <code translate="no">forget</code>, so what you see is what stays.</p>
       </div>
-      <div class="timeline" aria-hidden="true">
-        <div class="grid">
-          {times.map((_, i) => <span class:list={['dot', { kept: keep[i] }]} data-i={i} />)}
-        </div>
-        <div class="axis"><span>30 days ago</span><span>Today</span></div>
-      </div>
-      <div class="legend" aria-hidden="true"><span class="dot kept" /> kept <span class="dot" /> forgotten</div>
-      <p class="count" data-retention-count aria-live="polite">Keeps {keptCount} of {times.length} snapshots</p>
-      <a class="text-link" href="/docs/guides/retention-and-checks/" {...NEW_TAB}>How retention works<NewTabIcon /></a>
-    </div>
 
-    <div class="controls">
-      {rules.map((r) => (
-        <div class:list={['rule', { 'phone-hidden': !r.phone }]}>
-          <label for={`keep-${r.key}`}>{r.label}</label>
-          <div class="stepper">
-            <button type="button" data-step="-1" data-key={r.key} aria-label={`Fewer ${word(r.key)}`}>−</button>
-            <input id={`keep-${r.key}`} type="number" inputmode="numeric" min="0" max="999" autocomplete="off" name={r.key} value={initial[r.key]} aria-label={r.label} />
-            <button type="button" data-step="1" data-key={r.key} aria-label={`More ${word(r.key)}`}>+</button>
+      <div class="panel" data-ui data-retention data-reveal style="--reveal-delay: 90ms">
+        <div class="demo">
+          <div class="dests" role="radiogroup" aria-label="Destination">
+            {Object.entries(DESTINATION_PRESETS).map(([key, d], i) => (
+              <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-dest={key}>{d.label}</button>
+            ))}
+          </div>
+          <div class="timeline" aria-hidden="true">
+            <div class="grid">
+              {times.map((_, i) => <span class:list={['cell', { kept: keep[i] }]} data-i={i} />)}
+            </div>
+            <div class="axis"><span>30 days ago</span><span>4 runs a day</span><span>Today</span></div>
+          </div>
+          <div class="foot">
+            <p class="count" data-retention-count aria-live="polite">Keeps {keptCount} of {times.length} snapshots</p>
+            <div class="legend" aria-hidden="true"><span><i class="cell kept"></i>kept</span><span><i class="cell"></i>forgotten</span></div>
           </div>
         </div>
-      ))}
-      <button type="button" class="more-rules" data-more-rules aria-expanded="false">More rules</button>
+
+        <div class="controls">
+          <p class="controls-title">Keep rules</p>
+          {rules.map((r) => (
+            <div class:list={['rule', { 'phone-hidden': !r.phone }]}>
+              <label for={`keep-${r.key}`}>{r.label}</label>
+              <div class="stepper">
+                <button type="button" data-step="-1" data-key={r.key} aria-label={`Fewer ${word(r.key)}`}>−</button>
+                <input id={`keep-${r.key}`} type="number" inputmode="numeric" min="0" max="999" autocomplete="off" name={r.key} value={initial[r.key]} aria-label={r.label} />
+                <button type="button" data-step="1" data-key={r.key} aria-label={`More ${word(r.key)}`}>+</button>
+              </div>
+            </div>
+          ))}
+          <button type="button" class="more-rules" data-more-rules aria-expanded="false">More rules</button>
+          <a class="text-link docs-link" href="/docs/guides/retention-and-checks/" {...NEW_TAB}>How retention works<NewTabIcon /></a>
+        </div>
+      </div>
     </div>
   </div>
-  <p class="note" data-reveal style="--reveal-delay: 200ms">Values are the per-destination settings Arkeep sends to <code translate="no">restic forget</code>.</p>
 </section>
 
 <style>
-  .showcase { margin-top: var(--section-gap); }
-  h2 { font-size: var(--step-h2); }
-  .intro { margin-top: var(--space-4); max-width: 52ch; font-size: var(--step-body); }
+  /* Section panel: the soft band Expo uses for its large feature blocks. */
+  .band { background: var(--surface-soft); border-radius: var(--radius-xxl); padding: clamp(40px, 6vw, 80px) clamp(16px, 4vw, 64px); }
+  .section-head code { font-size: 0.92em; }
   .panel {
-    margin-top: var(--space-8);
-    max-width: 1040px;
-    display: grid;
-    grid-template-columns: 62fr 38fr;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: var(--surface-muted);
-    font-size: 14px;
+    max-width: 1000px; margin-inline: auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+    background: var(--surface-card); border: 1px solid var(--hairline-strong); border-radius: var(--radius-lg);
+    font-size: 14px; overflow: hidden;
   }
-  .demo { background: var(--surface-card); padding: var(--space-7) var(--space-6); display: grid; gap: var(--space-5); align-content: space-between; }
-  .dests { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .demo { padding: var(--space-lg); display: grid; gap: var(--space-xl); align-content: center; }
+  .dests { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; justify-self: start; background: var(--hairline-soft); border-radius: var(--radius-md); }
   .dests button {
-    min-height: 36px; padding: 0 var(--space-3); border-radius: var(--radius-md);
-    border: 1px solid var(--hairline-strong); background: transparent; cursor: pointer; font-size: 14px;
+    min-height: 32px; padding: 0 var(--space-sm); border: 0; border-radius: var(--radius-sm);
+    background: transparent; color: var(--body); font-size: 13px; font-weight: 500; cursor: pointer;
     transition: background-color 160ms ease, color 160ms ease;
   }
-  .dests button:hover { background: var(--surface-muted); }
-  .dests button[aria-checked='true'] { background: var(--ink); color: var(--canvas); border-color: var(--ink); }
+  .dests button:hover { color: var(--ink); }
+  .dests button[aria-checked='true'] { background: var(--surface-card); color: var(--ink); box-shadow: 0 1px 2px rgba(23, 16, 12, 0.08); }
   /* Days run left to right (oldest first), the four daily runs top to bottom. */
-  .timeline { display: grid; gap: var(--space-2); }
-  .grid { display: grid; grid-template-columns: repeat(30, 1fr); grid-template-rows: repeat(4, auto); grid-auto-flow: column; gap: 4px; }
-  .axis { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
-  .dot { aspect-ratio: 1; border-radius: 3px; border: 1px solid var(--hairline-strong); transition: background-color 200ms ease, border-color 200ms ease; }
-  .dot.kept { background: var(--brand); border-color: var(--brand); }
-  .legend { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-  .legend .dot { display: inline-block; width: 12px; }
-  .legend .dot + .dot { margin-left: var(--space-3); }
-  .count { font-size: var(--step-lead); font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-  .controls { padding: var(--space-6) var(--space-5); display: grid; align-content: start; gap: 2px; }
-  .rule { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: var(--space-3); }
+  .timeline { display: grid; gap: var(--space-xs); }
+  .grid { display: grid; grid-template-columns: repeat(30, 1fr); grid-template-rows: repeat(4, auto); grid-auto-flow: column; gap: 3px; }
+  .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--body); }
+  .cell { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--hairline-soft); transition: background-color 200ms ease, transform 200ms ease; }
+  .cell.kept { background: var(--brand); }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-base); flex-wrap: wrap; }
+  .count { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: var(--space-base); font-size: 12px; color: var(--body); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .cell { width: 10px; }
+
+  .controls { padding: var(--space-lg) var(--space-md); display: grid; align-content: start; gap: 2px; border-left: 1px solid var(--hairline); background: var(--canvas-soft); }
+  .controls-title { font-size: 12px; font-weight: 600; color: var(--body); margin-bottom: var(--space-xs); }
+  .rule { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: var(--space-sm); }
   .rule label { font-size: 14px; }
   .stepper { display: inline-flex; align-items: center; border: 1px solid var(--hairline-strong); border-radius: var(--radius-md); background: var(--surface-card); }
-  .stepper button { width: 34px; height: 34px; border: 0; background: transparent; cursor: pointer; font-size: 16px; transition: transform 120ms ease, background-color 120ms ease; }
-  .stepper button:hover { background: var(--surface-muted); }
+  .stepper button { width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer; font-size: 16px; color: var(--body); border-radius: var(--radius-sm); transition: background-color 120ms ease, color 120ms ease; }
+  .stepper button:hover { background: var(--hairline-soft); color: var(--ink); }
   .stepper button:active { transform: scale(0.94); }
   .stepper input {
-    width: 3.2em; height: 34px; border: 0; background: transparent; text-align: center;
+    width: 3em; height: 32px; border: 0; background: transparent; text-align: center;
     font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield;
   }
   .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .more-rules { display: none; }
-  .note { margin-top: var(--space-4); font-size: var(--step-small); color: var(--muted); }
-  .note code { font-size: 0.95em; }
+  .docs-link { margin-top: var(--space-base); font-size: 14px; }
 
-  @media (max-width: 900px) {
+  @media (max-width: 860px) {
     .panel { grid-template-columns: 1fr; }
-    .demo, .controls { padding: var(--space-5); }
+    .controls { border-left: 0; border-top: 1px solid var(--hairline); }
     .rule { min-height: 52px; }
+    .stepper button { width: 44px; height: 44px; }
+    .stepper input { height: 44px; }
     .phone-hidden { display: none; }
     .controls.show-all .phone-hidden { display: flex; }
     .more-rules {
-      display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-2);
+      display: inline-flex; align-items: center; min-height: 44px; margin-top: var(--space-xxs);
       border: 0; background: transparent; color: var(--ink); font-weight: 500; cursor: pointer; padding: 0;
       text-decoration: underline; text-underline-offset: 0.25em;
     }
+    .grid { gap: 2px; }
+    .axis span:nth-child(2) { display: none; }
   }
 </style>
 
