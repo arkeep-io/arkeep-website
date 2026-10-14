@@ -1,73 +1,94 @@
 ---
-// Live notifications: a backup runs, then the channels fire. Event names and titles are the real ones
-// (docs › Webhook events, Healthchecks). Without JS it shows the end of a failed run.
-const staticEvents = [
-  { channel: 'Healthchecks.io', text: 'Ping /fail', detail: '200 OK', kind: 'bad' },
-  { channel: 'Webhook', text: 'job_failure · Backup failed: Web server', detail: 'signed', kind: 'bad' },
-  { channel: 'Email', text: 'Backup failed: Web server', detail: 'ops@example.com', kind: 'bad' },
-  { channel: 'Webhook', text: 'job_success · Backup completed: Postgres', detail: 'signed', kind: 'ok' },
+// The GUI's notification panel, live: a backup runs, its notification lands, and the channels it went
+// out on light up. Titles and sentences follow the real ones (docs › Webhook events).
+// Without JS it shows three finished runs.
+import Icon from '../site/Icon.astro';
+
+const CHANNELS = ['Email', 'Webhook', 'Healthchecks.io'];
+const staticItems = [
+  { kind: 'bad', title: 'Backup failed: Web server', text: 'Policy “Web server” failed: repository is already locked.', time: 'just now' },
+  { kind: 'ok', title: 'Backup completed: Postgres', text: 'Policy “Postgres” completed successfully.', time: '6 min ago' },
+  { kind: 'ok', title: 'Backup completed: Home NAS', text: 'Policy “Home NAS” completed successfully.', time: '1 h ago' },
 ];
 ---
-<div class="notify" data-ui data-notify>
-  <div class="run">
-    <div class="run-head">
-      <span class="run-name" data-run-name>Web server <span>· web-01</span></span>
-      <span class="state" data-run-state data-kind="bad">Failed</span>
-    </div>
-    <div class="bar" aria-hidden="true"><span data-bar style="transform: scaleX(0.63)"></span></div>
-    <p class="run-meta" data-run-meta>repository is already locked</p>
+<div class="panel" data-ui data-notify>
+  <div class="panel-head">
+    <span class="panel-title"><Icon name="bell" size={14} />Notifications</span>
+    <span class="unread-count" data-unread>3 new</span>
   </div>
-  <ol class="events" data-events aria-label="Notifications sent">
-    {staticEvents.map((e) => (
-      <li data-kind={e.kind}>
-        <span class="channel">{e.channel}</span>
-        <span class="text">{e.text}</span>
-        <span class="detail">{e.detail}</span>
+
+  <div class="run" aria-live="off">
+    <div class="run-row">
+      <span class="run-name" data-run-name>Postgres <span>on db-01</span></span>
+      <span class="run-state" data-run-state data-kind="idle">Next run in 6 h</span>
+    </div>
+    <div class="bar" aria-hidden="true"><span data-bar></span></div>
+  </div>
+
+  <ul class="items" data-events aria-label="Notifications">
+    {staticItems.map((it) => (
+      <li class="item" data-kind={it.kind}>
+        <span class="status" aria-hidden="true"></span>
+        <div class="body">
+          <p class="title">{it.title}</p>
+          <p class="text">{it.text}</p>
+          <p class="meta">
+            <span class="time">{it.time}</span>
+            {CHANNELS.map((c) => <span class="sent is-sent">{c}</span>)}
+          </p>
+        </div>
       </li>
     ))}
-  </ol>
+  </ul>
 </div>
 
 <style>
-  /* Always on a dark card: fixed dark-theme values so it reads the same in both themes. */
-  .notify {
-    --ok: #53be70; --bad: #ee343b; --run: #f66921; --line: #2a221e;
-    margin: auto 0 0 var(--space-lg); padding: var(--space-md); display: grid; gap: var(--space-base);
-    background: #120d0a; border: 1px solid var(--line); border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-md);
-    color: #ece7e3; font-size: 13px; min-height: 300px; align-content: start;
+  /* Lives on the dark tile in both themes, so it uses the GUI's dark values directly. */
+  .panel {
+    --ok: #53be70; --bad: #ee343b; --run: #f66921; --line: #2a221e; --soft: #aba39e;
+    margin: auto 0 0 var(--space-lg); display: flex; flex-direction: column; min-height: 320px;
+    background: #120d0a; border: 1px solid var(--line); border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-lg);
+    color: #ece7e3; font-size: 14px;
   }
-  .run { display: grid; gap: 8px; padding: var(--space-sm) var(--space-base); background: #17110e; border: 1px solid var(--line); border-radius: var(--radius-md); }
-  .run-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
-  .run-name { font-weight: 600; }
-  .run-name span { color: #aba39e; font-weight: 400; }
-  .state { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
-  .state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .state[data-kind='run'] { color: var(--run); }
-  .state[data-kind='ok'] { color: var(--ok); }
-  .state[data-kind='bad'] { color: var(--bad); }
-  .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-  .bar span { display: block; height: 100%; background: var(--run); transform-origin: left; transform: scaleX(0); }
-  .notify:has(.state[data-kind='ok']) .bar span { background: var(--ok); }
-  .notify:has(.state[data-kind='bad']) .bar span { background: var(--bad); }
-  .run-meta { color: #aba39e; font-size: 12px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-base) var(--space-md); border-bottom: 1px solid var(--line); }
+  .panel-title { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+  .unread-count { padding: 2px 8px; border-radius: var(--radius-pill); background: #291811; color: var(--run); font-size: 12px; font-weight: 500; }
 
-  .events { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .events :global(li) {
-    display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm);
-    padding: 8px var(--space-sm); border-radius: var(--radius-sm); background: #17110e; border-left: 2px solid var(--ok);
+  .run { padding: var(--space-sm) var(--space-md); display: grid; gap: 8px; border-bottom: 1px solid var(--line); }
+  .run-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-sm); }
+  .run-name { font-weight: 500; }
+  .run-name span { color: var(--soft); font-weight: 400; }
+  .run-state { color: var(--soft); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .run-state[data-kind='run'] { color: var(--run); }
+  .bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--run); transform-origin: left; transform: scaleX(0); }
+
+  .items { list-style: none; margin: 0; padding: var(--space-xs) 0; }
+  .items :global(.item) { display: flex; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); }
+  .items :global(.item + .item) { border-top: 1px solid var(--line); }
+  .items :global(.item.enter) { animation: enter 420ms cubic-bezier(.2,.7,.2,1); }
+  @keyframes enter { from { opacity: 0; transform: translateY(-8px); } }
+  /* Status mark: a filled circle with a check or a cross, like the GUI's job status. */
+  .items :global(.status) { flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; }
+  .items :global(.status)::before { content: ''; width: 10px; height: 10px; background: currentColor; }
+  .items :global(.item[data-kind='ok'] .status) { background: #142a1b; color: var(--ok); }
+  .items :global(.item[data-kind='bad'] .status) { background: #2c1214; color: var(--bad); }
+  .items :global(.item[data-kind='ok'] .status)::before { clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 22%, 86% 8%, 38% 72%); }
+  .items :global(.item[data-kind='bad'] .status)::before { clip-path: polygon(16% 0, 0 16%, 34% 50%, 0 84%, 16% 100%, 50% 66%, 84% 100%, 100% 84%, 66% 50%, 100% 16%, 84% 0, 50% 34%); }
+  .items :global(.body) { display: grid; gap: 2px; min-width: 0; }
+  .items :global(.title) { font-weight: 600; }
+  .items :global(.text) { color: var(--soft); font-size: 13px; }
+  .items :global(.meta) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+  .items :global(.time) { color: var(--soft); margin-right: 4px; }
+  .items :global(.sent) {
+    display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--radius-pill);
+    background: #1f1916; color: #807874; transition: color 240ms ease, background-color 240ms ease;
   }
-  .events :global(li[data-kind='bad']) { border-left-color: var(--bad); }
-  .events :global(li[data-kind='info']) { border-left-color: #807874; }
-  .events :global(li.enter) { animation: enter 360ms cubic-bezier(.2,.7,.2,1); }
-  @keyframes enter { from { opacity: 0; transform: translateY(-6px); } }
-  .events :global(.channel) { color: #aba39e; font-size: 12px; }
-  .events :global(.text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .events :global(.detail) { color: #aba39e; font-size: 12px; font-family: var(--font-mono); }
+  .items :global(.sent.is-sent) { background: #2a221e; color: #ece7e3; }
+  .items :global(.sent.is-sent)::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--ok); }
 
   @media (max-width: 767px) {
-    .notify { margin-left: var(--space-md); }
-    .events :global(li) { grid-template-columns: minmax(0, 1fr) auto; }
-    .events :global(.channel) { grid-column: 1 / -1; }
+    .panel { margin-left: var(--space-md); }
   }
 </style>
 

@@ -1,6 +1,5 @@
-// Loops two runs while on screen: one succeeds, one fails, and the notification channels fire for each.
-// Reduced motion keeps the static end state rendered by the server.
-type Kind = 'ok' | 'bad' | 'info';
+// Loops two runs while on screen: one succeeds, one fails. Each ends in a notification whose channels
+// are marked sent one by one. Reduced motion keeps the static panel rendered by the server.
 interface Run {
   policy: string;
   host: string;
@@ -12,15 +11,16 @@ const RUNS: Run[] = [
   { policy: 'Postgres', host: 'db-01', mib: 18 },
   { policy: 'Web server', host: 'web-01', mib: 42, failAt: 0.63, error: 'repository is already locked' },
 ];
-const MAX_EVENTS = 5;
+const CHANNELS = ['Email', 'Webhook', 'Healthchecks.io'];
+const TIMES = ['just now', '6 min ago', '1 h ago'];
 
 const root = document.querySelector<HTMLElement>('[data-notify]');
 if (root && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const name = root.querySelector<HTMLElement>('[data-run-name]')!;
   const state = root.querySelector<HTMLElement>('[data-run-state]')!;
   const bar = root.querySelector<HTMLElement>('[data-bar]')!;
-  const meta = root.querySelector<HTMLElement>('[data-run-meta]')!;
   const list = root.querySelector<HTMLElement>('[data-events]')!;
+  const unread = root.querySelector<HTMLElement>('[data-unread]')!;
   let visible = false;
   let started = false;
 
@@ -28,24 +28,32 @@ if (root && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   const untilVisible = async () => {
     while (!visible) await sleep(250);
   };
+  const el = (tag: string, cls: string, text = '') => Object.assign(document.createElement(tag), { className: cls, textContent: text });
 
-  function event(channel: string, text: string, detail: string, kind: Kind) {
-    const li = document.createElement('li');
-    li.dataset.kind = kind;
-    li.className = 'enter';
-    for (const [cls, value] of [['channel', channel], ['text', text], ['detail', detail]]) {
-      const s = document.createElement('span');
-      s.className = cls;
-      s.textContent = value;
-      li.append(s);
-    }
-    list.prepend(li);
-    while (list.children.length > MAX_EVENTS) list.lastElementChild!.remove();
+  function setRun(run: Run) {
+    name.replaceChildren(run.policy, el('span', '', ` on ${run.host}`));
   }
 
-  function setState(text: string, kind: 'run' | 'ok' | 'bad') {
-    state.textContent = text;
-    state.dataset.kind = kind;
+  function notification(run: Run): HTMLElement[] {
+    const ok = !run.failAt;
+    const li = el('li', 'item enter');
+    li.dataset.kind = ok ? 'ok' : 'bad';
+    const body = el('div', 'body');
+    const meta = el('p', 'meta');
+    meta.append(el('span', 'time', TIMES[0]));
+    const pills = CHANNELS.map((c) => el('span', 'sent', c));
+    meta.append(...pills);
+    body.append(
+      el('p', 'title', ok ? `Backup completed: ${run.policy}` : `Backup failed: ${run.policy}`),
+      el('p', 'text', ok ? `Policy “${run.policy}” completed successfully.` : `Policy “${run.policy}” failed: ${run.error}.`),
+      meta,
+    );
+    li.append(el('span', 'status'), body);
+    list.prepend(li);
+    while (list.children.length > TIMES.length) list.lastElementChild!.remove();
+    [...list.children].forEach((item, i) => (item.querySelector('.time')!.textContent = TIMES[i]));
+    unread.textContent = `${list.children.length} new`;
+    return pills;
   }
 
   async function progress(run: Run) {
@@ -56,7 +64,7 @@ if (root && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const frame = (now: number) => {
         const p = Math.min(1, (now - t0) / duration) * end;
         bar.style.transform = `scaleX(${p})`;
-        meta.textContent = `${Math.round(p * 100)}% · ${(p * run.mib).toFixed(1)} of ${run.mib.toFixed(1)} MiB · NAS (local)`;
+        state.textContent = `Running · ${Math.round(p * 100)}% · ${(p * run.mib).toFixed(1)} of ${run.mib} MiB`;
         if (p < end) requestAnimationFrame(frame);
         else done();
       };
@@ -66,33 +74,20 @@ if (root && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
   async function play(run: Run) {
     await untilVisible();
-    name.innerHTML = '';
-    name.append(run.policy, Object.assign(document.createElement('span'), { textContent: ` · ${run.host}` }));
-    setState('Running', 'run');
+    setRun(run);
+    state.dataset.kind = 'run';
     bar.style.transform = 'scaleX(0)';
-    event('Healthchecks.io', 'Ping /start', '200 OK', 'info');
     await progress(run);
-    if (run.failAt) {
-      setState('Failed', 'bad');
-      meta.textContent = run.error!;
-      const title = `Backup failed: ${run.policy}`;
-      await sleep(400);
-      event('Email', title, 'ops@example.com', 'bad');
-      await sleep(300);
-      event('Webhook', `job_failure · ${title}`, 'signed', 'bad');
-      await sleep(300);
-      event('Healthchecks.io', 'Ping /fail', '200 OK', 'bad');
-    } else {
-      setState('Succeeded', 'ok');
-      const title = `Backup completed: ${run.policy}`;
-      await sleep(400);
-      event('Email', title, 'ops@example.com', 'ok');
-      await sleep(300);
-      event('Webhook', `job_success · ${title}`, 'signed', 'ok');
-      await sleep(300);
-      event('Healthchecks.io', 'Ping', '200 OK', 'ok');
+    await sleep(300);
+    const pills = notification(run);
+    state.dataset.kind = 'idle';
+    state.textContent = run.failAt ? 'Failed · retry at next run' : 'Succeeded · next run in 6 h';
+    bar.style.transform = 'scaleX(0)';
+    for (const pill of pills) {
+      await sleep(380);
+      pill.classList.add('is-sent');
     }
-    await sleep(2600);
+    await sleep(3000);
   }
 
   new IntersectionObserver(([e]) => {

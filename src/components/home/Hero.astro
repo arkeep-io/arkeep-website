@@ -4,11 +4,11 @@ import BackupFragment from './BackupFragment.astro';
 import NewTabIcon from '../site/NewTabIcon.astro';
 import Icon from '../site/Icon.astro';
 import { GET_STARTED_URL, GITHUB_URL, newTab, RELEASES_URL } from '../site/links';
-import { getLatestRelease } from '../../lib/release';
+import { latestRelease } from '../../lib/github-build';
 import phoneLight from '../../assets/screens/mobile-dashboard-light.png';
 import phoneDark from '../../assets/screens/mobile-dashboard-dark.png';
 
-const release = await getLatestRelease();
+const release = await latestRelease();
 ---
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap copy-wrap">

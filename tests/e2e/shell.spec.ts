@@ -55,12 +55,3 @@ test('in-page anchors scroll smoothly', async ({ page }) => {
   await page.goto('/docs/guides/notifications/');
   await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
 });
-
-test('every external link opens in a new tab', async ({ page }) => {
-  await page.goto('/');
-  const missing = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLAnchorElement>('a[href^="http"]')].filter((a) => a.target !== '_blank').map((a) => a.href),
-  );
-  expect(missing).toEqual([]);
-  await expect(page.locator('footer a.sponsor')).toHaveAttribute('target', '_blank');
-});

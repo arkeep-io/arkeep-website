@@ -5,9 +5,10 @@ import ThemeToggle from './ThemeToggle.astro';
 import NewTabIcon from './NewTabIcon.astro';
 import Icon from './Icon.astro';
 import { GET_STARTED_URL, GITHUB_URL, isDocs, navLinks, tabAttrs } from './links';
-import { formatStars, getRepoStars } from '../../lib/release';
+import { formatStars } from '../../lib/release';
+import { repoStars } from '../../lib/github-build';
 
-const stars = await getRepoStars();
+const stars = await repoStars();
 const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${stars.toLocaleString('en')} stars`;
 ---
 <nav class="nav wrap" aria-label="Main">

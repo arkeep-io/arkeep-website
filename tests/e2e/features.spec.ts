@@ -20,21 +20,20 @@ test('ecosystem strip names destinations in text', async ({ page }) => {
   }
 });
 
-test('notifications fragment runs a job and sends events', async ({ page }) => {
+test('notifications panel runs a job and sends its notification', async ({ page }) => {
   await page.goto('/');
-  const notify = page.locator('[data-notify]');
-  await notify.scrollIntoViewIfNeeded();
-  await expect(notify.locator('[data-run-state]')).toHaveText('Running');
-  await expect(notify.locator('[data-events] li').first()).toContainText('Healthchecks.io');
-  await expect(notify.locator('[data-run-state]')).toHaveText('Succeeded', { timeout: 8000 });
-  await expect(notify.locator('[data-events]')).toContainText('Backup completed: Postgres');
+  const panel = page.locator('[data-notify]');
+  await panel.scrollIntoViewIfNeeded();
+  await expect(panel.locator('[data-run-state]')).toContainText('Running');
+  await expect(panel.locator('[data-events] .item').first()).toContainText('Backup completed: Postgres', { timeout: 8000 });
+  await expect(panel.locator('[data-events] .item').first().locator('.sent.is-sent')).toHaveCount(3, { timeout: 4000 });
 });
 
-test('notifications fragment shows a finished run without JS', async ({ browser, baseURL }) => {
+test('notifications panel shows finished runs without JS', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ javaScriptEnabled: false });
   const page = await ctx.newPage();
   await page.goto(`${baseURL}/`);
-  await expect(page.locator('[data-notify] [data-run-state]')).toHaveText('Failed');
-  await expect(page.locator('[data-notify] [data-events] li')).toHaveCount(4);
+  await expect(page.locator('[data-notify] [data-events] .item')).toHaveCount(3);
+  await expect(page.locator('[data-notify] [data-events]')).toContainText('Backup failed: Web server');
   await ctx.close();
 });
