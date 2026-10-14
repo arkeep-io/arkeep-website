@@ -442,7 +442,8 @@ Generous editorial pacing. The warm canvas does not compete with the hero's warm
 | Dark inversion | `{colors.surface-dark}` (#17110e) | Dark feature cards, code blocks, featured pricing |
 
 ### Decorative Depth
-- **Warm-peach gradient backdrop** in the hero only — atmospheric depth without claiming to be a brand color.
+- **Warm-peach gradient backdrop** in the hero only — atmospheric depth without claiming to be a brand color. It fades out well before the hero ends, so the next section never cuts it.
+- **Snapshot-cell field** behind the hero copy: a grid of 10px cells (`{colors.hairline}`) like the retention timeline. Now and then a cell is "kept" in `{colors.brand}` and fades; a backup run sweeps a wave across, a restore ripples out from the headline in `{colors.semantic-success}`. Masked to a soft ellipse; still under reduced motion.
 - **Device mockup composite** as page chrome — MacBook + iPhone showing real Arkeep surfaces.
 
 ## Shapes

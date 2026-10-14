@@ -93,6 +93,7 @@ if (app && tryBox) {
       }
       append(rest.at(-1)!);
       saved = { id, html };
+      dispatchEvent(new CustomEvent('arkeep:backup'));
       readout.textContent = `${id} · ${files.length} files · ${added}`;
       pill(status, 'ok', 'Succeeded');
       note.textContent = `Snapshot ${id} saved to both destinations. Now break something.`;
@@ -107,25 +108,43 @@ if (app && tryBox) {
     (brk.disabled ? run : brk).focus();
   });
 
+  // The headline sits above the devices, usually off screen by now: bring it into view so the visitor
+  // sees it go, and offer the way back right inside the gap it leaves.
+  const reveal = (el: HTMLElement) => el.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+
   brk.addEventListener('click', () => {
     const target = document.querySelector<HTMLElement>('[data-snapshot="hero"]');
     if (!target || !saved) return;
     target.style.minHeight = `${target.offsetHeight}px`; // keep the layout still while content is gone
-    target.innerHTML = '<p class="missing">hero.html is gone. Restore it from the snapshot.</p>';
+    const gap = document.createElement('div');
+    gap.className = 'missing';
+    const msg = document.createElement('p');
+    msg.textContent = 'hero.html is gone.';
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'button';
+    back.textContent = `Restore from snapshot ${saved.id}`;
+    back.addEventListener('click', () => void doRestore());
+    gap.append(msg, back);
+    target.replaceChildren(gap);
     broken = target;
     pill(status, 'broken', 'Data lost');
     append([{ level: 'WARN', msg: '/arkeep.io/hero.html deleted on web-01' }]);
     note.textContent = 'The headline is gone. Restore it from the snapshot.';
     sync();
-    restore.focus();
+    reveal(target);
+    back.focus({ preventScroll: true });
   });
 
-  restore.addEventListener('click', async () => {
-    if (!broken || !saved) return;
+  async function doRestore() {
+    if (!broken || !saved || busy) return;
     busy = true;
     sync();
-    const name = broken.dataset.snapshot!;
+    const target = broken;
+    const name = target.dataset.snapshot!;
     pill(status, 'running', 'Restoring');
+    target.querySelector<HTMLButtonElement>('.missing .button')?.setAttribute('disabled', '');
+    reveal(target);
     try {
       for (const line of restoreLog(`/arkeep.io/${name}.html`, saved.id)) {
         append([line]);
@@ -133,16 +152,19 @@ if (app && tryBox) {
       }
     } finally {
       // Whatever happens to the log, the page gets its content back.
-      broken.innerHTML = saved.html.get(name)!;
-      broken.style.minHeight = '';
+      target.innerHTML = saved.html.get(name)!;
+      target.style.minHeight = '';
       broken = null;
       pill(status, 'ok', 'Restored');
       note.textContent = `Restored from snapshot ${saved.id}. That’s the whole point.`;
       busy = false;
       sync();
+      const box = target.querySelector('h1')?.getBoundingClientRect();
+      if (box) dispatchEvent(new CustomEvent('arkeep:restore', { detail: { x: box.left + box.width / 2, y: box.top + box.height / 2 } }));
     }
-    brk.focus();
-  });
+    brk.focus({ preventScroll: true });
+  }
+  restore.addEventListener('click', () => void doRestore());
 
   sync();
 }

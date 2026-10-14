@@ -59,9 +59,22 @@ test('focus moves to the next meaningful action', async ({ page, isMobile }) => 
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Break the headline' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: 'Restore it' })).toBeFocused();
+  await expect(page.getByRole('button', { name: /Restore from snapshot [0-9a-f]{8}/ })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Break the headline' })).toBeFocused();
+});
+
+test('breaking the headline brings it into view with the way back inside', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Run backup' }).click();
+  const brk = page.getByRole('button', { name: 'Break the headline' });
+  await expect(brk).toBeEnabled();
+  await brk.click();
+  const back = page.getByRole('button', { name: /Restore from snapshot/ });
+  await expect(back).toBeInViewport();
+  await back.click();
+  await expect(page.locator('#hero-title')).toBeInViewport();
+  await expect(page.locator('[data-backup] [data-status]')).toContainText('Restored');
 });
 
 test('phone frame shows the live job page without the sidebar', async ({ page, isMobile }) => {
