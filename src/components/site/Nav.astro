@@ -30,7 +30,7 @@ const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${sta
     <a class="button install" href={GET_STARTED_URL} {...tabAttrs(GET_STARTED_URL)}>Install Arkeep<NewTabIcon /></a>
     <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links" data-menu>
       <span class="visually-hidden">Menu</span>
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="bar-top" d="M4 8h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path class="bar-bottom" d="M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
     </button>
   </div>
 </nav>
@@ -67,13 +67,28 @@ const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${sta
     .github { display: none; }
     .menu { display: inline-grid; }
     .install { padding-inline: 14px; }
+    /* Install first, then the theme switch, then the menu. */
+    .install { order: 1; margin-left: 0; }
+    .actions > :global(.theme-toggle) { order: 2; }
+    .menu { order: 3; }
+    /* The menu drops in and out: hidden with visibility (out of the tab order and the a11y tree)
+       only after the fade has finished. */
     .links {
-      display: none; position: absolute; top: 64px; left: var(--gutter); right: var(--gutter); z-index: 20;
+      display: flex; position: absolute; top: 64px; left: var(--gutter); right: var(--gutter); z-index: 20;
       flex-direction: column; padding: var(--space-xs); gap: 0;
       background: var(--surface-card); border: 1px solid var(--hairline-strong); border-radius: var(--radius-lg);
       box-shadow: var(--shadow-soft);
+      opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.98); transform-origin: top right;
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2,.7,.2,1), visibility 0s linear 220ms;
     }
-    .links.open { display: flex; }
+    .links.open {
+      opacity: 1; visibility: visible; transform: none;
+      transition: opacity 180ms ease, transform 220ms cubic-bezier(.2,.7,.2,1), visibility 0s;
+    }
+    /* Two bars fold into an X while the menu is open. */
+    .menu svg path { transition: transform 220ms cubic-bezier(.2,.7,.2,1); transform-origin: center; transform-box: fill-box; }
+    .menu[aria-expanded='true'] .bar-top { transform: translateY(4px) rotate(45deg); }
+    .menu[aria-expanded='true'] .bar-bottom { transform: translateY(-4px) rotate(-45deg); }
     .links li:last-child { display: block; }
     .links a { width: 100%; min-height: 44px; font-size: 15px; color: var(--ink); }
   }
