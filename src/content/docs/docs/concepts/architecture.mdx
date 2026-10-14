@@ -3,26 +3,9 @@ title: Architecture
 description: How the Arkeep server, agents and GUI fit together, and how retention works.
 ---
 
-```
-┌─────────────────────────────────────────┐
-│              Arkeep Server              │
-│  ┌──────────┐  ┌──────────────────────┐ │
-│  │ REST API │  │     gRPC Server      │ │
-│  │  :8080   │  │       :9090          │ │
-│  └──────────┘  └──────────────────────┘ │
-│  ┌────────────────────────────────────┐ │
-│  │ Scheduler│Auth│DB│Notif│WebSocket  │ │
-│  └────────────────────────────────────┘ │
-└─────────────────────────────────────────┘
-         ▲                  ▲
-         │ REST/WS          │ gRPC (persistent, Pull)
-         │                  │
-    ┌────┴────┐      ┌──────┴──────┐
-    │   GUI   │      │   Agent(s)  │
-    │  (PWA)  │      │  (one per   │
-    └─────────┘      │   machine)  │
-                     └─────────────┘
-```
+import ArchitectureDiagram from '../../../../components/docs/ArchitectureDiagram.astro';
+
+<ArchitectureDiagram />
 
 **Server** exposes a REST API for the GUI (port 8080) and a gRPC server for agents (port 9090). It handles scheduling, notifications, and stores all state in SQLite (default) or PostgreSQL.
 

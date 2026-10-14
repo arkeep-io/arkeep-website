@@ -1,0 +1,115 @@
+---
+// Architecture diagram for the docs, drawn as inline SVG so it uses the site tokens, follows the theme
+// and stays real text. Content mirrors the Architecture page: GUI ↔ server over REST/WebSocket, agents
+// dial out to the server over gRPC (pull model), agents write to destinations with restic/rclone.
+const agents = [
+  { name: 'web-01', y: 96 },
+  { name: 'db-01', y: 196 },
+  { name: 'nas-01', y: 296 },
+];
+const modules = ['Scheduler', 'Auth', 'Notifications', 'WebSocket'];
+const destinations = ['NAS · local disk', 'S3 · B2 · R2', 'SFTP', 'rest-server', 'Rclone remotes'];
+---
+<figure class="arch not-content">
+  <div class="scroll">
+    <svg viewBox="0 0 1060 440" role="img" aria-labelledby="arch-title arch-desc">
+      <title id="arch-title">Arkeep architecture</title>
+      <desc id="arch-desc">
+        The browser GUI talks to the Arkeep server over REST and WebSocket on port 8080. The server runs the
+        scheduler, auth, notifications and WebSocket hub and stores state in SQLite or PostgreSQL. Each agent opens
+        an outbound gRPC stream to the server on port 9090, so agents work behind NAT. Agents run restic and rclone
+        to write to destinations such as a NAS, S3-compatible storage, SFTP, rest-server and rclone remotes.
+      </desc>
+      <defs>
+        <marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 10 5 0 10z" class="head" />
+        </marker>
+        <marker id="arch-arrow-brand" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0 10 5 0 10z" class="head brand" />
+        </marker>
+      </defs>
+
+      <!-- GUI -->
+      <rect class="box" x="20" y="96" width="150" height="88" rx="12" />
+      <text class="title" x="40" y="128">GUI</text>
+      <text class="sub" x="40" y="150">Vue 3 PWA</text>
+      <text class="sub" x="40" y="168">in your browser</text>
+
+      <line class="link" x1="170" y1="140" x2="268" y2="140" marker-end="url(#arch-arrow)" marker-start="url(#arch-arrow)" />
+      <text class="label" x="219" y="128" text-anchor="middle">REST · WS</text>
+      <text class="label mono" x="219" y="160" text-anchor="middle">:8080</text>
+
+      <!-- Server -->
+      <rect class="box server" x="270" y="40" width="320" height="370" rx="16" />
+      <text class="title" x="294" y="76">Arkeep server</text>
+      <text class="sub" x="294" y="96">one binary or container, serves the GUI</text>
+
+      <rect class="chip accent" x="294" y="120" width="130" height="34" rx="8" />
+      <text class="chip-text" x="359" y="142" text-anchor="middle">REST API :8080</text>
+      <rect class="chip accent" x="436" y="120" width="130" height="34" rx="8" />
+      <text class="chip-text" x="501" y="142" text-anchor="middle">gRPC :9090</text>
+
+      {modules.map((m, i) => (
+        <>
+          <rect class="chip" x={294 + (i % 2) * 142} y={176 + Math.floor(i / 2) * 44} width="130" height="34" rx="8" />
+          <text class="chip-text" x={359 + (i % 2) * 142} y={198 + Math.floor(i / 2) * 44} text-anchor="middle">{m}</text>
+        </>
+      ))}
+
+      <!-- Database cylinder -->
+      <path class="db" d="M340 292v64c0 11 40 20 90 20s90-9 90-20v-64" />
+      <ellipse class="db" cx="430" cy="292" rx="90" ry="20" />
+      <text class="chip-text" x="430" y="340" text-anchor="middle">SQLite or PostgreSQL</text>
+
+      <!-- Agents, inside your network -->
+      <rect class="zone" x="660" y="40" width="210" height="370" rx="16" />
+      <text class="zone-label" x="680" y="66">Your machines</text>
+      <text class="zone-sub" x="680" y="84">behind NAT is fine</text>
+      {agents.map((a) => (
+        <>
+          <rect class="box" x="680" y={a.y + 4} width="170" height="72" rx="12" />
+          <text class="title small" x="698" y={a.y + 34}>{a.name}</text>
+          <text class="sub" x="698" y={a.y + 56}>agent · restic · rclone</text>
+          <line class="link strong" x1="680" y1={a.y + 40} x2="592" y2={a.y + 40} marker-end="url(#arch-arrow-brand)" />
+          <line class="link" x1="850" y1={a.y + 40} x2="902" y2={a.y + 40} marker-end="url(#arch-arrow)" />
+        </>
+      ))}
+      <text class="label" x="624" y="124" text-anchor="middle">gRPC</text>
+      <text class="label" x="624" y="384" text-anchor="middle">opened by</text>
+      <text class="label" x="624" y="400" text-anchor="middle">the agent</text>
+
+      <!-- Destinations -->
+      <rect class="box" x="904" y="96" width="136" height="276" rx="12" />
+      <text class="title small" x="922" y="126">Destinations</text>
+      {destinations.map((d, i) => <text class="sub" x="922" y={160 + i * 40}>{d}</text>)}
+    </svg>
+  </div>
+  <figcaption>Agents always dial out to the server; the server never connects to an agent.</figcaption>
+</figure>
+
+<style>
+  .arch { margin: 1.5rem 0 2rem; }
+  /* On narrow screens the diagram keeps a readable size and scrolls sideways. */
+  .scroll { overflow-x: auto; border: 1px solid var(--hairline-strong); border-radius: var(--radius-lg); background: var(--canvas-soft); }
+  svg { display: block; width: 100%; min-width: 720px; height: auto; font-family: var(--font-sans); }
+  .box { fill: var(--surface-card); stroke: var(--hairline-strong); stroke-width: 1; }
+  .server { stroke: var(--muted); }
+  .zone { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 6 5; }
+  .chip { fill: var(--hairline-soft); }
+  .chip.accent { fill: var(--accent-soft); }
+  .db { fill: var(--hairline-soft); stroke: var(--hairline-strong); }
+  .title { fill: var(--ink); font-size: 17px; font-weight: 600; }
+  .title.small { font-size: 15px; }
+  .sub { fill: var(--body); font-size: 13px; }
+  .chip-text { fill: var(--ink); font-size: 13px; font-weight: 500; }
+  .chip.accent + .chip-text { fill: var(--on-accent-soft); }
+  .zone-label { fill: var(--ink); font-size: 13px; font-weight: 600; }
+  .zone-sub { fill: var(--body); font-size: 12px; }
+  .label { fill: var(--body); font-size: 12px; }
+  .mono { font-family: var(--font-mono); }
+  .link { stroke: var(--muted); stroke-width: 1.5; }
+  .link.strong { stroke: var(--brand); stroke-width: 2; }
+  .head { fill: var(--muted); }
+  .head.brand { fill: var(--brand); }
+  figcaption { margin-top: 0.5rem; font-size: 0.875rem; color: var(--body); }
+</style>
