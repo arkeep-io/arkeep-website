@@ -1,0 +1,76 @@
+---
+// Live notifications: a backup runs, then the channels fire. Event names and titles are the real ones
+// (docs › Webhook events, Healthchecks). Without JS it shows the end of a failed run.
+const staticEvents = [
+  { channel: 'Healthchecks.io', text: 'Ping /fail', detail: '200 OK', kind: 'bad' },
+  { channel: 'Webhook', text: 'job_failure · Backup failed: Web server', detail: 'signed', kind: 'bad' },
+  { channel: 'Email', text: 'Backup failed: Web server', detail: 'ops@example.com', kind: 'bad' },
+  { channel: 'Webhook', text: 'job_success · Backup completed: Postgres', detail: 'signed', kind: 'ok' },
+];
+---
+<div class="notify" data-ui data-notify>
+  <div class="run">
+    <div class="run-head">
+      <span class="run-name" data-run-name>Web server <span>· web-01</span></span>
+      <span class="state" data-run-state data-kind="bad">Failed</span>
+    </div>
+    <div class="bar" aria-hidden="true"><span data-bar style="transform: scaleX(0.63)"></span></div>
+    <p class="run-meta" data-run-meta>repository is already locked</p>
+  </div>
+  <ol class="events" data-events aria-label="Notifications sent">
+    {staticEvents.map((e) => (
+      <li data-kind={e.kind}>
+        <span class="channel">{e.channel}</span>
+        <span class="text">{e.text}</span>
+        <span class="detail">{e.detail}</span>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  /* Always on a dark card: fixed dark-theme values so it reads the same in both themes. */
+  .notify {
+    --ok: #53be70; --bad: #ee343b; --run: #f66921; --line: #2a221e;
+    margin: auto 0 0 var(--space-lg); padding: var(--space-md); display: grid; gap: var(--space-base);
+    background: #120d0a; border: 1px solid var(--line); border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-md);
+    color: #ece7e3; font-size: 13px; min-height: 300px; align-content: start;
+  }
+  .run { display: grid; gap: 8px; padding: var(--space-sm) var(--space-base); background: #17110e; border: 1px solid var(--line); border-radius: var(--radius-md); }
+  .run-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
+  .run-name { font-weight: 600; }
+  .run-name span { color: #aba39e; font-weight: 400; }
+  .state { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
+  .state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .state[data-kind='run'] { color: var(--run); }
+  .state[data-kind='ok'] { color: var(--ok); }
+  .state[data-kind='bad'] { color: var(--bad); }
+  .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--run); transform-origin: left; transform: scaleX(0); }
+  .notify:has(.state[data-kind='ok']) .bar span { background: var(--ok); }
+  .notify:has(.state[data-kind='bad']) .bar span { background: var(--bad); }
+  .run-meta { color: #aba39e; font-size: 12px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .events { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .events :global(li) {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: var(--space-sm);
+    padding: 8px var(--space-sm); border-radius: var(--radius-sm); background: #17110e; border-left: 2px solid var(--ok);
+  }
+  .events :global(li[data-kind='bad']) { border-left-color: var(--bad); }
+  .events :global(li[data-kind='info']) { border-left-color: #807874; }
+  .events :global(li.enter) { animation: enter 360ms cubic-bezier(.2,.7,.2,1); }
+  @keyframes enter { from { opacity: 0; transform: translateY(-6px); } }
+  .events :global(.channel) { color: #aba39e; font-size: 12px; }
+  .events :global(.text) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .events :global(.detail) { color: #aba39e; font-size: 12px; font-family: var(--font-mono); }
+
+  @media (max-width: 767px) {
+    .notify { margin-left: var(--space-md); }
+    .events :global(li) { grid-template-columns: minmax(0, 1fr) auto; }
+    .events :global(.channel) { grid-column: 1 / -1; }
+  }
+</style>
+
+<script>
+  import '../../scripts/notify-fragment.ts';
+</script>

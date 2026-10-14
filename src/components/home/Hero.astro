@@ -39,8 +39,8 @@ const release = await getLatestRelease();
       </div>
       <div class="phone" aria-hidden="true">
         <div class="phone-screen">
-          <Image src={phoneLight} alt="" width={390} densities={[1, 2]} data-theme-img="light" loading="eager" />
-          <Image src={phoneDark} alt="" width={390} densities={[1, 2]} data-theme-img="dark" loading="eager" />
+          <Image src={phoneLight} alt="" width={204} densities={[1, 2, 3]} quality={90} data-theme-img="light" loading="eager" />
+          <Image src={phoneDark} alt="" width={204} densities={[1, 2, 3]} quality={90} data-theme-img="dark" loading="eager" />
         </div>
       </div>
     </div>
@@ -115,7 +115,7 @@ const release = await getLatestRelease();
   .notch { position: absolute; left: 50%; top: 0; width: 120px; height: 7px; transform: translateX(-50%); border-radius: 0 0 8px 8px; background: rgba(0, 0, 0, 0.18); }
 
   .phone {
-    position: absolute; right: 0; bottom: -24px; width: 190px; padding: 7px;
+    position: absolute; right: 0; bottom: -28px; width: 220px; padding: 8px;
     border-radius: 34px; background: #1d1714; box-shadow: var(--shadow-device), inset 0 0 0 1px #3a312c;
   }
   .phone-screen { position: relative; aspect-ratio: 390 / 844; border-radius: 28px; overflow: hidden; background: var(--canvas); }

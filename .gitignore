@@ -25,3 +25,6 @@ pnpm-debug.log*
 test-results/
 playwright-report/
 scripts/screenshots/.demo/
+
+# vitest cache
+.vitest/

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getLatestRelease } from '../../src/lib/release';
+import { formatStars, getLatestRelease, getRepoStars } from '../../src/lib/release';
 
 const ok = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200 })) as typeof fetch;
 
@@ -21,4 +21,25 @@ describe('getLatestRelease', () => {
     }) as typeof fetch;
     expect(await getLatestRelease(fetchFn)).toBeNull();
   });
+});
+
+describe('getRepoStars', () => {
+  it('reads stargazers_count', async () => {
+    expect(await getRepoStars(ok({ stargazers_count: 1234 }))).toBe(1234);
+  });
+  it('returns null on a malformed payload or a failed request', async () => {
+    expect(await getRepoStars(ok({}))).toBeNull();
+    expect(await getRepoStars((async () => new Response('{}', { status: 403 })) as typeof fetch)).toBeNull();
+  });
+});
+
+describe('formatStars', () => {
+  it.each([
+    [7, '7'],
+    [950, '950'],
+    [1000, '1k'],
+    [1234, '1.2k'],
+    [15300, '15.3k'],
+    [123456, '123k'],
+  ])('%i → %s', (n, s) => expect(formatStars(n)).toBe(s));
 });

@@ -19,3 +19,22 @@ test('ecosystem strip names destinations in text', async ({ page }) => {
     await expect(strip.getByText(n, { exact: true })).toBeVisible();
   }
 });
+
+test('notifications fragment runs a job and sends events', async ({ page }) => {
+  await page.goto('/');
+  const notify = page.locator('[data-notify]');
+  await notify.scrollIntoViewIfNeeded();
+  await expect(notify.locator('[data-run-state]')).toHaveText('Running');
+  await expect(notify.locator('[data-events] li').first()).toContainText('Healthchecks.io');
+  await expect(notify.locator('[data-run-state]')).toHaveText('Succeeded', { timeout: 8000 });
+  await expect(notify.locator('[data-events]')).toContainText('Backup completed: Postgres');
+});
+
+test('notifications fragment shows a finished run without JS', async ({ browser, baseURL }) => {
+  const ctx = await browser.newContext({ javaScriptEnabled: false });
+  const page = await ctx.newPage();
+  await page.goto(`${baseURL}/`);
+  await expect(page.locator('[data-notify] [data-run-state]')).toHaveText('Failed');
+  await expect(page.locator('[data-notify] [data-events] li')).toHaveCount(4);
+  await ctx.close();
+});

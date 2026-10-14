@@ -16,7 +16,7 @@ export const roadmap: RoadmapVersion[] = [
       { text: 'Restore & restore test', done: true },
       { text: 'Helm chart', done: true },
       { text: 'Comprehensive test coverage (server + agent + GUI)', done: false },
-      { text: 'Full documentation site', done: false },
+      { text: 'Full documentation site', done: true },
     ],
   },
   {

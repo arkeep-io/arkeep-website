@@ -21,3 +21,24 @@ export async function getLatestRelease(fetchFn: typeof fetch = fetch): Promise<R
     return null;
   }
 }
+
+const REPO = 'https://api.github.com/repos/arkeep-io/arkeep';
+
+// Star count at build time, for the nav and footer. Same contract as above: null on any failure.
+export async function getRepoStars(fetchFn: typeof fetch = fetch): Promise<number | null> {
+  try {
+    const res = await fetchFn(REPO, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.stargazers_count === 'number' ? data.stargazers_count : null;
+  } catch {
+    return null;
+  }
+}
+
+/** GitHub-style short count: 950 → "950", 1234 → "1.2k", 15300 → "15.3k". */
+export function formatStars(n: number): string {
+  if (n < 1000) return String(n);
+  const k = n / 1000;
+  return `${k >= 100 ? Math.round(k) : Number(k.toFixed(1))}k`;
+}

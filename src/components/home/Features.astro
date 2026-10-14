@@ -1,6 +1,6 @@
 ---
-import ScreenCrop from './ScreenCrop.astro';
-import poster from '../../assets/screens/job-log-poster.png';
+import UiShot from './UiShot.astro';
+import NotifyFragment from './NotifyFragment.astro';
 ---
 <section id="features" class="section features" data-snapshot="features" aria-labelledby="features-title">
   <div class="wrap">
@@ -16,12 +16,7 @@ import poster from '../../assets/screens/job-log-poster.png';
           <h3 class="title-md">Know the moment it fails</h3>
           <p>Live progress while restic runs. Email, signed webhooks and Healthchecks.io pings on success or failure.</p>
         </div>
-        <div class="video-crop" data-ui>
-          <video muted loop playsinline preload="none" translate="no" poster={poster.src} width="1200" height="750" data-autoplay aria-label="A running backup job in the Arkeep interface, its destinations finishing one by one">
-            <source src="/media/job-log-loop.webm" type="video/webm" />
-          </video>
-          <button type="button" class="video-toggle" data-video-toggle aria-label="Pause video" hidden>Pause</button>
-        </div>
+        <NotifyFragment />
       </article>
 
       <article class="card tile docker" data-reveal style="--reveal-delay: 70ms">
@@ -60,7 +55,7 @@ import poster from '../../assets/screens/job-log-poster.png';
           <h3 class="title-md">One policy, many destinations</h3>
           <p>3-2-1 without scripts: a NAS, a bucket and an offsite box, each with its own retention.</p>
         </div>
-        <div class="crop-dock"><ScreenCrop name="policy" crop={{ x: 836, y: 250, w: 600, h: 200 }} alt="Arkeep policy page listing two destinations, NAS (local) and Offsite copy" /></div>
+        <div class="crop-dock"><UiShot name="ui-policy-destinations" alt="The Destinations card of an Arkeep policy, listing NAS (local) and Offsite copy in order" /></div>
       </article>
 
       <article class="card tile browse" data-reveal style="--reveal-delay: 70ms">
@@ -68,7 +63,7 @@ import poster from '../../assets/screens/job-log-poster.png';
           <h3 class="title-md">Browse a snapshot, restore a file</h3>
           <p>Open any snapshot, walk its folders, download a file or a folder as ZIP, or restore a selection.</p>
         </div>
-        <div class="crop-dock"><ScreenCrop name="snapshot-browse" crop={{ x: 272, y: 244, w: 760, h: 300 }} alt="Arkeep snapshot browser showing the folders and files of a Postgres snapshot" /></div>
+        <div class="crop-dock"><UiShot name="ui-snapshot-tree" alt="Arkeep snapshot browser showing the folders and files of a Postgres snapshot, with sizes" /></div>
       </article>
 
       <article class="card tile auth" data-reveal>
@@ -79,7 +74,7 @@ import poster from '../../assets/screens/job-log-poster.png';
             <li>OIDC</li><li>Keycloak</li><li>Authentik</li><li>Zitadel</li><li>TOTP 2FA</li><li>Read-only users</li><li>Audit log</li>
           </ul>
         </div>
-        <div class="crop-dock"><ScreenCrop name="security" crop={{ x: 268, y: 600, w: 640, h: 180 }} alt="Arkeep profile page with the option to enable two-factor authentication" /></div>
+        <div class="crop-dock"><UiShot name="ui-2fa" alt="Arkeep profile setting to enable two-factor authentication" /></div>
       </article>
     </div>
   </div>
@@ -113,6 +108,8 @@ import poster from '../../assets/screens/job-log-poster.png';
     margin: auto 0 0 var(--space-lg); background: var(--surface-card);
     border: 1px solid var(--hairline-strong); border-right: 0; border-bottom: 0; border-top-left-radius: var(--radius-md); overflow: hidden;
   }
+  /* GUI shots sit on the GUI's own page colour, inset like a window region. */
+  .crop-dock { background: var(--canvas); padding: var(--space-base) 0 0 var(--space-base); }
   .ui-card { padding: var(--space-base) var(--space-md); font-size: 13px; display: grid; gap: var(--space-xs); background: var(--canvas-soft); }
   .ui-head { font-weight: 600; font-size: 13px; }
   .ui-head span { color: var(--body); font-weight: 400; }
@@ -127,14 +124,6 @@ import poster from '../../assets/screens/job-log-poster.png';
   td code { font-size: 12px; }
 
   .live .text { padding-bottom: var(--space-base); }
-  .video-crop { position: relative; overflow: hidden; margin: auto 0 0 var(--space-lg); aspect-ratio: 600 / 360; border-top-left-radius: var(--radius-md); background: var(--surface-dark-elevated); }
-  /* The 1200×750 recording, cropped to x 270, y 270, 600×360. */
-  .video-crop video { position: absolute; max-width: none; width: calc(1200 / 600 * 100%); height: auto; left: calc(-270 / 600 * 100%); top: calc(-270 / 360 * 100%); }
-  .video-toggle {
-    position: absolute; right: var(--space-sm); bottom: var(--space-sm); z-index: 1; min-height: 32px; padding: 0 var(--space-sm);
-    border: 1px solid #3a312c; border-radius: var(--radius-md); background: #201915; color: #ece7e3; font-size: 13px; cursor: pointer;
-  }
-  .video-toggle:hover { background: #2a221e; }
 
   .auth { flex-direction: row; align-items: stretch; }
   .auth .text { flex: 0 0 40%; padding-block: var(--space-xl); }
@@ -151,7 +140,7 @@ import poster from '../../assets/screens/job-log-poster.png';
   @media (min-width: 768px) and (max-width: 1023px) {
     .live { flex-direction: row; }
     .live .text { flex: 0 0 38%; padding-bottom: var(--space-lg); }
-    .live .video-crop { flex: 1; margin: var(--space-xl) 0 0 0; align-self: flex-end; }
+    .live :global(.notify) { flex: 1; margin: var(--space-xl) 0 0 0; align-self: flex-end; }
   }
   @media (max-width: 767px) {
     .bento { grid-template-columns: 1fr; grid-template-areas: 'live' 'docker' 'db' 'browse' 'policy' 'auth'; gap: var(--space-sm); }
@@ -159,34 +148,6 @@ import poster from '../../assets/screens/job-log-poster.png';
     .auth .text { padding-bottom: var(--space-lg); }
     .auth .crop-dock { display: none; }
     .text { padding: var(--space-md); }
-    .crop-dock, .ui-card, .video-crop { margin-left: var(--space-md); }
+    .crop-dock, .ui-card { margin-left: var(--space-md); }
   }
 </style>
-
-<script>
-  // Autoplay only when motion is welcome; otherwise the poster stands in.
-  const video = document.querySelector<HTMLVideoElement>('#features video[data-autoplay]');
-  const toggle = document.querySelector<HTMLButtonElement>('[data-video-toggle]');
-  if (video && toggle && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    let paused = false; // the visitor's choice wins over scrolling
-    const label = () => {
-      toggle.textContent = video.paused ? 'Play' : 'Pause';
-      toggle.setAttribute('aria-label', video.paused ? 'Play video' : 'Pause video');
-    };
-    toggle.hidden = false;
-    toggle.addEventListener('click', () => {
-      paused = !video.paused;
-      if (paused) video.pause();
-      else void video.play().catch(() => {});
-    });
-    video.addEventListener('play', label);
-    video.addEventListener('pause', label);
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting && !paused) void video.play().catch(() => {});
-        else if (!e.isIntersecting) video.pause();
-      }
-    });
-    io.observe(video);
-  }
-</script>

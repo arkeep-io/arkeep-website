@@ -11,4 +11,5 @@ server and agent state live in `scripts/screenshots/.demo/` (gitignored), demo s
 4. Stop the demo with Ctrl+C. Delete `scripts/screenshots/.demo/` for a fresh run (the setup endpoint only
    works for 15 minutes after the server starts).
 
-Output: `src/assets/screens/*-{light,dark}.png` (including `mobile-dashboard-*` for the hero phone), `src/assets/screens/job-log-poster.png`, `public/media/job-log-loop.webm`.
+Output: `src/assets/screens/ui-*-{light,dark}.png` (GUI pieces captured as elements at 3x, shown 1:1 by `UiShot`) and
+`mobile-dashboard-{light,dark}.png` for the hero phone.

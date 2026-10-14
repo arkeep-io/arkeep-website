@@ -1,18 +1,16 @@
 ---
-import { Image } from 'astro:assets';
-import mark from '../../assets/arkeep-mark.png';
-import { getLatestRelease } from '../../lib/release';
+import { formatStars, getLatestRelease, getRepoStars } from '../../lib/release';
 import NewTabIcon from './NewTabIcon.astro';
 import Icon from './Icon.astro';
 import { DISCUSSIONS_URL, DOCKER_HUB_URL, GITHUB_URL, ISSUES_URL, RELEASES_URL, SPONSORS_URL, isDocs, tabAttrs } from './links';
 
-const release = await getLatestRelease();
+const [release, stars] = await Promise.all([getLatestRelease(), getRepoStars()]);
 const year = new Date().getFullYear();
 const releaseDate = release
   ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${release.date}T00:00:00Z`))
   : null;
 
-const columns = [
+const lists = [
   {
     title: 'Product',
     links: [
@@ -33,82 +31,106 @@ const columns = [
       { label: 'FAQ', href: '/docs/reference/faq/' },
     ],
   },
-  {
-    title: 'Community',
-    links: [
-      { label: 'GitHub', href: GITHUB_URL },
-      { label: 'Discussions', href: DISCUSSIONS_URL },
-      { label: 'Open an issue', href: ISSUES_URL },
-      { label: 'Contributing', href: '/docs/contributing/' },
-    ],
-  },
-  {
-    title: 'Downloads',
-    links: [
-      { label: 'Releases', href: RELEASES_URL },
-      { label: 'Docker Hub', href: DOCKER_HUB_URL },
-      { label: 'Helm chart', href: '/docs/installation/kubernetes/' },
-    ],
-  },
 ];
 ---
-<footer class="footer" aria-labelledby="footer-title">
-  <div class="wrap">
-    <h2 id="footer-title" class="visually-hidden">Arkeep project</h2>
-    <div class="grid">
-      <div class="brand">
-        <a class="wordmark" href="/"><Image src={mark} alt="" width={32} height={32} /><span>Arkeep</span></a>
-        <p class="statement">Your infra’s Ark. Back up everything, keep it yours.</p>
-        <p class="release">
-          {release ? (
-            <a href={release.url} {...tabAttrs(release.url)}><span class="badge badge--accent">{release.tag}</span><span>Latest release · <time datetime={release.date}>{releaseDate}</time></span></a>
-          ) : (
-            <a href={RELEASES_URL} {...tabAttrs(RELEASES_URL)}>All releases</a>
-          )}
-        </p>
-        <a class="button button--secondary sponsor" href={SPONSORS_URL} {...tabAttrs(SPONSORS_URL)}><Icon name="heart" />Sponsor the work</a>
-      </div>
-      {columns.map((c) => (
-        <nav class="col" aria-label={c.title}>
-          <h3>{c.title}</h3>
-          <ul>
-            {c.links.map((l) => (
-              <li><a href={l.href} {...tabAttrs(l.href)}>{l.label}{isDocs(l.href) && <NewTabIcon />}</a></li>
-            ))}
-          </ul>
-        </nav>
-      ))}
+<footer class="footer wrap" aria-labelledby="footer-title">
+  <h2 id="footer-title" class="visually-hidden">Arkeep project</h2>
+  <div class="tiles">
+    <div class="tile statement">
+      <p class="lead">Your infra’s Ark. Back up everything, keep it yours.</p>
+      <p class="small">Open source under Apache-2.0 · © {year} Arkeep contributors</p>
     </div>
-    <div class="bottom">
-      <p>© {year} Arkeep contributors · Apache-2.0</p>
+
+    {lists.map((l) => (
+      <nav class="tile list" aria-label={l.title}>
+        <h3 class="small">{l.title}</h3>
+        <ul>
+          {l.links.map((link) => (
+            <li><a href={link.href} {...tabAttrs(link.href)}>{link.label}{isDocs(link.href) && <NewTabIcon />}</a></li>
+          ))}
+        </ul>
+      </nav>
+    ))}
+
+    <div class="tile stat release">
+      <p class="small">Latest release</p>
+      {release ? <a class="big" href={release.url} {...tabAttrs(release.url)}>{release.tag}</a> : <a class="big" href={RELEASES_URL} {...tabAttrs(RELEASES_URL)}>All releases</a>}
+      {release && <p class="small"><time datetime={release.date}>{releaseDate}</time></p>}
     </div>
+
+    <a class="tile stat stars" href={GITHUB_URL} {...tabAttrs(GITHUB_URL)}>
+      <span class="small">Star on GitHub</span>
+      <span class="big"><Icon name="github" size={24} />{stars === null ? 'GitHub' : formatStars(stars)}</span>
+      <span class="small">arkeep-io/arkeep</span>
+    </a>
+
+    <div class="tile stat downloads">
+      <p class="small">Get it</p>
+      <ul>
+        <li><a href={DOCKER_HUB_URL} {...tabAttrs(DOCKER_HUB_URL)}>Docker Hub</a></li>
+        <li><a href={RELEASES_URL} {...tabAttrs(RELEASES_URL)}>Binaries</a></li>
+        <li><a href="/docs/installation/kubernetes/" {...tabAttrs('/docs/installation/kubernetes/')}>Helm chart<NewTabIcon /></a></li>
+      </ul>
+    </div>
+
+    <div class="tile stat community">
+      <p class="small">Questions and bugs</p>
+      <a class="big" href={DISCUSSIONS_URL} {...tabAttrs(DISCUSSIONS_URL)}>Discussions</a>
+      <a href={ISSUES_URL} {...tabAttrs(ISSUES_URL)}>Open an issue</a>
+    </div>
+
+    <div class="tile wordmark" aria-hidden="true">Arkeep</div>
+    <a class="tile sponsor" href={SPONSORS_URL} {...tabAttrs(SPONSORS_URL)}>
+      <span class="lead">Sponsor the work</span>
+      <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><path d="M10 38 38 10M16 10h22v22" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="square" /></svg>
+    </a>
   </div>
 </footer>
 
 <style>
-  .footer { margin-top: var(--space-xxl); padding: 64px 0 var(--space-xxl); background: var(--canvas); border-top: 1px solid var(--hairline); }
-  .grid { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)); gap: var(--space-xl); }
-  .brand { display: grid; gap: var(--space-base); align-content: start; justify-items: start; }
-  .wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; text-decoration: none; }
-  .wordmark img { width: 32px; height: 32px; border-radius: var(--radius-sm); }
-  .statement { color: var(--body); font-size: 14px; max-width: 28ch; }
-  .release a { display: inline-flex; align-items: center; gap: var(--space-xs); color: var(--body); font-size: 13px; text-decoration: none; }
-  .release a:hover { color: var(--ink); }
-  .release .badge { text-transform: none; letter-spacing: 0.02em; font-size: 12px; }
-  .sponsor svg { color: var(--brand); }
-  h3 { font-size: 14px; font-weight: 600; margin-bottom: var(--space-base); }
-  .col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .col a { color: var(--body); font-size: 14px; text-decoration: none; transition: color 160ms ease; }
-  .col a:hover { color: var(--ink); }
-  .bottom { margin-top: var(--space-xxl); padding-top: var(--space-lg); border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; gap: var(--space-base); flex-wrap: wrap; font-size: 13px; color: var(--body); }
+  .footer { padding-block: var(--space-section) var(--gutter); }
+  .tiles { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-xs); }
+  .tile {
+    display: flex; flex-direction: column; gap: var(--space-sm); min-height: 200px; padding: var(--space-lg);
+    background: var(--hairline-soft); border-radius: var(--radius-md); color: var(--ink); text-decoration: none;
+  }
+  .statement { grid-column: span 6; justify-content: space-between; }
+  .list { grid-column: span 3; }
+  .stat { grid-column: span 3; justify-content: flex-end; min-height: 180px; }
+  .lead { font-size: clamp(1.25rem, 1rem + 0.8vw, 1.625rem); font-weight: 500; line-height: 1.25; letter-spacing: -0.02em; max-width: 24ch; }
+  .small { font-size: 14px; font-weight: 400; color: var(--body); }
+  .big { display: inline-flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; font-variant-numeric: tabular-nums; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
+  .tile a { color: var(--ink); text-decoration: none; transition: color 160ms ease; }
+  .tile a:hover, .stars:hover .big { color: var(--text-link); }
+  .stars { transition: background-color 160ms ease; }
+  .stars:hover { background: var(--surface-strong); }
+  .wordmark {
+    grid-column: span 8; min-height: 300px; background: var(--ink); color: var(--canvas);
+    font-weight: 600; font-size: clamp(4rem, 13vw, 11rem); letter-spacing: -0.05em; line-height: 1;
+    align-items: center; justify-content: center;
+  }
+  .tile.sponsor {
+    grid-column: span 4; min-height: 300px; background: var(--primary); color: var(--on-primary);
+    justify-content: space-between; transition: background-color 160ms ease;
+  }
+  .sponsor svg { align-self: flex-end; transition: transform 200ms ease; }
+  .tile.sponsor:hover { background: var(--primary-hover); color: var(--on-primary); }
+  .sponsor:hover svg { transform: translate(4px, -4px); }
 
   @media (max-width: 1023px) {
-    .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .brand { grid-column: 1 / -1; }
+    .statement { grid-column: span 12; min-height: 160px; }
+    .list { grid-column: span 6; }
+    .stat { grid-column: span 6; }
   }
   @media (max-width: 639px) {
-    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-xl); }
-    .col a { display: inline-flex; min-height: 40px; align-items: center; }
-    .col ul { gap: 0; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .tile { min-height: 150px; padding: var(--space-md); }
+    .statement, .wordmark, .tile.sponsor { grid-column: span 2; }
+    .list, .stat { grid-column: span 1; }
+    .wordmark { min-height: 150px; order: -2; font-size: 24vw; }
+    .tile.sponsor { min-height: 140px; order: -1; }
+    .tile li a { display: inline-flex; min-height: 40px; align-items: center; }
+    ul { gap: 0; }
   }
 </style>

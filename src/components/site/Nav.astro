@@ -4,7 +4,11 @@ import mark from '../../assets/arkeep-mark.png';
 import ThemeToggle from './ThemeToggle.astro';
 import NewTabIcon from './NewTabIcon.astro';
 import Icon from './Icon.astro';
-import { GET_STARTED_URL, isDocs, navLinks, tabAttrs } from './links';
+import { GET_STARTED_URL, GITHUB_URL, isDocs, navLinks, tabAttrs } from './links';
+import { formatStars, getRepoStars } from '../../lib/release';
+
+const stars = await getRepoStars();
+const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${stars.toLocaleString('en')} stars`;
 ---
 <nav class="nav wrap" aria-label="Main">
   <a class="wordmark" href="/">
@@ -17,7 +21,10 @@ import { GET_STARTED_URL, isDocs, navLinks, tabAttrs } from './links';
     ))}
   </ul>
   <div class="actions">
-    <a class="github" href={navLinks.at(-1)!.href} {...tabAttrs(navLinks.at(-1)!.href)} aria-label="Arkeep on GitHub"><Icon name="github" size={18} /></a>
+    <a class:list={['github', { 'has-count': stars !== null }]} href={GITHUB_URL} {...tabAttrs(GITHUB_URL)} aria-label={starLabel}>
+      <Icon name="github" size={18} />
+      {stars !== null && <span class="count" aria-hidden="true">{formatStars(stars)}</span>}
+    </a>
     <ThemeToggle />
     <a class="button install" href={GET_STARTED_URL} {...tabAttrs(GET_STARTED_URL)}>Install Arkeep<NewTabIcon /></a>
     <button class="menu" type="button" aria-expanded="false" aria-controls="nav-links" data-menu>
@@ -46,6 +53,10 @@ import { GET_STARTED_URL, isDocs, navLinks, tabAttrs } from './links';
     background: transparent; color: var(--ink); cursor: pointer; transition: background-color 160ms ease;
   }
   .github:hover, .menu:hover { background: var(--hairline-soft); }
+  .github.has-count { display: inline-flex; gap: 6px; width: auto; padding: 0 10px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--body); }
+  .github.has-count:hover { color: var(--ink); }
+  .github :global(svg) { color: var(--ink); }
+  .count { font-variant-numeric: tabular-nums; }
   .install { margin-left: var(--space-xs); }
   .menu { display: none; }
 
