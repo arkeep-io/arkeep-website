@@ -1,0 +1,28 @@
+---
+title: Audit log
+description: What Arkeep records about who did what, and how to filter it.
+---
+
+The **Audit Log** (admin only) records changes and sensitive actions: who did what, to which resource, when
+and from which IP address. Expand an entry to see its details.
+
+## Filters
+
+- **Action group**: All, Auth, Policies, Snapshots, Agents, Destinations, Users or Settings.
+- **Filter by user email**: narrows the current page.
+
+Behind a reverse proxy, set `ARKEEP_TRUSTED_PROXIES` so the recorded IP is the client's and not the proxy's
+(see [Reverse proxy and TLS](/docs/installation/reverse-proxy-tls/)).
+
+## What is recorded
+
+| Area | Actions |
+|---|---|
+| Agents | create, update, delete, reset identity |
+| Destinations | create, update, delete, import, sync, run retention, run check |
+| Policies | create, update, delete, run now |
+| Snapshots | delete, restore, download |
+| Users | create, update, delete, password changed, failed password change, 2FA reset |
+| Auth | login (including the 2FA step and whether a recovery code was used), logout, 2FA enabled, disabled, recovery codes regenerated or used, password reset requested and confirmed |
+| Settings | OIDC providers, SMTP, webhook, notifications, log retention and cleanup, job queue, snapshot sync |
+| Setup | creation of the first admin |

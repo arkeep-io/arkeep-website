@@ -1,0 +1,58 @@
+---
+import '../styles/site.css';
+import Nav from '../components/site/Nav.astro';
+import Footer from '../components/site/Footer.astro';
+import font400 from '@fontsource/be-vietnam-pro/files/be-vietnam-pro-latin-400-normal.woff2?url';
+import font600 from '@fontsource/be-vietnam-pro/files/be-vietnam-pro-latin-600-normal.woff2?url';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preload" href={font400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={font600} as="font" type="font/woff2" crossorigin />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#fefbf9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0806" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // Same logic as Starlight's ThemeProvider, so both halves agree before first paint.
+      (() => {
+        let stored = null;
+        try { stored = localStorage.getItem('starlight-theme'); } catch {}
+        const theme = stored || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+        document.documentElement.classList.add('js');
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="wrap"><Nav /></header>
+    <main id="main"><slot /></main>
+    <Footer />
+    <script>
+      import '../scripts/reveal.ts';
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip { position: absolute; left: var(--margin); top: -100px; z-index: 10; padding: var(--space-3) var(--space-4); background: var(--ink); color: var(--canvas); border-radius: var(--radius-md); }
+  .skip:focus { top: var(--space-3); }
+</style>

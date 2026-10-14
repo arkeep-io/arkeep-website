@@ -1,0 +1,78 @@
+---
+title: Project structure
+description: How the Arkeep repository is organised, and where to add a new destination or source type.
+---
+
+```text
+arkeep/
+├── agent/                      # Agent binary
+│   ├── cmd/agent/              # Entry point
+│   └── internal/
+│       ├── connection/         # gRPC client, job stream, state persistence
+│       ├── executor/           # Job queue and execution
+│       ├── restic/             # restic/rclone wrapper (binary extraction, backup, forget, check)
+│       ├── docker/             # Docker volume discovery
+│       ├── hooks/              # Pre/post backup hook runner
+│       └── metrics/            # Host metrics (CPU, RAM, disk)
+├── server/                     # Server binary
+│   ├── cmd/server/             # Entry point, with the interface embedded
+│   └── internal/
+│       ├── api/                # Chi router, HTTP handlers, middleware
+│       ├── auth/               # JWT (RS256), local auth, OIDC
+│       ├── db/                 # GORM setup, migrations, EncryptedString type
+│       ├── repositories/       # Data access layer (explicit queries, no GORM Preload)
+│       ├── grpc/               # gRPC server: receives agent streams, dispatches jobs
+│       ├── agentmanager/       # In-memory registry of connected agents
+│       ├── scheduler/          # Backup scheduler
+│       ├── notification/       # Email and webhook senders
+│       ├── metrics/            # Prometheus collectors and HTTP middleware
+│       └── websocket/          # WebSocket hub for live updates in the interface
+├── shared/                     # Code shared between server and agent
+│   ├── proto/                  # Protobuf definitions and generated code
+│   └── types/                  # Shared types
+├── gui/                        # Vue 3 PWA
+│   └── src/
+│       ├── components/         # UI components (shadcn-vue based)
+│       ├── pages/              # Route-level pages
+│       ├── stores/             # Pinia stores
+│       ├── services/           # API and WebSocket clients
+│       ├── composables/        # Vue composables
+│       ├── router/             # Vue Router configuration
+│       └── types/              # TypeScript interfaces
+├── deploy/
+│   ├── docker/                 # Docker Compose files
+│   ├── systemd/                # systemd unit for the agent
+│   └── helm/                   # Helm chart
+├── go.work                     # Go workspace (agent + server + shared)
+└── Taskfile.yml                # Task runner
+```
+
+All gRPC messages are defined in `shared/proto/agent.proto`; run `task proto` after changing it.
+
+## Adding a destination type
+
+1. **Database**: add a migration that updates the `destinations.type` CHECK constraint.
+2. **Server**, in `server/internal/destutil/`:
+   - `BuildRepoURL()` builds the restic repository URL from the destination's config;
+   - `BuildEnv()` maps credentials to a **fixed** set of restic and rclone environment variables. Never pass
+     user-supplied keys through;
+   - `ValidateConfig()` and `ValidateCredentials()` (in `validate.go`) check the required fields. The server
+     is the authority, not the interface;
+   - add the type to `validDestinationTypes` in `server/internal/api/destinations.go`.
+3. **Agent**: add every environment variable the type needs to `allowedDestEnv` in
+   `agent/internal/restic/env.go`. Anything else is dropped before restic runs.
+4. **Interface**: in `gui/src/components/destinations/DestinationSheet.vue`, add the form section and the
+   entry in `destinationTypeLabels`.
+5. **Tests**: in `server/internal/destutil/` (URL and environment) and `agent/internal/restic/` (allowlist).
+
+## Adding a source type
+
+1. **Server**: `server/internal/policyutil/sources.go`, either in `SourcePaths` (for a type that resolves to a
+   path) or with a dedicated extractor like `CommandSources`.
+2. **Agent**: `agent/internal/executor/executor.go`, either in `resolveSources` (path-shaped types, with a
+   prefix convention like `docker-volume://`) or with its own dispatch in `executeBackup`.
+3. **Interface**: `gui/src/components/policies/PolicySheet.vue`, in `SOURCE_TYPES`, the type selector and
+   `sourceItemSchema`.
+
+For data that must be produced first and then backed up as files, a pre-backup hook is still the right tool.
+For data that can stream straight into restic, follow the `command` source type.

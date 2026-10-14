@@ -1,0 +1,61 @@
+---
+title: Jobs
+description: Job types and statuses, following a job live, cancelling it, and the job queue timeout.
+---
+
+Every action an agent performs is a job: a **backup**, a **restore**, a **retention** sweep or an
+**integrity check**. The **Jobs** page lists them all, newest first.
+
+## Statuses
+
+| Status | Meaning |
+|---|---|
+| **Pending** | Created, not started yet. If the agent is offline, the job waits and is sent when it reconnects. |
+| **Waiting** | Queued behind another job on the same destination. Backups can share a repository, but retention sweeps and integrity checks need it alone. Starts on its own. |
+| **Running** | The agent is working on it. |
+| **Succeeded** | Finished successfully on every destination. |
+| **Failed** | Something failed. For backups: at least one destination failed, even if others succeeded. |
+| **Cancelled** | An admin cancelled it. |
+| **Interrupted** | The agent disconnected while the job was running. |
+
+### Interrupted jobs
+
+When a policy has **Resume interrupted backups** on (the default), an interrupted backup runs again as soon
+as the agent reconnects. After 3 resumes in a row it is marked **failed** and you are notified.
+
+### Queue timeout
+
+A job that waits too long, either for a busy destination or for its agent to start it, is marked **failed**
+with *timed out waiting for destination* or *timed out waiting for the agent to start the job*.
+
+Set the limit in **Settings → Job Queue** with **Queue timeout (minutes)**: 1440 (24 hours) by default, 0 to
+wait forever, at most 43200 (30 days).
+
+## The Jobs list
+
+Filter by **status** and **type**. Columns: **Policy**, **Type**, **Agent**, **Status**, **Started** and
+**Duration**. Links from an agent, policy or destination open the list already filtered.
+
+## Job details
+
+- **Policy**, **Agent** and **Duration**, with the start and end times.
+- The error, when the job failed, or a banner when it was cancelled or is waiting.
+- **Destinations**: the status, the data added, the duration and any error, per destination.
+- **Command Sources**: the result of each command source.
+- **Retention Tags**: for retention sweeps, what was swept.
+- **Progress**: live while the job runs, with percentage, bytes and files.
+- **Logs**: available once the job is finished, with levels INFO, WARN and ERROR.
+
+## Cancel
+
+Admins can cancel a pending, waiting or running job with **Cancel Job**. A running job is stopped on the
+agent.
+
+## Restores do not queue
+
+A restore needs its target agent online: it is refused, instead of queued, when the agent is offline.
+
+## Notifications
+
+Every job type can send notifications when it finishes: see [Notifications](/docs/guides/notifications/).
+Log retention is set in [Settings](/docs/guides/settings/#log-retention).

@@ -1,0 +1,74 @@
+---
+title: Snapshots and restore
+description: Browse snapshots, download files or folders, and restore to a custom path, the original location or another machine.
+---
+
+The **Snapshots** page lists the restore points created by completed backups, plus snapshots
+[imported](/docs/guides/importing-and-sync/) from existing repositories.
+
+Filter by **Policy** or **Destination**. Columns: **Policy**, **Destination**, **Snapshot ID**, **Added**
+(data added by that snapshot) and **Created**.
+
+## Browse
+
+Admins can click a snapshot ID to browse it, one folder at a time.
+
+- **Read with agent**: the agent that opens the repository. By default, the agent that made the snapshot.
+  Any other online agent that can reach the repository works too, which helps when the original machine
+  is gone.
+- Opening a large remote repository can take a while; the request gives up after 5 minutes.
+- Imported snapshots have no agent of their own: choose one.
+
+## Download
+
+From the browser, admins can download a single file, a folder as a ZIP archive, or the whole snapshot with
+**Download all (ZIP)**. Downloads stream from the agent through the server, with no temporary files on
+either side and no size limit.
+
+## Restore
+
+Click **Restore** on a snapshot, or select files while browsing and click **Restore selected**.
+
+- **Target agent**: any online agent. It can be a different machine from the one that was backed up.
+- **Restore mode**:
+  - **Custom path** (default `/tmp/arkeep-restore`, or `C:\Users\Public\arkeep-restore` on Windows): an
+    absolute path on the target agent. The original folder structure is recreated inside it.
+  - **Original location**: writes files back where they came from, **overwriting existing data**. Not
+    available on Windows agents.
+- **Files to restore**: leave empty for the whole snapshot, or pick files with **Browse files**.
+
+The restore runs as a job and opens in the job view when it starts. It needs the target agent online.
+
+:::tip
+To make sure a backup is usable, restore it to a scratch path now and then and look at the result. The
+scheduled [integrity check](/docs/guides/retention-and-checks/#integrity-checks) complements this by
+verifying the repository's data.
+:::
+
+### Restore with a Docker agent
+
+A custom path is written through the agent's host mount, which must be `:rw`. Restoring Docker volumes in
+place has its own rules: see [Docker volumes](/docs/guides/docker-volumes/#restore-volumes).
+
+### Snapshots of a deleted destination
+
+Deleting a destination erases its credentials, so its snapshots can no longer be browsed or downloaded. You
+can still restore a whole snapshot: the restore form asks for the destination's credentials again (S3 keys,
+SFTP password or key, REST user and password) and, if no policy holds it, the repository password. They are
+used for that restore only and not saved.
+
+## Delete a snapshot
+
+**Delete** removes the snapshot from Arkeep's list. It does **not** delete it from the repository: the data
+stays on the storage, and the next [snapshot sync](/docs/guides/importing-and-sync/#sync-snapshots) adds it
+back as imported. To remove snapshots from the repository, use [retention](/docs/guides/retention-and-checks/).
+
+## Restoring without Arkeep
+
+Every repository is a plain restic repository. With the repository password you can always use restic
+directly:
+
+```bash
+restic -r <repository> snapshots
+restic -r <repository> restore <snapshot-id> --target /tmp/restore
+```

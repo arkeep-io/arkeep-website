@@ -1,0 +1,203 @@
+---
+title: Backing up Arkeep itself
+description: What to back up on the Arkeep server, how to do it for each deployment, and how to recover.
+---
+
+Arkeep backs up your machines, but who backs up Arkeep? Back up the server before every upgrade and on a
+regular schedule.
+
+Your **actual backup data** (the restic repositories) lives on the destinations you configured and does
+not depend on the Arkeep server. Losing the server never damages a repository: you can always read it
+with the `restic` command line.
+
+## What to back up
+
+| Component | Where | Why it matters |
+|---|---|---|
+| **Database** | `--db-dsn` (SQLite file or PostgreSQL) | All configuration: agents, destinations, policies, users, jobs, audit log |
+| **Data directory** | `--data-dir` | The private CA key and TLS certificates. Losing it means re-enrolling every agent |
+| **Secret key** | `ARKEEP_SECRET_KEY` | Encrypts stored credentials. Losing it makes them unreadable |
+
+Store the secret key in a password manager or secrets vault, **apart from** the database backups: a
+backup that contains both gives away every stored credential.
+
+## The backup script
+
+The repository ships [`scripts/backup-arkeep-db.sh`](https://github.com/arkeep-io/arkeep/blob/main/scripts/backup-arkeep-db.sh).
+Set `ARKEEP_DEPLOY_MODE` to match your installation:
+
+| Deployment | `ARKEEP_DEPLOY_MODE` |
+|---|---|
+| Binary / systemd | `standalone` (default) |
+| Docker Compose | `docker` |
+| PostgreSQL | `postgres` |
+| Helm / Kubernetes | use the CronJob below |
+
+```bash
+sudo cp scripts/backup-arkeep-db.sh /usr/local/bin/arkeep-backup
+sudo chmod +x /usr/local/bin/arkeep-backup
+sudo nano /usr/local/bin/arkeep-backup        # adjust the paths at the top
+sudo /usr/local/bin/arkeep-backup             # test it once
+echo "0 3 * * * root /usr/local/bin/arkeep-backup" | sudo tee /etc/cron.d/arkeep-backup
+```
+
+## SQLite
+
+A one-off copy is safe while the server runs (SQLite WAL mode):
+
+```bash
+sqlite3 /var/lib/arkeep/arkeep.db \
+  ".backup '/var/backups/arkeep/arkeep-$(date +%Y%m%d-%H%M%S).db'"
+
+# Verify the copy
+sqlite3 /var/backups/arkeep/arkeep-YYYYMMDD-HHMMSS.db "PRAGMA integrity_check;"   # expect: ok
+```
+
+### Docker Compose
+
+With the script:
+
+```bash
+ARKEEP_DEPLOY_MODE=docker \
+ARKEEP_DOCKER_CONTAINER=arkeep-server \
+ARKEEP_DB_DSN=/var/lib/arkeep/arkeep.db \
+  /usr/local/bin/arkeep-backup
+```
+
+Without it:
+
+```bash
+docker exec arkeep-server sqlite3 /var/lib/arkeep/arkeep.db ".backup '/tmp/arkeep-backup.db'"
+docker cp arkeep-server:/tmp/arkeep-backup.db ./arkeep-$(date +%Y%m%d-%H%M%S).db
+docker exec arkeep-server rm /tmp/arkeep-backup.db
+```
+
+## PostgreSQL
+
+```bash
+# With the script; set ARKEEP_POSTGRES_CONTAINER if pg_dump is not installed on the host
+ARKEEP_DEPLOY_MODE=postgres \
+ARKEEP_DB_DSN="postgres://arkeep:password@localhost:5432/arkeep" \
+ARKEEP_BACKUP_DIR=/var/backups/arkeep \
+  /usr/local/bin/arkeep-backup
+
+# Or directly, in custom format
+pg_dump -Fc -d arkeep -U arkeep -h localhost \
+  -f /var/backups/arkeep/arkeep-$(date +%Y%m%d-%H%M%S).dump
+```
+
+On a managed service (AWS RDS, Cloud SQL, Supabase…), enable the provider's automated backups and keep at
+least 7 days of point-in-time recovery.
+
+## Data directory
+
+```bash
+tar -czf /var/backups/arkeep/arkeep-data-$(date +%Y%m%d-%H%M%S).tar.gz -C /var/lib/arkeep data/
+chmod 600 /var/backups/arkeep/arkeep-data-*.tar.gz   # it contains private keys
+```
+
+## Helm / Kubernetes
+
+The chart keeps the database and the data directory on one PVC mounted at `/var/lib/arkeep`. If your
+storage class supports it, a `VolumeSnapshot` of that PVC covers both. Otherwise, schedule a CronJob that
+mounts the same PVC:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: arkeep-db-backup
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: keinos/sqlite3:latest
+              command:
+                - sh
+                - -c
+                - |
+                  sqlite3 /data/arkeep.db ".backup '/data/backups/arkeep-$(date +%Y%m%d-%H%M%S).db'"
+                  find /data/backups -name "arkeep-*.db" -mtime +7 -delete
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          restartPolicy: OnFailure
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: arkeep-data   # adjust to your release name
+```
+
+With the bundled PostgreSQL, run `pg_dump` from a temporary pod and copy the dump out of the cluster.
+
+## Suggested targets
+
+| Target | Approach |
+|---|---|
+| RPO 24 h | Daily backup of the database and data directory |
+| RPO 1 h | PostgreSQL streaming replication or managed point-in-time recovery |
+| RTO 30 min | The recovery procedure below, with a tested backup |
+| RTO 5 min | A hot standby with PostgreSQL streaming replication |
+
+## Recovery
+
+### Server host lost, database intact
+
+1. Install the same Arkeep version on the new host.
+2. Restore the data directory: `tar -xzf arkeep-data-….tar.gz -C /var/lib/arkeep/`.
+3. Point `--db-dsn` at the existing database.
+4. Set `ARKEEP_SECRET_KEY` to the original value.
+5. Start the server. Agents reconnect on their own within about 30 seconds.
+
+### Database lost, data directory intact
+
+1. Restore the database: copy the SQLite backup in place (then run `PRAGMA integrity_check;`), or
+   `createdb arkeep && pg_restore -Fc -d arkeep arkeep-….dump` for PostgreSQL.
+2. Start the server with the original `ARKEEP_SECRET_KEY`.
+3. Check `GET /health/ready` and log in. Agents reconnect with their existing certificates.
+
+### Data directory lost
+
+The CA that signed the agents' certificates is gone, so agents cannot reconnect.
+
+1. Restore the database.
+2. Start the server without a data directory: it creates a new CA.
+3. Re-enroll each agent by deleting its certificates and restarting it:
+   ```bash
+   rm -rf /var/lib/arkeep-agent/certs/
+   systemctl restart arkeep-agent
+   ```
+4. Agents that were bound to their old certificate need **Reset identity** on the Agents page.
+
+Policies, jobs and configuration are intact.
+
+### Everything lost
+
+Restore both the database and the data directory. Without a database backup, start fresh and recreate
+destinations, policies and users. Your restic repositories are untouched: import them as destinations
+with [Import existing repository](/docs/guides/importing-and-sync/).
+
+## Verify your backups
+
+```bash
+# SQLite
+sqlite3 /var/backups/arkeep/arkeep-latest.db "PRAGMA integrity_check;"
+
+# PostgreSQL: restore into a scratch database
+createdb arkeep_verify
+pg_restore -Fc -d arkeep_verify arkeep-latest.dump
+psql -d arkeep_verify -c "SELECT COUNT(*) FROM users;"
+dropdb arkeep_verify
+```
+
+## Before every upgrade
+
+- [ ] Back up the database
+- [ ] Back up the data directory
+- [ ] Note the current version (`GET /api/v1/version`)
+- [ ] Pull the new image or binary
+- [ ] Restart and check `GET /health/ready`

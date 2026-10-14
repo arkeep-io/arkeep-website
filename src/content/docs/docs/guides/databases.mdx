@@ -1,0 +1,74 @@
+---
+title: Backing up databases
+description: Stream pg_dump, mysqldump and other dumps straight into restic with a command source.
+---
+
+Copying a running database's files rarely gives you a consistent backup. Dump it instead. Arkeep's
+**Command (stdin)** source runs the dump on the agent and streams its output straight into restic
+(`restic backup --stdin-from-command`): no temporary file is ever written, so you need no extra disk space
+and nothing sensitive is left behind.
+
+## Add a command source
+
+In the policy, **Add Source → Command (stdin)** (admin only):
+
+- **Name**: the file name the dump gets inside the snapshot, for example `appdb.sql`.
+- **Command**: the dump command, run on the agent.
+
+A non-zero exit code aborts the backup, so a failed dump never becomes a successful-looking snapshot.
+
+Each command source produces its own snapshot on each destination, tagged with the policy and the source
+name, and retention treats it separately from the policy's file snapshots.
+
+## Examples
+
+**PostgreSQL**
+
+```bash
+pg_dump -U app -h localhost appdb
+```
+
+Use `pg_dumpall` to include roles and every database.
+
+**MySQL / MariaDB**
+
+```bash
+mysqldump --single-transaction --routines --triggers -u backup appdb
+```
+
+**MongoDB**
+
+```bash
+mongodump --archive --db appdb
+```
+
+**SQLite**
+
+```bash
+sqlite3 /var/lib/app/app.db .dump
+```
+
+The dump tools must be installed where the agent runs. With an agent in Docker, the agent container only
+has what its image ships; run the agent on the database host, or call the tool inside the database
+container if the agent can use Docker.
+
+## Credentials
+
+Do not put passwords on the command line: they are stored in the policy and visible to every admin. Use
+the database's own credential files on the agent host instead, such as `~/.pgpass` for PostgreSQL or
+`~/.my.cnf` for MySQL, owned by the user the agent runs as.
+
+The server refuses commands containing `$(…)` or backticks, `..`, or references to `$RESTIC_*`,
+`$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024 characters.
+
+## Restore a dump
+
+Restore the snapshot's file (for example `appdb.sql`) to a custom path, then load it:
+
+```bash
+psql -U app -d appdb < /tmp/arkeep-restore/appdb.sql
+mysql -u root appdb < /tmp/arkeep-restore/appdb.sql
+mongorestore --archive=/tmp/arkeep-restore/appdb.archive
+```
+
+See [Snapshots and restore](/docs/guides/snapshots-and-restore/).

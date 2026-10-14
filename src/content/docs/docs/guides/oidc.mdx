@@ -1,0 +1,53 @@
+---
+title: Single sign-on (OIDC)
+description: Sign in with Zitadel, Keycloak, Authentik or any OpenID Connect provider.
+---
+
+Arkeep supports single sign-on with any OpenID Connect provider: Zitadel, Keycloak, Authentik, Authelia,
+Google, Microsoft Entra ID and others. You can configure several providers; each gets its own button on the
+login page.
+
+## Add a provider
+
+In **Settings → OpenID Connect** (admin), add a provider:
+
+| Field | Notes |
+|---|---|
+| **Display Name** | Shown on the login button, as *Login with* followed by the name |
+| **Issuer URL** | The provider's issuer; Arkeep discovers the rest from `/.well-known/openid-configuration` |
+| **Client ID** | From the client you create at the provider |
+| **Client Secret** | Required when adding; leave blank when editing to keep the current one |
+| **Scopes** | Optional, `openid email profile` by default |
+| **Enabled** | Show the provider's button on the login page and accept its logins |
+
+The page shows the **Redirect URI** to register at the provider, with a copy button:
+
+```text
+https://arkeep.example.com/auth/oidc/callback
+```
+
+It is built from the address you are using, so open the settings through the public URL (and, behind a
+proxy, forward `X-Forwarded-Proto` and `X-Forwarded-Host`).
+
+At the provider, create a confidential client using the authorization code flow. Arkeep uses PKCE.
+
+## How accounts work
+
+- **First login**: Arkeep creates an account with the **User** role (read-only). An admin can then promote
+  it on the Users page. Groups and roles from the provider are not mapped.
+- **Every login**: the email and display name are updated from the provider.
+- **Existing local account with the same email**: the OIDC login is linked to it only when the provider
+  asserts `email_verified=true`, the account is not an admin, and it is not already linked to another
+  provider. Otherwise the login is refused and the reason is shown on the *Sign-in failed* page.
+
+Admin accounts are never linked automatically, so a provider cannot take over an administrator.
+
+## Passwords and 2FA
+
+Accounts that sign in with OIDC manage their password at the provider. Use the provider's own MFA for a
+second factor.
+
+## Disable a provider
+
+Turning off **Enabled** hides the button **and** refuses logins through that provider, including flows that
+were already started.

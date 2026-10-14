@@ -1,0 +1,125 @@
+---
+title: Install on Kubernetes with Helm
+description: Deploy the Arkeep server on Kubernetes with the Helm chart, and the values you can set.
+---
+
+The Helm chart deploys the Arkeep **server**. Agents run on the machines you back up, inside or
+outside the cluster, and connect to the server's gRPC port.
+
+## Install
+
+The chart lives in the Arkeep repository at
+[`deploy/helm/arkeep`](https://github.com/arkeep-io/arkeep/tree/main/deploy/helm/arkeep).
+Install it from a clone:
+
+```bash
+git clone https://github.com/arkeep-io/arkeep.git
+cd arkeep
+helm dependency build ./deploy/helm/arkeep
+helm install arkeep ./deploy/helm/arkeep -f my-values.yaml
+```
+
+:::note
+A published chart repository is coming. Until then, install from the repository path as shown above.
+:::
+
+A minimal `my-values.yaml`:
+
+```yaml
+config:
+  baseURL: https://arkeep.example.com
+
+secret:
+  secretKey: "<openssl rand -hex 32>"
+  agentSecret: "<openssl rand -hex 24>"
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: arkeep.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: arkeep-tls
+      hosts:
+        - arkeep.example.com
+```
+
+:::caution[Run a single replica]
+Keep `replicaCount: 1`, with SQLite and with PostgreSQL alike. The server keeps the registry of
+connected agents and download tickets in memory, so agents and browsers must reach the same instance.
+With SQLite a second replica cannot even mount the ReadWriteOnce volume.
+:::
+
+## Exposing the gRPC port
+
+The ingress only carries HTTP (GUI and API, port 8080). Agents outside the cluster also need the gRPC
+port (9090). Expose it with a `LoadBalancer` or `NodePort` service, or with a TCP route on your ingress
+controller, and point agents at it with `--server-addr host:port`.
+
+With the default auto-PKI, keep gRPC end to end: do not terminate TLS for port 9090 in front of the
+server, or agents cannot present their client certificates. Agents enroll once over HTTP; if the HTTP
+API is only reachable through the ingress, set `--server-http-addr https://arkeep.example.com` on them.
+See [Reverse proxy and TLS](/docs/installation/reverse-proxy-tls/).
+
+## gRPC with your own certificate
+
+Set `grpc.tls.existingSecret` to the name of a TLS Secret (type `kubernetes.io/tls`). The chart mounts
+`tls.crt` and `tls.key` and auto-PKI is skipped. cert-manager with Let's Encrypt is the recommended way
+to produce that Secret:
+
+```bash
+kubectl create secret tls arkeep-grpc-tls \
+  --cert=path/to/tls.crt --key=path/to/tls.key -n <namespace>
+```
+
+## Values reference
+
+| Key | Default | Meaning |
+|---|---|---|
+| `image.repository` | `ghcr.io/arkeep-io/arkeep-server` | Server image |
+| `image.tag` | chart `appVersion` | Image tag |
+| `replicaCount` | `1` | Keep at 1 (see above) |
+| `config.logLevel` | `info` | `debug`, `info`, `warn`, `error` |
+| `config.baseURL` | empty | External URL, needed for password reset emails |
+| `config.dbDriver` | `sqlite` | `sqlite` or `postgres` |
+| `config.secureCookies` | `true` | `Secure` flag on auth cookies |
+| `config.updateCheck` | `true` | Check GitHub for new releases |
+| `config.httpAddr` / `config.grpcAddr` | `:8080` / `:9090` | Listen addresses inside the container |
+| `grpc.tls.existingSecret` | empty | TLS Secret for gRPC; empty means auto-PKI |
+| `grpc.tls.mountPath` | `/etc/arkeep/tls` | Where that Secret is mounted |
+| `secret.existingSecret` | empty | Use your own Secret with `ARKEEP_SECRET_KEY`, `ARKEEP_AGENT_SECRET` (and `ARKEEP_DB_DSN` for PostgreSQL) |
+| `secret.secretKey` / `secret.agentSecret` | empty | Values for the Secret the chart creates |
+| `persistence.enabled` | `true` | PVC for the database and data directory |
+| `persistence.size` | `10Gi` | PVC size |
+| `persistence.mountPath` | `/var/lib/arkeep` | Mount path |
+| `service.type` | `ClusterIP` | Service type |
+| `service.httpPort` / `service.grpcPort` | `8080` / `9090` | Service ports |
+| `ingress.*` | disabled | Standard ingress for the HTTP port |
+| `postgresql.enabled` | `false` | Deploy the bundled Bitnami PostgreSQL (set `config.dbDriver: postgres`) |
+| `externalPostgresql.url` | empty | Full DSN of an external PostgreSQL; or set `host`, `port`, `database`, `username`, `password`, `sslMode` |
+| `resources` | empty | Suggested start: requests 100m / 128Mi, limits 500m / 512Mi |
+| `livenessProbe` / `readinessProbe` | `/health/live` / `/health/ready` | Probes |
+| `securityContext` | non-root, uid 1000 | Pod and container security context |
+
+:::caution
+`ARKEEP_SECRET_KEY` encrypts every stored credential. Once set it must never change: a new key makes
+all stored destination credentials unreadable.
+:::
+
+## Upgrading
+
+Back up the database first (see [Backing up Arkeep itself](/docs/installation/backing-up-arkeep/)).
+Then, from your clone:
+
+```bash
+git pull
+helm dependency build ./deploy/helm/arkeep
+helm upgrade arkeep ./deploy/helm/arkeep --reuse-values
+kubectl rollout status deployment/arkeep-server
+```
+
+After upgrading, check that `GET /health/ready` returns `"status": "healthy"`. Schema migrations run
+automatically on startup.

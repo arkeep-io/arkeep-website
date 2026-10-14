@@ -1,0 +1,86 @@
+---
+import { roadmap } from '../../lib/roadmap';
+import { ISSUES_URL, NEW_TAB } from '../site/links';
+---
+<section id="roadmap" class="roadmap wrap" data-snapshot="roadmap" aria-labelledby="roadmap-title">
+  <div class="head" data-reveal>
+    <h2 id="roadmap-title"><span class="soft">Shipped first,</span> planned next</h2>
+    <a class="button button--quiet" href={ISSUES_URL} {...NEW_TAB}>Suggest a feature</a>
+  </div>
+
+  <div class="body" data-reveal style="--reveal-delay: 90ms">
+    <div class="tabs" role="tablist" aria-label="Roadmap versions">
+      {roadmap.map((v, i) => (
+        <button type="button" role="tab" id={`tab-${v.id}`} aria-controls={`panel-${v.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+          <span class="version">{v.version}</span>
+          <span class="theme">{v.theme}</span>
+        </button>
+      ))}
+    </div>
+    <div class="panels">
+      {roadmap.map((v) => (
+        <div class="panel" role="tabpanel" id={`panel-${v.id}`} aria-labelledby={`tab-${v.id}`} tabindex="0">
+          <h3 class="panel-title">{v.version} · {v.theme}</h3>
+          {v.summary && <p class="summary">{v.summary}</p>}
+          <ul>
+            {v.items.map((item) => (
+              <li>
+                <span class="text">{item.text}</span>
+                <span class:list={['state', { done: item.done }]}>{item.done ? 'Shipped' : 'Planned'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .roadmap { margin-top: var(--section-gap); scroll-margin-top: var(--space-6); }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
+  h2 { font-size: var(--step-h2); }
+  h2 .soft { display: block; color: var(--muted); }
+  .body { margin-top: 56px; display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  .tabs { display: grid; gap: 6px; }
+  [role='tab'] {
+    display: grid; justify-items: start; gap: 2px; width: 180px; min-height: 64px; padding: var(--space-3) var(--space-4);
+    border: 0; border-radius: var(--radius-md); background: var(--surface-muted); text-align: left; cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+  [role='tab']:hover { background: var(--surface-strong); }
+  [role='tab'][aria-selected='true'] { background: var(--ink); color: var(--canvas); }
+  .version { font-size: var(--step-body); font-weight: 600; }
+  .theme { font-size: var(--step-small); }
+  .panel { display: grid; gap: var(--space-3); }
+  .panel[hidden] { display: none; }
+  .panel:focus-visible { outline-offset: 6px; }
+  :global(.js) .panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .panel-title { font-size: var(--step-lead); font-weight: 500; letter-spacing: -0.01em; }
+  :global(html:not(.js)) .panel + .panel { margin-top: var(--space-8); }
+  .summary { font-size: var(--step-body); max-width: 60ch; margin-bottom: var(--space-2); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  li {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-6);
+    min-height: 64px; padding: var(--space-3) var(--space-5); border-radius: var(--radius-md);
+  }
+  li:nth-child(odd) { background: var(--surface-muted); }
+  li:nth-child(even) { background: var(--surface-strong); }
+  .text { font-size: var(--step-body); }
+  .state { flex: none; display: inline-flex; align-items: center; gap: 8px; font-size: var(--step-small); color: var(--muted); }
+  .state.done { color: var(--success); font-weight: 500; }
+  .state.done::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  @media (max-width: 900px) {
+    .body { grid-template-columns: 1fr; }
+    .tabs { grid-template-columns: repeat(4, 1fr); position: sticky; top: 0; z-index: 1; background: var(--canvas); padding-block: var(--space-2); }
+    [role='tab'] { width: auto; min-height: 56px; padding: var(--space-2) var(--space-3); }
+    .theme { display: none; }
+    li { flex-direction: column; align-items: flex-start; gap: var(--space-1); padding: var(--space-4); }
+    .head .button { width: 100%; }
+  }
+</style>
+
+<script>
+  import '../../scripts/roadmap-tabs.ts';
+</script>

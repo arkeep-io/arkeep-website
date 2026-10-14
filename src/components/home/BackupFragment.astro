@@ -1,0 +1,77 @@
+---
+import { buildLog, formatBytes } from '../../lib/snapshot';
+
+// Static completed run, shown before any interaction and when JS is off.
+const STATIC_FILES = [
+  { path: '/arkeep.io/hero.html', bytes: 3_412 },
+  { path: '/arkeep.io/showcase.html', bytes: 9_870 },
+  { path: '/arkeep.io/how-it-works.html', bytes: 6_215 },
+  { path: '/arkeep.io/features.html', bytes: 8_904 },
+  { path: '/arkeep.io/proof.html', bytes: 1_733 },
+  { path: '/arkeep.io/roadmap.html', bytes: 7_480 },
+  { path: '/arkeep.io/install.html', bytes: 2_391 },
+];
+const staticLog = buildLog(STATIC_FILES, 'a3f9c1d2', ['NAS (local)', 'Backblaze B2']).join('\n');
+const staticTotal = formatBytes(STATIC_FILES.reduce((n, f) => n + f.bytes, 0));
+---
+<div class="fragment" data-ui data-backup>
+  <div class="head">
+    <div>
+      <p class="name">arkeep.io</p>
+      <p class="meta">Every 6 hours · 2 destinations</p>
+    </div>
+    <span class="status" data-status data-kind="ok" aria-live="polite">Succeeded</span>
+  </div>
+  <ul class="dests" aria-label="Destinations">
+    <li>NAS (local)</li>
+    <li>Backblaze B2</li>
+  </ul>
+  <pre translate="no" class="log" data-log tabindex="0" aria-label="Job log">{staticLog}</pre>
+  <div class="actions">
+    <button class="button" type="button" data-run>Run now</button>
+    <button class="button button--quiet" type="button" data-break disabled>Break something</button>
+    <button class="button button--quiet" type="button" data-restore disabled>Restore</button>
+  </div>
+  <p class="readout" data-readout aria-live="polite">Last snapshot a3f9c1d2 · 7 files · {staticTotal}</p>
+</div>
+
+<style>
+  .fragment {
+    width: min(100%, 470px);
+    background: var(--surface-card);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    font-size: 14px;
+    display: grid;
+    gap: var(--space-4);
+  }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+  .name { font-size: 15px; font-weight: 600; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .status {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+    border: 1px solid var(--hairline-strong); border-radius: var(--radius-md); font-size: 13px; font-weight: 500;
+  }
+  .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .status[data-kind='running']::before { background: var(--brand); animation: pulse 900ms ease-in-out infinite alternate; }
+  .status[data-kind='broken']::before { background: var(--error); }
+  @keyframes pulse { to { opacity: 0.3; } }
+  .dests { display: flex; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+  .dests li { background: var(--surface-muted); border-radius: var(--radius-sm); padding: 2px 8px; font-size: 13px; }
+  .log {
+    margin: 0; height: 200px; overflow: auto; padding: var(--space-3) var(--space-4);
+    background: var(--surface-dark); color: var(--on-dark); border-radius: var(--radius-md);
+    font-size: 13px; line-height: 1.6; white-space: pre;
+  }
+  /* In dark the card is already --surface-dark; the log steps down to the canvas instead. */
+  :global([data-theme='dark']) .log { background: var(--canvas); }
+  .actions { display: none; flex-wrap: wrap; gap: var(--space-2); }
+  :global(.js) .actions { display: flex; }
+  .actions .button { min-height: 40px; padding: 0 var(--space-4); font-size: 14px; }
+  .readout { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+</style>
+
+<script>
+  import '../../scripts/backup-fragment.ts';
+</script>

@@ -1,0 +1,57 @@
+---
+title: Architecture
+description: How the Arkeep server, agents and GUI fit together, and how retention works.
+---
+
+```
+┌─────────────────────────────────────────┐
+│              Arkeep Server              │
+│  ┌──────────┐  ┌──────────────────────┐ │
+│  │ REST API │  │     gRPC Server      │ │
+│  │  :8080   │  │       :9090          │ │
+│  └──────────┘  └──────────────────────┘ │
+│  ┌────────────────────────────────────┐ │
+│  │ Scheduler│Auth│DB│Notif│WebSocket  │ │
+│  └────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+         ▲                  ▲
+         │ REST/WS          │ gRPC (persistent, Pull)
+         │                  │
+    ┌────┴────┐      ┌──────┴──────┐
+    │   GUI   │      │   Agent(s)  │
+    │  (PWA)  │      │  (one per   │
+    └─────────┘      │   machine)  │
+                     └─────────────┘
+```
+
+**Server** exposes a REST API for the GUI (port 8080) and a gRPC server for agents (port 9090). It handles scheduling, notifications, and stores all state in SQLite (default) or PostgreSQL.
+
+**Agent** runs on each machine to be backed up. It initiates a persistent outbound gRPC connection to the server and never listens on any port. This makes deployment behind NAT and corporate firewalls effortless.
+
+**GUI** is a Vue 3 PWA served directly by the server as embedded static files. No separate web server is required.
+
+:::note[gRPC transport limits]
+The server and agent both enforce a maximum message size of **16 MB** per RPC call. The agent also sends keepalive pings every 30 seconds (10-second timeout) to detect stale connections early. These values are fixed in the binary; no configuration is required.
+:::
+
+## Pull model
+
+Agents always initiate the connection; the server never connects to an agent.
+Agents therefore work behind NAT, firewalls and dynamic IPs without port forwarding or a VPN.
+
+1. The agent registers with the server.
+2. It opens a persistent stream on which the server sends job assignments.
+3. Every 30 seconds it sends a heartbeat with host metrics.
+4. When a job arrives, the agent runs restic or rclone locally.
+5. It streams logs and reports status back while the job runs, so the GUI shows progress live.
+
+<h2 id="retention">Retention</h2>
+
+Retention runs per destination, on its own schedule, with restic's `forget` rules. See
+[Retention and integrity checks](/docs/guides/retention-and-checks/).
+
+## Where to go next
+
+- [How backups work](/docs/concepts/how-backups-work/): policies, destinations, jobs and snapshots.
+- [Security model](/docs/concepts/security/): mTLS, roles and credential encryption.
+- [Reverse proxy and TLS](/docs/installation/reverse-proxy-tls/): exposing the two ports.

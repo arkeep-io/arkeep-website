@@ -1,0 +1,33 @@
+---
+const names = ['S3', 'Backblaze B2', 'Cloudflare R2', 'MinIO', 'SFTP', 'rest-server', 'Google Drive'];
+---
+<section id="proof" class="proof wrap" data-snapshot="proof" aria-labelledby="proof-title">
+  <h2 id="proof-title" class="visually-hidden">No lock-in</h2>
+  <div class="row" data-reveal>
+    <p class="opener">Built on Restic and Rclone. Writes to</p>
+    <ul>
+      {names.map((n) => <li>{n}</li>)}
+    </ul>
+  </div>
+  <div class="readable" data-reveal style="--reveal-delay: 90ms">
+    <pre translate="no"><code>restic -r s3:s3.amazonaws.com/backups snapshots</code></pre>
+    <p>Your snapshots stay readable without Arkeep.</p>
+  </div>
+</section>
+
+<style>
+  .proof { padding-block: 140px; }
+  .row { display: flex; align-items: center; gap: var(--space-8); }
+  .opener { font-size: var(--step-body); flex: none; max-width: 16ch; line-height: 1.35; }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex: 1; justify-content: space-between; gap: var(--space-5); flex-wrap: wrap; }
+  li { font-size: var(--step-lead); font-weight: 500; letter-spacing: -0.01em; }
+  .readable { margin-top: var(--space-8); display: flex; align-items: center; gap: var(--space-6); flex-wrap: wrap; }
+  pre { margin: 0; padding: var(--space-3) var(--space-4); background: var(--surface-muted); border-radius: var(--radius-md); font-size: 14px; overflow-x: auto; max-width: 100%; }
+  .readable p { font-size: var(--step-body); }
+  @media (max-width: 900px) {
+    .proof { padding-block: 96px; }
+    .row { flex-direction: column; align-items: flex-start; gap: var(--space-5); }
+    .opener { max-width: none; }
+    ul { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-6); width: 100%; }
+  }
+</style>

@@ -1,0 +1,133 @@
+---
+title: Destinations
+description: Where backups are stored. Every destination type, its fields, and how to create, edit, clone and delete destinations.
+---
+
+A destination is where backups are stored. Each one holds a single restic repository that every policy
+writing to it shares. Retention and integrity checks are set on the destination: see
+[Retention and integrity checks](/docs/guides/retention-and-checks/).
+
+Create one with **Destinations → New Destination** (admin).
+
+## Types
+
+### Local Path
+
+A directory on the agent's host.
+
+| Field | Required | Notes |
+|---|---|---|
+| **Path** | yes | For example `/mnt/backups`. With a Docker agent, type the host path; see [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker). |
+
+The path is resolved on the agent that runs the job, so a local destination only makes sense for policies
+on that machine (or a path every agent can reach, such as an NFS mount).
+
+### S3 / Object Storage
+
+Any S3-compatible service: AWS S3, Backblaze B2, Cloudflare R2, MinIO, Wasabi, and more.
+
+| Field | Required | Notes |
+|---|---|---|
+| **Bucket** | yes | |
+| **Endpoint** | yes | The provider's S3 endpoint, for example `s3.amazonaws.com`, `s3.eu-central-003.backblazeb2.com`, `<account>.r2.cloudflarestorage.com`. Leaving it blank does not mean AWS. |
+| **Region** | no | Sent as `AWS_DEFAULT_REGION` |
+| **Prefix** | no | A folder inside the bucket, so several repositories can share one bucket |
+| **Access Key ID** | yes | |
+| **Secret Access Key** | yes | |
+
+The repository is `s3:<endpoint>/<bucket>/<prefix>`.
+
+### SFTP
+
+Any SSH server.
+
+| Field | Required | Notes |
+|---|---|---|
+| **Host** | yes | |
+| **Port** | no | Defaults to 22 |
+| **Username** | yes | |
+| **Remote Path** | yes | |
+| **Password** | no | Password authentication |
+| **Private Key (PEM)** | no | Key authentication |
+
+SFTP connections go through the agent's bundled rclone, so the agent host needs no SSH client or
+`~/.ssh` setup. The credentials you enter are used directly.
+
+:::caution
+The SFTP server's host key is not currently verified.
+:::
+
+### REST Server
+
+A self-hosted restic [rest-server](https://github.com/restic/rest-server).
+
+| Field | Required | Notes |
+|---|---|---|
+| **REST Server URL** | yes | `http://` or `https://` |
+| **Username**, **Password** | no | HTTP basic auth, if the server uses it |
+
+rest-server's `--append-only` mode pairs well with an [append-only destination](/docs/guides/retention-and-checks/#append-only-destinations).
+
+### Rclone
+
+Any of rclone's 40+ backends: Google Drive, OneDrive, Azure Blob, Dropbox, and more.
+
+| Field | Required | Notes |
+|---|---|---|
+| **Remote Name** | yes | Must match a remote configured in `rclone.conf` on the agent |
+| **Path** | yes | Path inside the remote |
+
+Rclone destinations take no credentials in Arkeep: configure the remote, with its credentials, in
+`rclone.conf` on each agent that writes to it. The remote name accepts letters, digits, `_ . + @`,
+spaces and dashes; it cannot be an rclone connection string.
+
+## Credentials
+
+Credentials are encrypted at rest and never shown again after saving. When you edit a destination, leave
+the credential fields blank to keep the current ones.
+
+## Common fields
+
+- **Name** (required).
+- **Enabled**: disabled destinations are skipped during backup jobs and by the periodic snapshot sync.
+
+## Import an existing repository
+
+When creating a destination, turn on **Import existing repository** if the location already holds a
+restic repository, for example from before you used Arkeep. Pick an **Agent** that can reach it and enter
+its **Repository Password**. Arkeep tests the repository through that agent before saving anything, then
+lists its snapshots. See [Importing and syncing snapshots](/docs/guides/importing-and-sync/).
+
+## The Destinations list
+
+Columns: **Name**, **Type**, **Status**, **Usage** (repository size, sortable) and **Created**. Badges next
+to the name tell you more:
+
+| Badge | Meaning |
+|---|---|
+| Existing repo | The destination was imported and stores its repository password |
+| Append-only | Snapshots here are never deleted or pruned |
+| No retention | Retention is off |
+| Retention needs reconfiguration | After an upgrade, policies that used to have different retention share this destination; set its retention once |
+| Integrity check failed | The last integrity check failed |
+
+**Status** shows Enabled or Disabled and, while the repository is in use, **Busy** or **N backups running**,
+linking to the job.
+
+Admin actions: **Edit**, **Duplicate** (copies the settings without the credentials, named "Copy of …"),
+**Import snapshots** and **Delete**.
+
+## Destination details
+
+The destination page shows **Used by N policies**, the repository size, the retention schedule, the last
+integrity check and the recent jobs on it. Admins also get **Run Retention Now**, **Run Check Now**,
+**Sync Snapshots**, **Edit** and **Delete**.
+
+While a job holds the repository, the page explains which job and since when; other jobs on the
+destination wait for it (see [Jobs](/docs/guides/jobs/#statuses)).
+
+## Delete a destination
+
+Deleting a destination erases its stored credentials and repository password and removes it from every
+policy. Its snapshots stay listed, but browsing and downloading them is no longer possible, and restoring
+one asks for the destination's credentials again. **The backup data on the storage is not touched.**

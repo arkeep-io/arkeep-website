@@ -1,0 +1,75 @@
+---
+title: Agents
+description: How agents join, what the Agents pages show, and how to rename, delete or reset an agent.
+---
+
+An agent runs on every machine you back up. It connects out to the server and runs restic and rclone
+locally. Install it with [Docker Compose](/docs/installation/docker-compose/#agent-only), as a
+[standalone binary](/docs/installation/binary/#agent) or as a [systemd service](/docs/installation/agent-systemd/).
+
+## How an agent joins
+
+There is no approval step. On first start the agent:
+
+1. enrolls over HTTP with the shared `ARKEEP_AGENT_SECRET` and receives a client certificate;
+2. opens its gRPC connection and registers.
+
+The agent then appears on the **Agents** page, named after the machine's hostname, and turns
+**Online** as soon as its job stream is open. A wrong secret is refused, and enrollment is limited to
+10 attempts per minute per IP.
+
+When an agent reconnects, its hostname, version, operating system, architecture and Docker availability
+are refreshed. If you never renamed it, its name follows hostname changes too.
+
+## Online and offline
+
+Agents send a heartbeat every 30 seconds. An agent is marked **Offline**:
+
+- immediately, when it closes its connection cleanly (for example when it is stopped);
+- within about two minutes, when its heartbeats stop arriving.
+
+When an agent goes offline, jobs it was running become **interrupted** and can be resumed when it comes
+back (see [Jobs](/docs/guides/jobs/#interrupted-jobs)), and an *agent offline* notification is sent. Jobs
+created while it is offline wait as **pending** and start as soon as it reconnects.
+
+## The Agents list
+
+Columns: **Name**, **Hostname**, **OS / Arch**, **Version**, **Status**, **Last Seen**, all sortable.
+Status updates live. An agent older than the latest Arkeep release shows an update indicator next to its
+version.
+
+## Agent details
+
+Open an agent to see:
+
+- **OS / Arch**, **Version**, **Last Seen** and **Registered**;
+- **Resource Usage**: CPU, memory and disk usage of the root filesystem (or `C:\` on Windows), from the
+  agent's heartbeats. The chart is live only: it shows the last 10 readings since you opened the page.
+  When the agent is offline it shows *Agent is offline — live metrics are not available*;
+- **Recent Jobs**: the last five, with a link to all jobs of the agent.
+
+## Rename
+
+Admins can rename an agent with **Rename**. The name is what appears across the interface; renaming stops
+it from following hostname changes.
+
+## Delete
+
+Deleting an agent removes it from the list. Its existing jobs and snapshots stay. Policies assigned to it
+are left as they are: edit them to pick another agent.
+
+If the same machine connects again later, it registers as a new agent.
+
+## Reset identity
+
+With the default auto-PKI, each agent is bound to the certificate it first registered with. If the agent
+enrolls again with a new certificate (for example after its state directory was deleted, or the server's
+CA was regenerated), the server refuses it with *the client certificate does not belong to this agent*.
+
+**Reset identity** (admin only, on the agent's page) clears that binding: the next certificate that
+registers as this agent takes it over. Use it only for an agent you are re-enrolling yourself.
+
+## Docker
+
+When the agent can reach Docker, policies on that agent can back up Docker volumes. See
+[Docker volumes](/docs/guides/docker-volumes/).

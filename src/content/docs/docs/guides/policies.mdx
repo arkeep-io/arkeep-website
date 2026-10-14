@@ -1,0 +1,154 @@
+---
+title: Policies
+description: What to back up, from which agent, when, and where. Sources, schedules, destinations, hooks and every other policy setting.
+---
+
+A policy describes one backup: an agent, what to back up on it, when, and where to send it. Create one
+with **Policies → New Policy** (admin).
+
+## General
+
+- **Name** (required).
+- **Agent** (required): the machine the backup runs on.
+
+## Sources
+
+Add one or more with **Add Source**.
+
+### Directory
+
+A path on the agent's host. With a Docker agent, type the host path: the agent translates it.
+
+- **Path** is required and cannot start with `-`.
+- **Label** is optional and shown in the interface.
+
+### Docker Volume
+
+Pick one or more named volumes from the list the agent reports. Volumes that no longer exist are marked
+**Not found**, and you can type a volume name by hand. This type is unavailable when the agent has no
+Docker access. See [Docker volumes](/docs/guides/docker-volumes/).
+
+### Command (stdin)
+
+Admin only. Runs a command on the agent and streams its output straight into restic, without ever writing
+a temporary file. Ideal for database dumps. See [Backing up databases](/docs/guides/databases/).
+
+- **Name** is required: letters, digits, `.`, `_` and `-`, starting with a letter or digit, up to 64
+  characters, unique within the policy. It becomes the file name inside the snapshot.
+- **Command** runs on the agent. A non-zero exit code aborts the backup.
+
+Each command source produces its own snapshot on each destination.
+
+## Schedule
+
+Pick a preset or write a cron expression:
+
+| Preset | Cron |
+|---|---|
+| Every hour | `0 * * * *` |
+| Daily at 02:00 | `0 2 * * *` |
+| Daily at midnight | `0 0 * * *` |
+| Weekly (Sunday) | `0 2 * * 0` |
+| Weekly (Monday) | `0 2 * * 1` |
+| Monthly | `0 2 1 * *` |
+
+Cron expressions use the standard five fields, or descriptors such as `@daily`. Schedules follow the
+server's time zone (`TZ`), unless the expression starts with `CRON_TZ=Europe/Rome`.
+
+If a run is still going when the next one is due, the next one is skipped.
+
+## Destinations
+
+Select one or more destinations and order them with ↑ and ↓. The agent backs up to them **one after the
+other, in that order**. If one fails, the others are still attempted and the job ends as **failed**.
+
+A destination already used by other policies shows *Already used by N other policies — shares one retention
+configuration*: retention is set on the destination, for all of them.
+
+## Repository password
+
+Restic encrypts each repository with a password. Every policy writing to a destination shares its
+repository, and so its password.
+
+- **Password** and **Confirm Password**: at least 8 characters. Store the password safely: it cannot be
+  recovered.
+- **Use the destination's existing password**: available when every selected destination already stores
+  one (because it was [imported](/docs/guides/importing-and-sync/)). The stored passwords must match.
+
+While you type, Arkeep checks each destination:
+
+- *no existing repository — one will be created*: the first backup initializes it;
+- *existing repository found, password verified*: fine;
+- a wrong password blocks the policy until you fix it.
+
+The password is set when the policy is created and cannot be changed from the interface afterwards.
+
+## Hooks
+
+Admin only. A **pre-backup** and a **post-backup** hook, each with a **Name**, a **Timeout** (seconds,
+default 30), a **Command** and optional **Arguments**. They run on the agent through the shell.
+
+- A failing pre-backup hook aborts the backup.
+- The post-backup hook always runs, even after a failed backup. Its failure is reported but does not fail
+  the job.
+
+```bash
+# Stop a container before the backup, start it after (needs the Docker socket mounted :rw)
+docker stop my-container
+docker start my-container
+```
+
+Hooks run with the agent's privileges. The server refuses commands that contain `$(…)` or backticks, `..`,
+or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024 characters. See
+[Security model](/docs/concepts/security/#hooks-and-command-sources).
+
+:::tip
+To back up a database, prefer a [command source](/docs/guides/databases/) over a `pg_dump` hook: the
+dump streams into restic and never touches the disk.
+:::
+
+## Exclude patterns
+
+One pattern per line, passed to restic as `--exclude` (glob syntax). Lines starting with `#` are ignored.
+
+```text
+*.tmp
+**/node_modules
+/var/lib/app/cache
+```
+
+## Resume interrupted backups
+
+On by default. If the agent disconnects in the middle of a backup (a laptop that sleeps, a network drop),
+the job runs again as soon as the agent reconnects. After 3 resumes in a row the job is marked failed and
+you are notified.
+
+## Notifications
+
+**On success** and **On failure**: **Use global setting**, **Always** or **Never**. They override the event
+toggles in **Settings → Notifications** for this policy. See [Notifications](/docs/guides/notifications/).
+
+## Healthchecks.io
+
+Admin only. Paste a ping URL to have every backup ping it. See [Healthchecks.io](/docs/guides/healthchecks/).
+
+## Enabled
+
+Disabled policies are paused: they do not run on schedule, and **Run Now** is unavailable.
+
+## Run Now
+
+Admins can start a backup at any time with **Run Now**, on the list or on the policy page. It is refused when
+the policy is disabled, or when a run of the policy is already queued.
+
+## The policy page
+
+- **Schedule**, **Last Run**, **Next Run** (empty while disabled) and **Created**.
+- The sources, the destinations in priority order and the recent jobs.
+
+List actions: **Run Now**, **Edit**, **Duplicate** and **Delete** (admin).
+
+## Delete a policy
+
+Deleting a policy stops its schedule and erases its stored repository password. Its snapshots stay listed,
+and the backup data on the storage is not touched.

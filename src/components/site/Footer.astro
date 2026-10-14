@@ -1,0 +1,79 @@
+---
+import { getLatestRelease } from '../../lib/release';
+import NewTabIcon from './NewTabIcon.astro';
+import { NEW_TAB, DISCUSSIONS_URL, DOCKER_HUB_URL, GITHUB_URL, ISSUES_URL, RELEASES_URL, SPONSORS_URL } from './links';
+
+const release = await getLatestRelease();
+const year = new Date().getFullYear();
+const releaseDate = release
+  ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${release.date}T00:00:00Z`))
+  : null;
+---
+<footer class="footer wrap" aria-labelledby="footer-title">
+  <h2 id="footer-title" class="visually-hidden">Arkeep project</h2>
+  <div class="tiles">
+    <div class="tile statement">
+      <p class="lead">Your infra’s Ark. Back up everything, keep it yours.</p>
+      <p class="small">Apache-2.0 · © {year} Arkeep contributors</p>
+    </div>
+    <div class="tile nav">
+      <ul>
+        <li><a href="/docs/" {...NEW_TAB}>Documentation<NewTabIcon /></a></li>
+        <li><a href="/#roadmap">Roadmap</a></li>
+        <li><a href={GITHUB_URL} {...NEW_TAB}>GitHub</a></li>
+        <li><a href={RELEASES_URL} {...NEW_TAB}>Releases</a></li>
+        <li><a href={DOCKER_HUB_URL} {...NEW_TAB}>Docker Hub</a></li>
+      </ul>
+    </div>
+    <div class="tile release">
+      <p class="small">Latest release</p>
+      {release ? <a class="big" href={release.url} {...NEW_TAB}>{release.tag}</a> : <a class="big" href={RELEASES_URL} {...NEW_TAB}>All releases</a>}
+      {release && <p class="small"><time datetime={release.date}>{releaseDate}</time></p>}
+    </div>
+    <div class="tile community">
+      <p class="small">Questions and bugs</p>
+      <a class="big" href={DISCUSSIONS_URL} {...NEW_TAB}>Discussions</a>
+      <a href={ISSUES_URL} {...NEW_TAB}>Open an issue</a>
+    </div>
+    <div class="tile wordmark" aria-hidden="true">Arkeep</div>
+    <a class="tile sponsor" href={SPONSORS_URL} {...NEW_TAB}>
+      <span class="lead">Sponsor the work</span>
+      <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true"><path d="M10 38 38 10M16 10h22v22" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="square" /></svg>
+    </a>
+  </div>
+</footer>
+
+<style>
+  .footer { padding-block: var(--section-gap) var(--margin); }
+  .tiles { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-2); }
+  .tile { background: var(--surface-muted); border-radius: var(--radius-md); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); min-height: 220px; }
+  .statement { grid-column: span 4; justify-content: space-between; }
+  .nav { grid-column: span 3; }
+  .release { grid-column: span 2; justify-content: flex-end; }
+  .community { grid-column: span 3; justify-content: flex-end; }
+  .nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+  .nav a, .community a { color: var(--ink); text-decoration: none; transition: color 160ms ease; }
+  .nav a:hover, .community a:hover, .release a:hover { color: var(--text-link); }
+  .lead { font-size: var(--step-lead); font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; }
+  .small { font-size: var(--step-small); color: var(--muted); }
+  .big { font-size: var(--step-lead); font-weight: 600; text-decoration: none; transition: color 160ms ease; }
+  .wordmark {
+    grid-column: span 8; min-height: 320px; background: var(--ink); color: var(--canvas);
+    font-weight: 600; font-size: clamp(4rem, 13vw, 12rem); letter-spacing: -0.05em; line-height: 1;
+    align-items: center; justify-content: center;
+  }
+  .sponsor {
+    grid-column: span 4; min-height: 320px; background: var(--primary); color: var(--on-primary);
+    justify-content: space-between; text-decoration: none; transition: background-color 160ms ease;
+  }
+  .sponsor svg { align-self: flex-end; transition: transform 200ms ease; }
+  .sponsor:hover { background: var(--primary-hover); }
+  .sponsor:hover svg { transform: translate(4px, -4px); }
+  @media (max-width: 900px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .tile { grid-column: span 1; min-height: 160px; padding: var(--space-5); }
+    .wordmark { grid-column: span 2; min-height: 160px; order: -2; font-size: 26vw; }
+    .sponsor { grid-column: span 2; min-height: 160px; order: -1; }
+    .statement { grid-column: span 2; }
+  }
+</style>

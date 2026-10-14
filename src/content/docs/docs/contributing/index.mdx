@@ -1,0 +1,66 @@
+---
+title: Contributing
+description: How to propose changes to Arkeep, the conventions the code follows, and the pull request process.
+---
+
+Contributions are welcome. This page covers what you need to get a change merged.
+
+## Before you start
+
+- Check the [open issues](https://github.com/arkeep-io/arkeep/issues): your idea or bug may already be tracked.
+- For anything non-trivial, open an issue first to agree on the approach before writing code.
+
+Set up your environment with [Development setup](/docs/contributing/development/) and find your way around
+with [Project structure](/docs/contributing/project-structure/).
+
+## Conventions
+
+### Go
+
+- Standard Go style: `gofmt`, idiomatic error handling, small interfaces.
+- Comments and documentation in English.
+- Error strings are lowercase and end without punctuation: `fmt.Errorf("something failed: %w", err)`.
+- Sentinel errors per package: `var ErrNotFound = errors.New(...)`.
+- New IDs use `uuid.NewV7()`, never `uuid.New()`.
+- No `gorm.Preload`: relations are loaded with explicit queries in the repository layer.
+- Credentials use the `EncryptedString` type.
+- Table-driven tests with the standard `testing` package.
+- `task lint` must pass.
+
+### Vue and TypeScript
+
+- Composition API with `<script setup>` only.
+- Type everything, no implicit `any`.
+- Forms use `useField()` from vee-validate, never the `<Field>` component.
+- Tailwind CSS v4 utility classes only, no `<style>` blocks.
+- All HTTP calls go through `api<T>()` in `services/api.ts`.
+
+### Commits
+
+[Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`,
+`test:`. The changelog is generated from them.
+
+```text
+feat: add SFTP destination type
+fix: handle restic init error on first backup
+```
+
+## Pull requests
+
+The repository follows Gitflow: `develop` is the integration branch, `main` only receives releases.
+
+1. Fork the repository and branch from `develop` (`git checkout -b feat/my-feature`).
+2. Make your change, with tests where they make sense.
+3. Run `task test` and `task lint`; both must pass.
+4. Open the pull request **against `develop`**, explaining what changed and why, and fill in the template.
+5. Address review feedback with new commits; do not force-push once review has started.
+6. Accepted pull requests are squash-merged.
+
+## Security issues
+
+Do not open a public issue. Email **hello@arkeep.io**; see [Security model](/docs/concepts/security/#reporting-a-vulnerability).
+
+## License
+
+By contributing you agree that your contributions are licensed under the
+[Apache License 2.0](https://github.com/arkeep-io/arkeep/blob/main/LICENSE).

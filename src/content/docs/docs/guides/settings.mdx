@@ -1,0 +1,36 @@
+---
+title: Settings
+description: Every tab of the Settings page, what it controls and its defaults.
+---
+
+**Settings** is available to admins and has six tabs.
+
+| Tab | What it controls | Details |
+|---|---|---|
+| **OpenID Connect** | Single sign-on providers | [Single sign-on](/docs/guides/oidc/) |
+| **SMTP** | The mail server for notifications and password reset | [Notifications](/docs/guides/notifications/#email) |
+| **Notifications** | Which events are sent, and the webhook | [Notifications](/docs/guides/notifications/) |
+| **Log Retention** | How long job logs are kept | below |
+| **Job Queue** | How long a job may wait before it fails | below |
+| **Snapshot Sync** | Periodic sync of snapshot lists with repositories | below |
+
+## Log retention
+
+Job logs can grow quickly on busy installations. Set how long to keep them, by level:
+
+- **Info logs — keep for (days)**
+- **Warning & error logs — keep for (days)**
+
+Both default to 0, which keeps logs forever, and accept up to 3650 days. Old logs are removed once a day.
+**Run cleanup** removes them now and reclaims the disk space.
+
+## Job queue
+
+**Queue timeout (minutes)**: how long a job may wait, for a busy destination or for its agent to start it,
+before it is marked failed. 1440 (24 hours) by default, 0 to wait forever, at most 43200 (30 days). See
+[Jobs](/docs/guides/jobs/#queue-timeout).
+
+## Snapshot sync
+
+**Sync every (hours)**: reconcile the snapshot list of every enabled destination with its repository on a
+schedule. Off (0) by default, up to 720 hours. See [Importing and syncing snapshots](/docs/guides/importing-and-sync/#sync-snapshots).

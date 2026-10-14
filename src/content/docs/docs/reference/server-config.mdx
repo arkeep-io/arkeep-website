@@ -1,0 +1,59 @@
+---
+title: Server configuration
+description: Every flag and environment variable of arkeep-server.
+---
+
+Every option can be set with a flag or an environment variable. When both are set, the flag wins.
+
+| Flag | Environment | Default | Description |
+|---|---|---|---|
+| `--http-addr` | `ARKEEP_HTTP_ADDR` | `:8080` | HTTP listen address: web interface, REST API, enrollment, health, metrics |
+| `--grpc-addr` | `ARKEEP_GRPC_ADDR` | `:9090` | gRPC listen address for agents |
+| `--grpc-tls-cert` | `ARKEEP_GRPC_TLS_CERT` | | PEM certificate for gRPC TLS (requires `--grpc-tls-key`). Disables auto-PKI. |
+| `--grpc-tls-key` | `ARKEEP_GRPC_TLS_KEY` | | PEM private key for gRPC TLS (requires `--grpc-tls-cert`) |
+| `--grpc-insecure` | `ARKEEP_GRPC_INSECURE` | `false` | Disable TLS for gRPC. Same machine or trusted private network only. |
+| `--db-driver` | `ARKEEP_DB_DRIVER` | `sqlite` | `sqlite` or `postgres` |
+| `--db-dsn` | `ARKEEP_DB_DSN` | `./arkeep.db` | SQLite file path or PostgreSQL DSN |
+| `--secret-key` | `ARKEEP_SECRET_KEY` | | **Required.** Master key for AES-256-GCM credential encryption. Must never change. |
+| `--agent-secret` | `ARKEEP_AGENT_SECRET` | | **Required.** Shared secret agents present to enroll and authenticate |
+| `--data-dir` | `ARKEEP_DATA_DIR` | `./data` | Server state: JWT signing keys, the private CA and certificates |
+| `--base-url` | `ARKEEP_BASE_URL` | | Public URL, such as `https://arkeep.example.com`. Required for password reset emails; links are never built from request headers. |
+| `--log-level` | `ARKEEP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `--secure-cookies` | `ARKEEP_SECURE_COOKIES` | `false` | `Secure` flag on auth cookies. Turn on when served over HTTPS. |
+| `--trusted-proxies` | `ARKEEP_TRUSTED_PROXIES` | loopback and private networks | Comma-separated IPs or CIDRs of reverse proxies whose `X-Forwarded-For` is trusted, for rate limits and the audit log. `none` trusts no proxy. |
+| `--metrics-token` | `ARKEEP_METRICS_TOKEN` | | When set, `/metrics` requires `Authorization: Bearer <token>`. When empty, `/metrics` is public. |
+| `--telemetry` | `ARKEEP_TELEMETRY` | `true` | Send anonymous usage statistics. See [Telemetry](/docs/reference/telemetry/). |
+| `--update-check` | `ARKEEP_UPDATE_CHECK` | `true` | Check the GitHub releases API (cached 1 hour) to show an update indicator. `false` never contacts GitHub. |
+
+The server also honours `TZ`: policy schedules follow the server's time zone.
+
+## Generating secrets
+
+```bash
+openssl rand -hex 32   # ARKEEP_SECRET_KEY
+openssl rand -hex 24   # ARKEEP_AGENT_SECRET
+```
+
+:::caution
+`ARKEEP_SECRET_KEY` must stay the same for the life of the installation: changing it makes every stored
+credential unreadable. Keep it in a password manager or secrets vault, apart from database backups.
+:::
+
+## PostgreSQL
+
+```text
+postgres://arkeep:password@localhost:5432/arkeep?sslmode=require
+```
+
+SQLite is the default and fits most installations. Choose PostgreSQL for many agents running jobs at the
+same time, or to use a managed database service. Either way, run a single server instance.
+
+## Docker Compose variables
+
+The compose files in `deploy/docker` also read:
+
+| Variable | Used for |
+|---|---|
+| `ARKEEP_HTTP_PORT`, `ARKEEP_GRPC_PORT` | Host ports published for the server (8080, 9090) |
+| `POSTGRES_PASSWORD` | The PostgreSQL variants (`docker-compose.postgres*.yml`) |
+| `PUID`, `PGID` | Agent: the user that writes to host directories through the `/hostfs` mount |

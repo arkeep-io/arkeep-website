@@ -1,0 +1,96 @@
+---
+title: Development setup
+description: Build and run Arkeep from source, with hot reload on the server, the agent and the web interface.
+---
+
+## Prerequisites
+
+| Tool | Version | Install |
+|---|---|---|
+| Go | 1.27+ | [go.dev](https://go.dev/dl/) |
+| Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
+| pnpm | 9+ | `corepack enable` |
+| Docker | any | [docker.com](https://www.docker.com/) |
+| Task | latest | `go install github.com/go-task/task/v3/cmd/task@latest` |
+| protoc | latest | `apt install protobuf-compiler` or `brew install protobuf` |
+| protoc-gen-go | latest | `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest` |
+| protoc-gen-go-grpc | latest | `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest` |
+
+## Getting started
+
+```bash
+git clone https://github.com/arkeep-io/arkeep
+cd arkeep
+
+# Download the restic and rclone binaries embedded into the agent at build time
+task deps:download
+
+# Generate gRPC code from the .proto definitions
+task proto
+
+# Terminal 1: the server (http://localhost:8080, gRPC :9090)
+task run:server
+
+# Terminal 2: the web interface dev server with hot reload (http://localhost:5173)
+task run:gui
+
+# Terminal 3: an agent connected to the local server
+task run:agent
+```
+
+The interface dev server proxies API requests to the server, so frontend and backend both reload as you
+work. In production the interface is compiled and embedded in the server binary; no separate web server is
+needed.
+
+`task run:server` sets development secrets and turns telemetry off:
+
+```text
+ARKEEP_SECRET_KEY=dev-secret-key-00000000000000000
+ARKEEP_AGENT_SECRET=dev-agent-secret
+ARKEEP_TELEMETRY=false
+```
+
+### First login
+
+Open `http://localhost:8080`. The first visit redirects to the setup page, where you create the admin
+account. It only accepts the account within 15 minutes of the server starting; restart the server if the
+window has passed.
+
+## Tasks
+
+```bash
+task build          # Build all binaries (server + agent, interface included)
+task build:server   # Build the server (builds the interface first, then embeds it)
+task build:agent    # Build the agent (downloads restic and rclone first)
+task build:gui      # Build the interface only (gui/dist/)
+task test           # Run all tests
+task lint           # Run linters (golangci-lint + vue-tsc)
+task proto          # Regenerate gRPC code
+task tidy           # Tidy all Go modules
+task clean          # Remove build artifacts
+
+task run:server     # Run the server in development mode
+task run:agent      # Run the agent in development mode
+task run:gui        # Run the interface dev server with hot reload
+
+task deps:download  # Download restic and rclone for the current platform
+```
+
+## Tests
+
+```bash
+task test           # everything
+task test:server    # server only
+task test:agent     # agent only
+```
+
+The three Go modules are separate, so run a single test from inside its module:
+
+```bash
+cd server && go test -v -run TestJobCancel ./internal/api/
+cd agent  && go test -v -run TestExecutor  ./internal/executor/
+```
+
+Go tests are table-driven with the standard `testing` package and live next to the code they test. CI also
+runs the race detector, `golangci-lint` on each module, the build of the agent for armv7 and MIPS, and the
+interface build with type checking.

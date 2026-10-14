@@ -1,0 +1,26 @@
+---
+title: Telemetry
+description: What anonymous usage data Arkeep sends, and how to turn it off.
+---
+
+Arkeep sends anonymous usage statistics once a day to help prioritise development. **No personal data,
+backup contents, credentials or hostnames are ever sent.**
+
+What is sent:
+
+- a random instance ID, stable for the installation;
+- the Arkeep version;
+- the operating system;
+- the number of connected agents;
+- the number of active policies.
+
+The aggregated numbers are public at [telemetry.arkeep.io/stats](https://telemetry.arkeep.io/stats).
+
+## Turn it off
+
+Set `ARKEEP_TELEMETRY=false`, or start the server with `--telemetry=false`.
+
+## Other outbound connections
+
+The server also checks the GitHub releases API, at most once an hour, to show an update indicator. Turn it
+off with `ARKEEP_UPDATE_CHECK=false`. Agents only ever connect to your Arkeep server.

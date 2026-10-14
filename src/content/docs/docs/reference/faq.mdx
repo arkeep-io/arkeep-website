@@ -1,0 +1,55 @@
+---
+title: FAQ
+description: Common questions about Arkeep.
+---
+
+## Why restic under the hood?
+
+Restic is battle-tested, content-addressable and deduplicates very well. It handles encryption, chunking
+and repository integrity natively. Arkeep adds the management layer on top (scheduling, coordination across
+machines, a web interface, notifications) without reinventing the storage engine.
+
+## Can I access my backups without Arkeep?
+
+Yes. Every repository is a plain restic repository. Use the `restic` command line with the repository
+password at any time. Your data is never locked in.
+
+## Why does the agent connect to the server, and not the other way around?
+
+So agents work behind NAT, firewalls and dynamic IPs without port forwarding or a VPN. The server never
+reaches out to agents: each agent keeps a persistent gRPC connection open and receives its jobs through it.
+
+## Does the agent need root?
+
+No. The agent runs as an unprivileged user that can read what it backs up. The exception is Docker volumes:
+reading `/var/lib/docker/volumes` usually requires the `docker` group or root. The Docker Compose deployment
+handles this through its mounts.
+
+## Are hooks safe?
+
+Hooks run on the agent with the agent's privileges: treat hook configuration like SSH access to the machine.
+That is why only admins can set them, and why the server refuses command substitution, path traversal and
+references to internal credential variables. See [Security model](/docs/concepts/security/#hooks-and-command-sources).
+
+## SQLite or PostgreSQL?
+
+SQLite is the default and works well for most installations. Switch to PostgreSQL when many agents run jobs
+at the same time, or to use a managed database. Either way, run a **single** server instance: connected
+agents and download tickets live in that instance's memory.
+
+## Is there a Kubernetes deployment?
+
+Yes, a Helm chart. See [Install on Kubernetes](/docs/installation/kubernetes/). For simpler setups, Docker
+Compose on a single node works too.
+
+## Can several policies write to the same destination?
+
+Yes. They share the destination's restic repository (and so its password), deduplicate against each other,
+and share the destination's retention settings. Each policy's snapshots are tagged, so retention applies to
+each policy separately.
+
+## What happens if the Arkeep server is lost?
+
+Your backups are not affected: they live on the destinations. Restore the server from its own backup (see
+[Backing up Arkeep itself](/docs/installation/backing-up-arkeep/)), or start fresh and
+[import the existing repositories](/docs/guides/importing-and-sync/).
