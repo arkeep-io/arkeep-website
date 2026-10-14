@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Two tags pushed close together deploy one after the other, never in parallel.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node >= 25 no longer bundles corepack. pnpm/action-setup installs the
+      # version pinned by packageManager in package.json, and must run before
+      # setup-node so its pnpm cache lookup can find the binary.
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Cheap guard on the exact artifact that is about to go live.
+      - name: Check internal links
+        run: pnpm check:links
+
+      # Wrangler is pinned here rather than in devDependencies, so CI and local
+      # installs do not pull the workerd runtime they never use.
+      - name: Deploy
+        run: pnpm dlx wrangler@4.151.0 deploy --tag "${GITHUB_REF_NAME}" --message "${GITHUB_REF_NAME} (${GITHUB_SHA::7})"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Create GitHub release
+        run: gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes --title "${GITHUB_REF_NAME}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
