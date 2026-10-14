@@ -14,6 +14,7 @@ arkeep/
 │       ├── docker/             # Docker volume discovery
 │       ├── hooks/              # Pre/post backup hook runner
 │       └── metrics/            # Host metrics (CPU, RAM, disk)
+│   └── scripts/                # download_deps.go: fetches restic and rclone to embed
 ├── server/                     # Server binary
 │   ├── cmd/server/             # Entry point, with the interface embedded
 │   └── internal/
@@ -23,13 +24,25 @@ arkeep/
 │       ├── repositories/       # Data access layer (explicit queries, no GORM Preload)
 │       ├── grpc/               # gRPC server: receives agent streams, dispatches jobs
 │       ├── agentmanager/       # In-memory registry of connected agents
-│       ├── scheduler/          # Backup scheduler
+│       ├── agentwatchdog/      # Marks agents offline when heartbeats stop
+│       ├── scheduler/          # Backup scheduler (one job per policy)
+│       ├── retentionscheduler/ # Retention sweeps, per destination
+│       ├── checkscheduler/     # Repository integrity checks, per destination
+│       ├── destqueue/          # Dispatches jobs queued behind a busy destination
+│       ├── destutil/           # Repository URLs, backend env vars, destination validation
+│       ├── policyutil/         # Flattens policy sources (paths, command sources)
+│       ├── snapshotsync/       # Keeps snapshot records in step with the repository
+│       ├── logretention/       # Prunes old job log rows
 │       ├── notification/       # Email and webhook senders
+│       ├── healthcheck/        # Healthchecks.io pings (start, success, failure)
+│       ├── telemetry/          # Anonymous daily usage ping (opt-out)
 │       ├── metrics/            # Prometheus collectors and HTTP middleware
-│       └── websocket/          # WebSocket hub for live updates in the interface
+│       ├── websocket/          # WebSocket hub for live updates in the interface
+│       └── integration/        # In-process server + gRPC integration tests
 ├── shared/                     # Code shared between server and agent
 │   ├── proto/                  # Protobuf definitions and generated code
-│   └── types/                  # Shared types
+│   ├── types/                  # Shared types
+│   └── validation/             # Rules enforced identically on server and agent
 ├── gui/                        # Vue 3 PWA
 │   └── src/
 │       ├── components/         # UI components (shadcn-vue based)
@@ -62,7 +75,7 @@ All gRPC messages are defined in `shared/proto/agent.proto`; run `task proto` af
 3. **Agent**: add every environment variable the type needs to `allowedDestEnv` in
    `agent/internal/restic/env.go`. Anything else is dropped before restic runs.
 4. **Interface**: in `gui/src/components/destinations/DestinationSheet.vue`, add the form section and the
-   entry in `destinationTypeLabels`.
+   entry in `DEST_TYPES` (value and label shown in the type selector).
 5. **Tests**: in `server/internal/destutil/` (URL and environment) and `agent/internal/restic/` (allowlist).
 
 ## Adding a source type

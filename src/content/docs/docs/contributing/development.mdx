@@ -8,13 +8,16 @@ description: Build and run Arkeep from source, with hot reload on the server, th
 | Tool | Version | Install |
 |---|---|---|
 | Go | 1.27+ | [go.dev](https://go.dev/dl/) |
-| Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
-| pnpm | 9+ | `corepack enable` |
+| Node.js | 26 (as in CI) | [nodejs.org](https://nodejs.org/) |
+| pnpm | 12 (pinned in `gui/package.json`) | `npm install -g pnpm` |
 | Docker | any | [docker.com](https://www.docker.com/) |
 | Task | latest | `go install github.com/go-task/task/v3/cmd/task@latest` |
 | protoc | latest | `apt install protobuf-compiler` or `brew install protobuf` |
 | protoc-gen-go | latest | `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest` |
 | protoc-gen-go-grpc | latest | `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest` |
+
+Node.js 25 and later no longer ship Corepack, so install pnpm directly; it switches to the version pinned by
+`packageManager` in `gui/package.json` on its own.
 
 ## Getting started
 
@@ -37,6 +40,8 @@ task run:gui
 # Terminal 3: an agent connected to the local server
 task run:agent
 ```
+
+`task run:dev` starts the server and the interface together in one terminal; the agent still runs on its own.
 
 The interface dev server proxies API requests to the server, so frontend and backend both reload as you
 work. In production the interface is compiled and embedded in the server binary; no separate web server is
@@ -62,9 +67,9 @@ window has passed.
 task build          # Build all binaries (server + agent, interface included)
 task build:server   # Build the server (builds the interface first, then embeds it)
 task build:agent    # Build the agent (downloads restic and rclone first)
-task build:gui      # Build the interface only (gui/dist/)
-task test           # Run all tests
-task lint           # Run linters (golangci-lint + vue-tsc)
+task build:gui      # Build the interface only (gui/dist/), with vue-tsc type checking
+task test           # Run all Go tests (shared, server, agent)
+task lint           # Run golangci-lint on the server module
 task proto          # Regenerate gRPC code
 task tidy           # Tidy all Go modules
 task clean          # Remove build artifacts
@@ -72,6 +77,7 @@ task clean          # Remove build artifacts
 task run:server     # Run the server in development mode
 task run:agent      # Run the agent in development mode
 task run:gui        # Run the interface dev server with hot reload
+task run:dev        # Run the server and the interface together
 
 task deps:download  # Download restic and rclone for the current platform
 ```
@@ -79,18 +85,25 @@ task deps:download  # Download restic and rclone for the current platform
 ## Tests
 
 ```bash
-task test           # everything
+task test           # all Go modules
+task test:shared    # shared only
 task test:server    # server only
 task test:agent     # agent only
 ```
 
+`task test` covers the Go modules only. The interface has no unit tests; `task build:gui` type-checks it.
+
 The three Go modules are separate, so run a single test from inside its module:
 
 ```bash
-cd server && go test -v -run TestJobCancel ./internal/api/
-cd agent  && go test -v -run TestExecutor  ./internal/executor/
+cd server && go test -v -run TestAgentHandler_Create ./internal/api/
+cd agent  && go test -v -run TestResolveSources      ./internal/executor/
 ```
 
-Go tests are table-driven with the standard `testing` package and live next to the code they test. CI also
-runs the race detector, `golangci-lint` on each module, the build of the agent for armv7 and MIPS, and the
-interface build with type checking.
+Go tests are table-driven with the standard `testing` package and live next to the code they test.
+`server/internal/integration/` runs a real server and gRPC listener in-process against an in-memory SQLite
+database, with no restic binary or Docker needed.
+
+CI runs every Go module's tests with the race detector, `golangci-lint` on each module (locally `task lint`
+covers the server only), the build of the agent for armv7, MIPS and MIPSLE, and the interface build with type
+checking.
