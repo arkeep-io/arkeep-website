@@ -92,8 +92,9 @@ const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${sta
     .links li:last-child { display: block; }
     .links a { width: 100%; min-height: 44px; font-size: 15px; color: var(--ink); }
   }
-  @media (max-width: 400px) {
-    .wordmark span { display: none; }
+  /* Phones: the wordmark stays; the hero's own Install button is right below, so the nav drops it. */
+  @media (max-width: 639px) {
+    .install { display: none; }
   }
 </style>
 

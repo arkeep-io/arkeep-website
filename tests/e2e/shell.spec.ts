@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test';
 
 test('nav links and footer are present', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Install Arkeep' })).toHaveAttribute('href', '/docs/installation/docker-compose/');
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await expect(nav.locator('a.wordmark')).toContainText('Arkeep');
+  await expect(nav.locator('a.install')).toHaveAttribute('href', '/docs/installation/docker-compose/');
   await expect(page.getByRole('link', { name: 'Sponsor the work' })).toHaveAttribute('href', 'https://github.com/sponsors/arkeep-io');
   await expect(page.locator('footer .release a')).toBeVisible();
   await expect(page.locator('footer').getByRole('navigation', { name: 'Docs' }).getByRole('link')).toHaveCount(5);
@@ -54,4 +56,13 @@ test('in-page anchors scroll smoothly', async ({ page }) => {
   await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
   await page.goto('/docs/guides/notifications/');
   await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+});
+
+test('phones keep the wordmark and leave Install to the hero', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone layout');
+  await page.goto('/');
+  const nav = page.getByRole('navigation', { name: 'Main' });
+  await expect(nav.locator('a.wordmark span')).toBeVisible();
+  await expect(nav.locator('a.install')).toBeHidden();
+  await expect(page.locator('.hero').getByRole('link', { name: /Install Arkeep/ })).toBeVisible();
 });
