@@ -3,7 +3,7 @@ import Search from 'virtual:starlight/components/Search';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 import { Image } from 'astro:assets';
 import mark from '../../assets/arkeep-mark.png';
-import { GET_STARTED_URL, isExternal, NEW_TAB, navLinks } from '../site/links';
+import { GET_STARTED_URL, isExternal, newTab, navLinks } from '../site/links';
 ---
 <div class="header">
   <a class="wordmark" href="/">
@@ -13,7 +13,7 @@ import { GET_STARTED_URL, isExternal, NEW_TAB, navLinks } from '../site/links';
   <div class="search"><Search /></div>
   <div class="right">
     <ul class="links">
-      {navLinks.map((l) => <li class:list={{ 'home-anchor': l.href.startsWith('/#') }}><a href={l.href} {...(isExternal(l.href) ? NEW_TAB : {})}>{l.label}</a></li>)}
+      {navLinks.map((l) => <li class:list={{ 'home-anchor': l.href.startsWith('/#') }}><a href={l.href} {...(isExternal(l.href) ? newTab() : {})}>{l.label}</a></li>)}
     </ul>
     <ThemeSelect />
     <a class="get-started" href={GET_STARTED_URL}>Install Arkeep</a>

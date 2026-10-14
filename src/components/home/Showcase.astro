@@ -1,6 +1,6 @@
 ---
 import NewTabIcon from '../site/NewTabIcon.astro';
-import { NEW_TAB } from '../site/links';
+import { newTab } from '../site/links';
 import { applyRetention, DESTINATION_PRESETS, timeline, type RetentionPolicy } from '../../lib/retention';
 
 // Fixed end so the build is deterministic; labels are relative, so the date never shows.
@@ -62,7 +62,7 @@ const word = (key: string) => (key === 'last' ? 'last' : key);
             </div>
           ))}
           <button type="button" class="more-rules" data-more-rules aria-expanded="false">More rules</button>
-          <a class="text-link docs-link" href="/docs/guides/retention-and-checks/" {...NEW_TAB}>How retention works<NewTabIcon /></a>
+          <a class="text-link docs-link" href="/docs/guides/retention-and-checks/" {...newTab()}>How retention works<NewTabIcon /></a>
         </div>
       </div>
     </div>

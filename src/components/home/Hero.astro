@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import BackupFragment from './BackupFragment.astro';
 import NewTabIcon from '../site/NewTabIcon.astro';
 import Icon from '../site/Icon.astro';
-import { GET_STARTED_URL, GITHUB_URL, NEW_TAB, RELEASES_URL } from '../site/links';
+import { GET_STARTED_URL, GITHUB_URL, newTab, RELEASES_URL } from '../site/links';
 import { getLatestRelease } from '../../lib/release';
 import phoneLight from '../../assets/screens/mobile-dashboard-light.png';
 import phoneDark from '../../assets/screens/mobile-dashboard-dark.png';
@@ -13,9 +13,9 @@ const release = await getLatestRelease();
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap copy-wrap">
     <div class="hero-copy" data-snapshot="hero">
-      <a class="release" href={release?.url ?? RELEASES_URL} {...NEW_TAB}>
-        <span class="badge badge--accent">{release ? release.tag : 'Open source'}</span>
-        <span>{release ? 'Latest release' : 'Apache-2.0'}</span>
+      <a class="release" href={release?.url ?? RELEASES_URL} {...newTab()} data-gh-release-link>
+        <span class="badge badge--accent" data-gh-release-tag>{release ? release.tag : 'Open source'}</span>
+        <span data-gh-release-label>{release ? 'Latest release' : 'Apache-2.0'}</span>
         <Icon name="chevron-right" size={14} />
       </a>
       <h1 id="hero-title" class="display-mega">
@@ -24,8 +24,8 @@ const release = await getLatestRelease();
       </h1>
       <p class="lead">Open-source, self-hosted control for Restic and Rclone: one server, a lightweight agent on every machine, one dashboard.</p>
       <div class="actions">
-        <a class="button button--lg" href={GET_STARTED_URL} {...NEW_TAB}>Install Arkeep<NewTabIcon /></a>
-        <a class="button button--lg button--secondary" href={GITHUB_URL} {...NEW_TAB}><Icon name="github" />Star on GitHub</a>
+        <a class="button button--lg" href={GET_STARTED_URL} {...newTab()}>Install Arkeep<NewTabIcon /></a>
+        <a class="button button--lg button--secondary" href={GITHUB_URL} {...newTab()}><Icon name="github" />Star on GitHub</a>
       </div>
     </div>
   </div>

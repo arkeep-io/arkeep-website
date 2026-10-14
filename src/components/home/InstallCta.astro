@@ -1,7 +1,7 @@
 ---
 import NewTabIcon from '../site/NewTabIcon.astro';
 import Icon from '../site/Icon.astro';
-import { NEW_TAB } from '../site/links';
+import { newTab } from '../site/links';
 import { installTargets } from '../../lib/install';
 const first = installTargets[0];
 ---
@@ -28,7 +28,7 @@ const first = installTargets[0];
           <pre translate="no"><code data-install-command>{first.command}</code></pre>
         </div>
         <div class="actions">
-          <a class="button button--lg" href={first.href} {...NEW_TAB} data-install-link><span>Open the <span data-install-label>{first.label}</span> guide</span><NewTabIcon /></a>
+          <a class="button button--lg" href={first.href} {...newTab()} data-install-link><span>Open the <span data-install-label>{first.label}</span> guide</span><NewTabIcon /></a>
         </div>
       </div>
     </div>

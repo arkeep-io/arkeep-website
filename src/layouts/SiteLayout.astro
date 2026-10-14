@@ -48,6 +48,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <Footer />
     <script>
       import '../scripts/reveal.ts';
+      import '../scripts/github-live.ts';
       // A hairline under the sticky nav once the page has scrolled.
       const header = document.querySelector<HTMLElement>('[data-header]');
       const onScroll = () => header?.classList.toggle('scrolled', scrollY > 8);

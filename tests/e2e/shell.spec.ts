@@ -30,3 +30,37 @@ test('phone menu opens, lists every link and closes on Escape', async ({ page, i
   await page.keyboard.press('Escape');
   await expect(page.locator('#nav-links')).toBeHidden();
 });
+
+test('release and stars refresh from the GitHub API on load', async ({ page }) => {
+  await page.route('https://api.github.com/repos/arkeep-io/arkeep', (r) => r.fulfill({ json: { stargazers_count: 4321 } }));
+  await page.route('https://api.github.com/repos/arkeep-io/arkeep/releases/latest', (r) =>
+    r.fulfill({ json: { tag_name: 'v9.9.9', published_at: '2027-01-02T10:00:00Z', html_url: 'https://github.com/arkeep-io/arkeep/releases/tag/v9.9.9' } }),
+  );
+  await page.goto('/');
+  await expect(page.locator('footer [data-gh-stars]')).toHaveText('4.3k');
+  await expect(page.locator('footer [data-gh-release-tag]')).toHaveText('v9.9.9');
+  await expect(page.locator('footer [data-gh-release-date]')).toHaveText('Jan 2, 2027');
+  await expect(page.locator('.hero [data-gh-release-tag]')).toHaveText('v9.9.9');
+});
+
+test('a failing GitHub API keeps the built values', async ({ page }) => {
+  await page.route('https://api.github.com/**', (r) => r.fulfill({ status: 403, json: {} }));
+  await page.goto('/');
+  await expect(page.locator('footer [data-gh-release-tag]')).not.toBeEmpty();
+});
+
+test('in-page anchors scroll smoothly', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+  await page.goto('/docs/guides/notifications/');
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+});
+
+test('every external link opens in a new tab', async ({ page }) => {
+  await page.goto('/');
+  const missing = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLAnchorElement>('a[href^="http"]')].filter((a) => a.target !== '_blank').map((a) => a.href),
+  );
+  expect(missing).toEqual([]);
+  await expect(page.locator('footer a.sponsor')).toHaveAttribute('target', '_blank');
+});

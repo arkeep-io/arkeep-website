@@ -1,6 +1,6 @@
 ---
 import { roadmap } from '../../lib/roadmap';
-import { ISSUES_URL, NEW_TAB } from '../site/links';
+import { ISSUES_URL, newTab } from '../site/links';
 ---
 <section id="roadmap" class="section roadmap" data-snapshot="roadmap" aria-labelledby="roadmap-title">
   <div class="wrap">
@@ -10,7 +10,7 @@ import { ISSUES_URL, NEW_TAB } from '../site/links';
         <h2 id="roadmap-title" class="display-lg">Shipped first, planned next</h2>
         <p>Backups come first. Inventory and safe updates build on top of them.</p>
       </div>
-      <a class="button button--secondary" href={ISSUES_URL} {...NEW_TAB}>Suggest a feature</a>
+      <a class="button button--secondary" href={ISSUES_URL} {...newTab()}>Suggest a feature</a>
     </div>
 
     <div class="body" data-reveal style="--reveal-delay: 90ms">

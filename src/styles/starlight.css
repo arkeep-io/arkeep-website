@@ -47,3 +47,8 @@
 .starlight-aside--tip { --sl-color-asides-border: var(--info); --sl-color-asides-text-accent: var(--info); }
 .starlight-aside--caution { --sl-color-asides-border: var(--warning); --sl-color-asides-text-accent: var(--warning); }
 .starlight-aside--danger { --sl-color-asides-border: var(--error); --sl-color-asides-text-accent: var(--error); }
+
+/* Table-of-contents and heading anchors glide, as on the marketing pages. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}

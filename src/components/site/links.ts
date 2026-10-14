@@ -18,5 +18,7 @@ export const navLinks = [
 // (and show NewTabIcon); inside the docs they stay in the same tab.
 export const isExternal = (href: string) => /^https?:\/\//.test(href);
 export const isDocs = (href: string) => href.startsWith('/docs');
-export const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' } as const;
-export const tabAttrs = (href: string) => (isExternal(href) || isDocs(href) ? NEW_TAB : {});
+// A fresh object per call: Astro writes its scoped class onto spread props, so a shared object would
+// collect every component's class and leak it onto later links.
+export const newTab = () => ({ target: '_blank', rel: 'noopener noreferrer' }) as const;
+export const tabAttrs = (href: string) => (isExternal(href) || isDocs(href) ? newTab() : {});

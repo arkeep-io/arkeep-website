@@ -3,6 +3,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; scroll-padding-top: 80px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 a, button, select, input, [role='tab'], [role='radio'] { touch-action: manipulation; }
 body {
   margin: 0;
