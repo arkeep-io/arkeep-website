@@ -1,0 +1,15 @@
+name = "arkeep-website"
+compatibility_date = "2026-09-01"
+
+# Static site only: no Worker script, every request is served from ./dist.
+# The workers.dev URL stays off so the site has a single public address.
+workers_dev = false
+
+routes = [
+  { pattern = "arkeep.io", custom_domain = true }
+]
+
+[assets]
+directory = "./dist"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
