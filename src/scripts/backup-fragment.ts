@@ -12,7 +12,6 @@ if (app && tryBox) {
   const rows = [...app.querySelectorAll<HTMLTableRowElement>('[data-dest]')];
   const run = tryBox.querySelector<HTMLButtonElement>('[data-run]')!;
   const brk = tryBox.querySelector<HTMLButtonElement>('[data-break]')!;
-  const restore = tryBox.querySelector<HTMLButtonElement>('[data-restore]')!;
   const note = tryBox.querySelector<HTMLElement>('[data-try-note]')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = (ms: number) => (reduced ? Promise.resolve() : new Promise((r) => setTimeout(r, ms)));
@@ -38,7 +37,6 @@ if (app && tryBox) {
   function sync() {
     run.disabled = busy || broken !== null;
     brk.disabled = busy || saved === null || broken !== null;
-    restore.disabled = busy || broken === null;
   }
 
   function append(lines: LogLine[]) {
@@ -164,7 +162,6 @@ if (app && tryBox) {
     }
     brk.focus({ preventScroll: true });
   }
-  restore.addEventListener('click', () => void doRestore());
 
   sync();
 }

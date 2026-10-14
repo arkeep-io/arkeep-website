@@ -484,7 +484,7 @@ Compact developer-ergonomic radii — 8px CTAs, 12px cards. Pill geometry is res
 
 **`hero-band`** — Background `{colors.canvas}` with a soft warm-peach gradient wash behind the centered headline. Display headline in `{typography.display-mega}` (64px / 600 / -1.92px), subhead in `{typography.body-md}`, single primary CTA, then below — the device mockup composite.
 
-**`device-mockup-card`** — A layered MacBook + iPhone composite showing real Arkeep surfaces. Background `{colors.surface-card}`, rounded `{rounded.xl}`. The MacBook screen is the GUI's job page rebuilt in HTML at true size (`BackupFragment`), and it runs a live backup of this page: **Run backup** → **Break the headline** → **Restore it**, driven from a control strip under the devices. The iPhone shows a real mobile screenshot of the dashboard (`scripts/screenshots/`). This is the page chrome.
+**`device-mockup-card`** — A layered MacBook + iPhone composite showing real Arkeep surfaces. Background `{colors.surface-card}`, rounded `{rounded.xl}`. The MacBook screen is the GUI's job page rebuilt in HTML at true size (`BackupFragment`), and it runs a live backup of this page: **Run backup** and **Break the headline** from a control strip under the devices; breaking scrolls the headline into view and leaves a gap with a **Restore from snapshot** button inside. The iPhone shows a real mobile screenshot of the dashboard (`scripts/screenshots/`). This is the page chrome.
 
 ### Cards
 

@@ -9,7 +9,7 @@ test('run, break and restore the page', async ({ page }) => {
   await page.getByRole('button', { name: 'Break the headline' }).click();
   await expect(page.locator('#hero-title')).toHaveCount(0);
   await expect(app.locator('[data-status]')).toContainText('Data lost');
-  await page.getByRole('button', { name: 'Restore it' }).click();
+  await page.getByRole('button', { name: /Restore from snapshot/ }).click();
   await expect(page.locator('#hero-title')).toContainText('Let there be backups');
   await expect(app.locator('[data-status]')).toContainText('Restored');
 });
@@ -28,15 +28,14 @@ test('hero controls survive out-of-order use', async ({ page }) => {
   await page.goto('/');
   const run = page.getByRole('button', { name: 'Run backup' });
   const brk = page.getByRole('button', { name: 'Break the headline' });
-  const restore = page.getByRole('button', { name: 'Restore it' });
-  await expect(restore).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Restore from snapshot/ })).toHaveCount(0);
   await expect(brk).toBeDisabled();
   await run.click();
   await expect(brk).toBeEnabled();
   await brk.click();
   await expect(brk).toBeDisabled();
   await expect(run).toBeDisabled();
-  await restore.click();
+  await page.getByRole('button', { name: /Restore from snapshot/ }).click();
   await expect(run).toBeEnabled();
   await run.click();
   await expect(page.locator('[data-backup] [data-readout]')).toContainText(/[0-9a-f]{8} · \d+ files/);
