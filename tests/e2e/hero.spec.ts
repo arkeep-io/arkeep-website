@@ -10,7 +10,7 @@ test('run, break and restore the page', async ({ page }) => {
   await expect(page.locator('#hero-title')).toHaveCount(0);
   await expect(app.locator('[data-status]')).toContainText('Data lost');
   await page.getByRole('button', { name: 'Restore it' }).click();
-  await expect(page.locator('#hero-title')).toContainText('Backups you can');
+  await expect(page.locator('#hero-title')).toContainText('Let there be backups');
   await expect(app.locator('[data-status]')).toContainText('Restored');
 });
 
