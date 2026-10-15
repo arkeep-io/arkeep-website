@@ -10,3 +10,10 @@
 # Astro fingerprints everything under /_astro, so a file there never changes.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Pages are served as plain text/html; name the charset in the header too, not only in <meta>.
+# Every page URL ends in a slash (trailingSlash: 'always'), assets never do.
+/
+  Content-Type: text/html; charset=utf-8
+/*/
+  Content-Type: text/html; charset=utf-8

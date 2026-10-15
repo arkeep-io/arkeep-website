@@ -15,6 +15,7 @@ export default defineConfig({
       title: 'Arkeep',
       logo: { src: './src/assets/arkeep-mark.png', alt: 'Arkeep' },
       favicon: '/favicon.ico',
+      head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } }],
       customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/starlight.css'],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/arkeep-io/arkeep' }],
       editLink: { baseUrl: 'https://github.com/arkeep-io/arkeep-website/edit/master/' },

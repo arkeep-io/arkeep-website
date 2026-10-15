@@ -13,8 +13,8 @@ const starLabel = stars === null ? 'Arkeep on GitHub' : `Arkeep on GitHub, ${sta
 ---
 <nav class="nav wrap" aria-label="Main">
   <a class="wordmark" href="/">
-    <Image src={mark} alt="" width={28} height={28} loading="eager" />
-    <span>Arkeep</span>
+    <Image src={mark} alt="Arkeep" width={28} height={28} loading="eager" />
+    <span aria-hidden="true">Arkeep</span>
   </a>
   <ul class="links" id="nav-links">
     {navLinks.map((l) => (
