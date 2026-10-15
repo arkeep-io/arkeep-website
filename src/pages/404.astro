@@ -1,0 +1,134 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Icon from '../components/site/Icon.astro';
+import { cellGrid, scanLog } from '../lib/not-found';
+
+const grid = cellGrid();
+const columns = grid[0].length;
+// Built-in log for visitors without JS; the script replaces it with the real path and fresh ids.
+const fallback = scanLog('/this-page/', new Date('2026-10-15T12:00:00'), () => 0.5);
+---
+<SiteLayout
+  title="Page not found · Arkeep"
+  description="This page is not in any snapshot."
+  noindex
+>
+  <section class="not-found wrap" aria-labelledby="lost-title">
+    <div class="cells" style={`--cols: ${columns}`} role="img" aria-label="404">
+      {grid.flatMap((row, r) =>
+        row.map((cell, c) => <span class={cell} style={cell === 'empty' ? undefined : `--c: ${c}; --r: ${r}`} />),
+      )}
+    </div>
+
+    <p class="badge badge--error"><span class="dot"></span>404 · Snapshot not found</p>
+    <h1 id="lost-title" class="display-xl">This page isn’t in any snapshot</h1>
+    <p class="lead">We searched every snapshot on every destination and came back empty-handed.</p>
+
+    <div class="term">
+      <div class="term-bar">
+        <span class="term-title"><Icon name="terminal" size={14} />restore</span>
+        <button class="again" type="button" data-again hidden><Icon name="refresh" size={14} />Search again</button>
+      </div>
+      <pre class="term-log" data-scan aria-live="polite">{fallback.map((l) => <span class={l.kind}>{l.text}{'\n'}</span>)}</pre>
+    </div>
+
+    <div class="actions">
+      <a class="button button--lg" href="/"><Icon name="arrow-left" />Restore the homepage</a>
+      <a class="button button--lg button--secondary" href="/docs/">Browse the docs</a>
+    </div>
+  </section>
+</SiteLayout>
+
+<style>
+  .not-found { display: grid; justify-items: center; text-align: center; padding-block: clamp(48px, 8vw, 96px) var(--space-xl); }
+
+  /* "404" in snapshot cells: the 4s are kept, the 0 is the one that went missing. */
+  .cells {
+    --size: clamp(10px, 2.4vw, 16px);
+    display: grid; grid-template-columns: repeat(var(--cols), var(--size)); gap: calc(var(--size) * 0.4);
+    margin-bottom: var(--space-xxl);
+  }
+  .cells span { width: var(--size); height: var(--size); border-radius: calc(var(--size) * 0.25); background: var(--hairline); }
+  .cells .kept { background: var(--brand); }
+  .cells .lost { background: transparent; outline: 1.5px dashed var(--error); outline-offset: -1.5px; }
+  /* Kept cells are written column by column like a backup run; the lost ones flicker, then give up. */
+  :global(.js) .cells .kept { animation: keep 500ms ease calc(var(--c) * 45ms) backwards; }
+  :global(.js) .cells .lost { animation: flicker 1.6s steps(1) calc(400ms + var(--r) * 60ms) backwards; }
+  @keyframes keep { from { background: var(--hairline); transform: scale(0.6); } }
+  @keyframes flicker {
+    0%, 30%, 60% { background: var(--brand); outline-color: transparent; }
+    15%, 45%, 75% { background: transparent; outline-color: var(--error); }
+  }
+
+  .badge--error { background: color-mix(in srgb, var(--error) 12%, transparent); color: var(--error); margin-bottom: var(--space-base); }
+  .lead { margin-top: var(--space-base); max-width: 46ch; font-size: 1.125rem; color: var(--body); }
+
+  .term {
+    width: min(100%, 640px); margin-top: var(--space-xl); text-align: left;
+    background: var(--surface-dark); color: var(--on-dark); border-radius: var(--radius-lg); overflow: hidden;
+  }
+  :global([data-theme='dark']) .term { border: 1px solid var(--hairline); }
+  .term-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+    min-height: 40px; padding: 6px 8px 6px var(--space-base); background: var(--surface-dark-elevated);
+    font-size: 12px; color: var(--on-dark-soft);
+  }
+  .term-title { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); }
+  .again {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 10px;
+    border: 1px solid transparent; border-radius: var(--radius-sm); background: none; color: var(--on-dark);
+    font-size: 12px; font-weight: 500; cursor: pointer; transition: border-color 160ms ease;
+  }
+  .again[hidden] { display: none; }
+  .again:hover { border-color: var(--on-dark-soft); }
+  .again svg { width: 14px; height: 14px; }
+  .term-log {
+    margin: 0; padding: var(--space-base) var(--space-md) var(--space-md); min-height: 11lh;
+    font-size: 13px; line-height: 1.6; white-space: pre; overflow-x: auto;
+  }
+  .term-log :global(.cmd)::before { content: '$ '; color: var(--brand); }
+  .term-log :global(.info), .term-log :global(.miss) { color: var(--on-dark-soft); }
+  .term-log :global(.warn) { color: var(--brand); }
+  .term-log :global(.hint) { color: var(--on-dark); white-space: pre-wrap; }
+
+  .actions { margin-top: var(--space-xl); display: flex; justify-content: center; gap: var(--space-sm); flex-wrap: wrap; }
+  @media (max-width: 639px) {
+    .actions { flex-direction: column; align-items: stretch; width: 100%; max-width: 360px; }
+    .term-log { font-size: 12px; }
+  }
+</style>
+
+<script>
+  import { scanLog } from '../lib/not-found';
+
+  const log = document.querySelector<HTMLElement>('[data-scan]')!;
+  const again = document.querySelector<HTMLButtonElement>('[data-again]')!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  function run() {
+    clearTimeout(timer);
+    again.disabled = true;
+    const lines = scanLog(location.pathname, new Date());
+    log.replaceChildren();
+    const write = (i: number) => {
+      if (i === lines.length) {
+        again.disabled = false;
+        return;
+      }
+      const span = document.createElement('span');
+      span.className = lines[i].kind;
+      span.textContent = `${lines[i].text}\n`;
+      log.append(span);
+      // The command "types", the snapshots tick by, the verdict lands with a beat of suspense.
+      const pause = lines[i].kind === 'cmd' ? 500 : lines[i + 1]?.kind === 'warn' ? 700 : 160;
+      if (reduced) write(i + 1);
+      else timer = setTimeout(() => write(i + 1), pause);
+    };
+    write(0);
+  }
+
+  again.hidden = false;
+  again.addEventListener('click', run);
+  run();
+</script>

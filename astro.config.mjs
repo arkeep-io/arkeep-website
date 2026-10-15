@@ -13,6 +13,8 @@ export default defineConfig({
     sitemap(),
     starlight({
       title: 'Arkeep',
+      // The site's own 404 (src/pages/404.astro) keeps the marketing nav for every missing URL.
+      disable404Route: true,
       logo: { src: './src/assets/arkeep-mark.png', alt: 'Arkeep' },
       favicon: '/favicon.ico',
       head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } }],
