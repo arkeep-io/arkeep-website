@@ -98,7 +98,7 @@ const agents = [
                     {(i === 1 ? agents.slice(0, 1) : agents).map((a) => (
                       <tr>
                         <td>{a.name}</td><td>{a.os}</td>
-                        <td>{i === 1 ? <span class="chip connecting"><span class="c-wait">Connecting…</span><span class="c-on">Online</span></span> : <span class="chip online">Online</span>}</td>
+                        <td>{i === 1 ? <span class="chip connecting"><span class="c-label"><span class="c-wait">Connecting…</span><span class="c-on">Online</span></span></span> : <span class="chip online">Online</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -177,12 +177,16 @@ const agents = [
   .chip { display: inline-flex; align-items: center; gap: 6px; }
   .chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
   .chip.connecting::before { background: var(--warning); }
-  .c-on { display: none; }
+  /* Both labels share one cell and swap by visibility: an element under display: none never starts
+     an animation, so animating display could hide "Connecting…" but never reveal "Online". */
+  .c-label { display: inline-grid; }
+  .c-label > span { grid-area: 1 / 1; }
+  .c-on { visibility: hidden; }
   /* Step 2 plays once when shown: the agent connects, then turns online. */
   :global(.js) .is-active .c-wait { animation: hide 0s 1.4s forwards; }
   :global(.js) .is-active .c-on { animation: show 0s 1.4s forwards; }
-  @keyframes hide { to { display: none; } }
-  @keyframes show { to { display: inline; } }
+  @keyframes hide { to { visibility: hidden; } }
+  @keyframes show { to { visibility: visible; } }
   :global(.js) .is-active .chip.connecting::before { animation: dot-on 0s 1.4s forwards; }
   @keyframes dot-on { to { background: var(--success); } }
   .job { display: grid; gap: 6px; padding-top: 4px; }

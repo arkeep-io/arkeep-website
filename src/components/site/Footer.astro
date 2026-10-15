@@ -39,7 +39,7 @@ const lists = [
   <div class="tiles">
     <div class="tile statement">
       <p class="lead">Your infra’s Ark. Back up everything, keep it yours.</p>
-      <p class="small">Open source under Apache-2.0 · © {year} Arkeep contributors</p>
+      <p class="small">Open source under Apache-2.0 · © {year} Arkeep contributors · <a class="privacy" href="/privacy/">Privacy Policy</a></p>
     </div>
 
     {lists.map((l) => (
@@ -103,6 +103,7 @@ const lists = [
   .big { display: inline-flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; font-variant-numeric: tabular-nums; }
   ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
   .tile a { color: var(--ink); text-decoration: none; transition: color 160ms ease; }
+  .tile a.privacy { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
   /* Same feedback as the release tile: only the big line takes the link colour. */
   .tile a:hover, .stars:hover .big { color: var(--text-link); }
   .stars .big { transition: color 160ms ease; }

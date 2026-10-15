@@ -13,3 +13,9 @@ routes = [
 directory = "./dist"
 not_found_handling = "404-page"
 html_handling = "auto-trailing-slash"
+
+# Matches the dashboard setting: a deploy applies this file and would otherwise switch logs off.
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true

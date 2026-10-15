@@ -1,0 +1,128 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import NewTabIcon from '../components/site/NewTabIcon.astro';
+import { newTab } from '../components/site/links';
+
+const CONTACT = 'hello@arkeep.io';
+---
+<SiteLayout
+  title="Privacy policy · Arkeep"
+  description="What data the arkeep.io website handles when you visit it, who processes it and how to exercise your rights."
+>
+  <article class="legal wrap" aria-labelledby="privacy-title">
+    <header>
+      <p class="eyebrow">Legal</p>
+      <h1 id="privacy-title" class="display-lg">Privacy policy</h1>
+      <p class="updated">Last updated: <time datetime="2026-10-15">15 October 2026</time></p>
+    </header>
+
+    <p class="intro">
+      arkeep.io sets no cookies, shows no ads and does not track you across sites. This page lists the little data
+      that does get handled when you visit, and why.
+    </p>
+
+    <h2>Who is responsible</h2>
+    <p>
+      The data controller is Filippo Crotti, Italy, maintainer of the Arkeep open-source project. For anything about
+      this policy or your data, write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+    </p>
+
+    <h2>What this policy covers</h2>
+    <p>
+      The website at arkeep.io, documentation included, and the anonymous telemetry endpoint at telemetry.arkeep.io.
+      The Arkeep software itself runs on your own machines: your backups, credentials and settings never reach us.
+    </p>
+
+    <h2>When you visit the site</h2>
+    <h3>Hosting</h3>
+    <p>
+      The site is served by Cloudflare, Inc. To deliver and protect it, Cloudflare processes technical data of each
+      request: IP address, browser user agent, requested page and time. Request logs are kept for a few days (at most
+      7) for troubleshooting, then deleted. Legal basis: our legitimate interest in running a working, secure website
+      (Art. 6(1)(f) GDPR).
+    </p>
+
+    <h3>Visitor statistics</h3>
+    <p>
+      We use Cloudflare Web Analytics to count page views. It sets no cookies, does not fingerprint your device and
+      does not follow you to other sites. We only see aggregate figures such as page views, referring sites, countries
+      and device types. Legal basis: legitimate interest in knowing which pages are useful (Art. 6(1)(f) GDPR).
+    </p>
+
+    <h3>GitHub release and star count</h3>
+    <p>
+      Pages show the latest Arkeep release and the project’s GitHub star count. To keep them current, your browser
+      asks the public GitHub API (api.github.com) for these numbers, so GitHub, Inc. receives your IP address and
+      user agent. No GitHub account or login is involved. See the
+      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" {...newTab()}>GitHub privacy statement</a>.
+      Blocking the request does no harm: the page falls back to the values baked in when it was built. Legal basis:
+      legitimate interest (Art. 6(1)(f) GDPR).
+    </p>
+
+    <h3>Links to other sites</h3>
+    <p>
+      Links to GitHub, Docker Hub and other services take you to sites with their own privacy policies. Nothing is
+      loaded from them until you click.
+    </p>
+
+    <h2>Cookies and local storage</h2>
+    <p>The site sets no cookies. It keeps two small entries in your browser’s local storage, which never leave your device:</p>
+    <ul>
+      <li><code>starlight-theme</code>: the light or dark theme you picked.</li>
+      <li><code>arkeep:github</code>: the last release and star count fetched from GitHub, reused for five minutes.</li>
+    </ul>
+    <p>Both only serve features you see on the page, so no consent is needed. Clearing site data in your browser removes them.</p>
+
+    <h2>Arkeep telemetry</h2>
+    <p>
+      An Arkeep server can send a daily anonymous ping to telemetry.arkeep.io: a random instance ID, the Arkeep
+      version, the operating system and the number of agents and policies. No IP address, hostname or personal data is
+      stored with it, and each record expires after 48 hours. As with the website, Cloudflare processes the request’s IP
+      address to deliver it. Details, and how to turn telemetry off, are in the
+      <a href="/docs/reference/telemetry/" {...newTab()}>telemetry docs<NewTabIcon /></a>.
+    </p>
+
+    <h2>Email</h2>
+    <p>
+      If you write to {CONTACT}, the message is forwarded by Cloudflare Email Routing to a mailbox hosted by Google.
+      We use your address and message only to reply, and delete the conversation when it is no longer needed. Legal
+      basis: your request (Art. 6(1)(b) and (f) GDPR).
+    </p>
+
+    <h2>Transfers outside the EU</h2>
+    <p>
+      Cloudflare, GitHub and Google are based in the United States. They are certified under the EU-U.S. Data Privacy
+      Framework and also rely on the European Commission’s standard contractual clauses.
+    </p>
+
+    <h2>What we do not do</h2>
+    <p>No advertising, no profiling, no automated decisions about you, and no selling or sharing of data with anyone else.</p>
+
+    <h2>Your rights</h2>
+    <p>
+      Under the GDPR you can ask for access to, correction or deletion of your data, restrict or object to its
+      processing, and receive it in a portable format. Write to <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. Since almost
+      everything above is aggregate or short-lived, we may simply hold nothing that identifies you. You can also lodge a
+      complaint with the Italian data protection authority,
+      <a href="https://www.garanteprivacy.it/" {...newTab()}>Garante per la protezione dei dati personali</a>, or with the authority
+      where you live.
+    </p>
+
+    <h2>Changes</h2>
+    <p>If what the site does changes, this page changes with it, and the date at the top moves.</p>
+  </article>
+</SiteLayout>
+
+<style>
+  .legal { max-width: calc(68ch + 2 * var(--gutter)); padding-block: var(--space-xxl) 0; }
+  header { display: grid; gap: var(--space-sm); margin-bottom: var(--space-xl); }
+  .updated { color: var(--body); font-size: 14px; }
+  .intro { font-size: 1.125rem; }
+  h2 { margin: var(--space-xl) 0 var(--space-sm); font-size: 1.375rem; line-height: 1.25; letter-spacing: -0.5px; }
+  h3 { margin: var(--space-lg) 0 var(--space-xs); font-size: 1.0625rem; font-weight: 600; }
+  p, li { line-height: 1.65; }
+  p + p { margin-top: var(--space-sm); }
+  ul { margin: var(--space-sm) 0; padding-left: 1.25em; display: grid; gap: var(--space-xs); }
+  a { color: var(--text-link); text-underline-offset: 2px; }
+  code { font-family: var(--font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
+</style>

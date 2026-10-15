@@ -66,3 +66,11 @@ test('phones keep the wordmark and leave Install to the hero', async ({ page, is
   await expect(nav.locator('a.install')).toBeHidden();
   await expect(page.locator('.hero').getByRole('link', { name: /Install Arkeep/ })).toBeVisible();
 });
+
+test('footer links to the privacy policy', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('footer').getByRole('link', { name: 'Privacy Policy' }).click();
+  await expect(page).toHaveURL(/\/privacy\/$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Privacy policy' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'hello@arkeep.io' }).first()).toHaveAttribute('href', 'mailto:hello@arkeep.io');
+});
