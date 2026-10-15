@@ -1,4 +1,4 @@
-// Mirrors the Roadmap section of the arkeep README; keep the wording in sync.
+// The full roadmap. The arkeep README keeps a one-line summary per version: update it when a theme changes.
 export interface RoadmapVersion {
   id: string;
   version: string;
