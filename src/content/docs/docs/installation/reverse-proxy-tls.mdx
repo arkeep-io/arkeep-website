@@ -60,6 +60,10 @@ Pass `--grpc-tls-cert` and `--grpc-tls-key` to the server (`ARKEEP_GRPC_TLS_CERT
 to serve gRPC with a certificate of your own, for example from Let's Encrypt. Auto-PKI is then skipped
 entirely, and agents are not bound to individual certificates.
 
+Agents then log `server does not use auto-PKI — connecting without client certificate` at startup. This
+is expected: the connection is still encrypted with TLS, and agents authenticate with the shared
+`--agent-secret`. Do not set `--grpc-insecure` on the agent to silence it: that disables TLS.
+
 If that certificate is signed by a CA that agents do not trust by default, give them the CA with
 `--grpc-tls-ca` (`ARKEEP_GRPC_TLS_CA`).
 
