@@ -31,7 +31,11 @@ with [Project structure](/docs/contributing/project-structure/).
 
 - Composition API with `<script setup>` only.
 - Type everything, no implicit `any`.
-- Forms use `useField()` from vee-validate, never the `<Field>` component.
+- Forms use `useForm` from vee-validate with a zod schema and `initialValues` for every field, and
+  `useField()` for each field, never the `<Field>` component. Field errors show under the field with
+  `FieldError`.
+- Rules shared with the server live in `gui/src/lib/validation.ts`; the server stays the authority.
+- Every form has a component test (Vitest), next to it.
 - Tailwind CSS v4 utility classes only, no `<style>` blocks.
 - All HTTP calls go through `api<T>()` in `services/api.ts`.
 

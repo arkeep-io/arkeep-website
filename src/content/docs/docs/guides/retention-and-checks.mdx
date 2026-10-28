@@ -40,7 +40,9 @@ Cron expressions use the standard five fields, or descriptors such as `@daily`.
 | **Monthly** | the newest snapshot of each of the last *n* months |
 | **Yearly** | the newest snapshot of each of the last *n* years |
 
-The defaults are 7 daily, 4 weekly, 6 monthly and 1 yearly. Set a rule to 0 to turn it off.
+The defaults are 7 daily, 4 weekly, 6 monthly and 1 yearly. Each rule accepts 0 to 1000; set a rule to 0
+to turn it off. With retention enabled, at least one rule must be above 0: with none, a sweep would remove
+nothing.
 
 These are restic's `forget` rules:
 

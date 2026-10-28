@@ -18,6 +18,10 @@ In **Settings → OpenID Connect** (admin), add a provider:
 | **Client ID** | From the client you create at the provider |
 | **Client Secret** | Required when adding; leave blank when editing to keep the current one |
 | **Scopes** | Optional, `openid email profile` by default |
+| **Groups claim** | Optional. The claim that lists the user's groups; required as soon as a group is set below. See [Restrict access by group](#restrict-access-by-group) |
+| **Allowed groups** | Optional, comma-separated. Only members of these groups (or of an admin group) can sign in |
+| **Admin groups** | Optional, comma-separated. Members get the **Admin** role, every other user of the provider the **User** role |
+| **Session duration (hours)** | How long a session lasts before the user must sign in at the provider again: 1 to 168, 12 by default. See [Session duration](#session-duration) |
 | **Enabled** | Show the provider's button on the login page and accept its logins |
 
 The page shows the **Redirect URI** to register at the provider, with a copy button:
@@ -33,14 +37,54 @@ At the provider, create a confidential client using the authorization code flow.
 
 ## How accounts work
 
-- **First login**: Arkeep creates an account with the **User** role (read-only). An admin can then promote
-  it on the Users page. Groups and roles from the provider are not mapped.
-- **Every login**: the email and display name are updated from the provider.
+- **First login**: Arkeep creates an account with the **User** role (read-only), or the role given by the
+  provider's [admin groups](#restrict-access-by-group). Without admin groups, an admin can then promote it on
+  the Users page.
+- **Every login**: the email and display name are updated from the provider, and so is the role when admin
+  groups are set.
 - **Existing local account with the same email**: the OIDC login is linked to it only when the provider
   asserts `email_verified=true`, the account is not an admin, and it is not already linked to another
   provider. Otherwise the login is refused and the reason is shown on the *Sign-in failed* page.
 
 Admin accounts are never linked automatically, so a provider cannot take over an administrator.
+
+## Restrict access by group
+
+An identity provider is often shared by many applications, and most of its users should not reach your
+backups. Set **Allowed groups** to let only the members of some groups sign in, and **Admin groups** to give
+the **Admin** role from the provider.
+
+**Groups claim** is the name of the claim that lists the user's groups, for example `groups`. Arkeep reads it
+from the ID token, and from the UserInfo endpoint when the ID token does not carry it. The claim can be a list
+of names (Keycloak, Authentik), a single name, or an object whose keys are the names (Zitadel's project roles,
+`urn:zitadel:iam:org:project:roles`). At the provider, add a mapper or scope that puts the groups in the
+token.
+
+Group names are compared exactly, as the provider sends them: Keycloak, for example, sends `/arkeep-admins`
+when its mapper includes the full group path.
+
+How the groups are applied:
+
+- **Allowed groups**: a user in none of them, and in no admin group, cannot sign in. No account is created
+  for them, and no existing account is linked to them. If the groups claim is missing from the token, the
+  login is refused as well, and the server log says which claim it looked for.
+- **Admin groups**: members get the **Admin** role and every other user of the provider the **User** role,
+  re-evaluated on every login. A role changed by hand in Arkeep is overwritten at the next login. The last
+  active admin is never demoted, so a change at the provider cannot leave Arkeep without an administrator.
+  An admin group counts as an allowed group.
+- With only **Admin groups** set, every user of the provider can sign in, and the groups decide the role.
+
+A refused user sees *Sign-in refused: your account is not a member of a group allowed to sign in* on the
+*Sign-in failed* page. The refusal also signs out the sessions the account still had open.
+
+## Session duration
+
+Every session started through a provider ends after its **Session duration** (12 hours by default), however
+often it was used. The user then signs in at the provider again, and their groups are checked again. A user
+removed from the allowed groups therefore loses access at the latest when their current session ends.
+
+To cut access at once, also deactivate the user on the Users page: Arkeep then refuses their session within
+15 minutes. Sessions of local accounts are not affected by this setting.
 
 ## Passwords and 2FA
 

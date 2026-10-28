@@ -68,7 +68,7 @@ task build          # Build all binaries (server + agent, interface included)
 task build:server   # Build the server (builds the interface first, then embeds it)
 task build:agent    # Build the agent (downloads restic and rclone first)
 task build:gui      # Build the interface only (gui/dist/), with vue-tsc type checking
-task test           # Run all Go tests (shared, server, agent)
+task test           # Run all tests (shared, server, agent, interface)
 task lint           # Run golangci-lint on the server module
 task proto          # Regenerate gRPC code
 task tidy           # Tidy all Go modules
@@ -85,13 +85,12 @@ task deps:download  # Download restic and rclone for the current platform
 ## Tests
 
 ```bash
-task test           # all Go modules
+task test           # all Go modules and the interface
 task test:shared    # shared only
 task test:server    # server only
 task test:agent     # agent only
+task test:gui       # interface only
 ```
-
-`task test` covers the Go modules only. The interface has no unit tests; `task build:gui` type-checks it.
 
 The three Go modules are separate, so run a single test from inside its module:
 
@@ -104,6 +103,17 @@ Go tests are table-driven with the standard `testing` package and live next to t
 `server/internal/integration/` runs a real server and gRPC listener in-process against an in-memory SQLite
 database, with no restic binary or Docker needed.
 
+Interface tests use Vitest with Vue Test Utils and jsdom, and also live next to the code they test
+(`Foo.test.ts` alongside `Foo.vue`). Every form has one, covering its validation and the request it sends;
+`gui/src/test/mount.ts` mounts a page with its store and router. Run a single file from `gui/`:
+
+```bash
+cd gui && pnpm vitest run src/pages/settings/SMTPPage.test.ts
+```
+
+Forms are validated with vee-validate and zod, as described in
+[CONTRIBUTING.md](https://github.com/arkeep-io/arkeep/blob/main/CONTRIBUTING.md#forms).
+
 CI runs every Go module's tests with the race detector, `golangci-lint` on each module (locally `task lint`
 covers the server only), the build of the agent for armv7, MIPS and MIPSLE, and the interface build with type
-checking.
+checking followed by its tests.
