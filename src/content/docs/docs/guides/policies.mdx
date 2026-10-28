@@ -86,7 +86,8 @@ The password is set when the policy is created and cannot be changed from the in
 ## Hooks
 
 Admin only. A **pre-backup** and a **post-backup** hook, each with a **Name**, a **Timeout** (seconds,
-default 30), a **Command** and optional **Arguments**. They run on the agent through the shell.
+default 30), a **Command** and optional **Arguments**. They run on the agent through the shell. The timeout
+accepts 0 to 86400 (24 hours); 0 uses the agent's default of 5 minutes.
 
 - A failing pre-backup hook aborts the backup.
 - The post-backup hook always runs, even after a failed backup. Its failure is reported but does not fail
