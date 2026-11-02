@@ -46,7 +46,9 @@ ingress:
 :::caution[Run a single replica]
 Keep `replicaCount: 1`, with SQLite and with PostgreSQL alike. The server keeps the registry of
 connected agents and download tickets in memory, so agents and browsers must reach the same instance.
-With SQLite a second replica cannot even mount the ReadWriteOnce volume.
+With SQLite a second replica cannot even mount the ReadWriteOnce volume. For the same reason the chart
+upgrades with the `Recreate` strategy: the old pod stops before the new one starts, so the server is
+down for a few seconds. Agents reconnect on their own.
 :::
 
 ## Exposing the gRPC port
