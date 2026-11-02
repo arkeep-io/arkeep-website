@@ -89,7 +89,10 @@ the credential fields blank to keep the current ones.
 ## Common fields
 
 - **Name** (required).
-- **Enabled**: disabled destinations are skipped during backup jobs and by the periodic snapshot sync.
+- **Enabled**: a disabled destination is paused. Backups skip it and do not list it in the job, and the
+  periodic snapshot sync, scheduled retention sweeps and scheduled integrity checks leave it alone.
+  **Run Retention Now** and **Run Check Now** still work. A backup whose destinations are all disabled
+  fails with *all destinations disabled: backup not run*.
 
 ## Import an existing repository
 
