@@ -47,14 +47,28 @@ Any SSH server.
 | **Port** | no | Defaults to 22 |
 | **Username** | yes | |
 | **Remote Path** | yes | |
-| **Password** | no | Password authentication |
-| **Private Key (PEM)** | no | Key authentication |
+| **Password** | one of the two | Password authentication |
+| **Private Key (PEM)** | one of the two | Key authentication |
+| **Host Key** | no, recommended | The server's public host key, see below |
 
 SFTP connections go through the agent's bundled rclone, so the agent host needs no SSH client or
 `~/.ssh` setup. The credentials you enter are used directly.
 
+### Host key
+
+Paste the server's host key, as printed by `ssh-keyscan` run from a network you trust:
+
+```bash
+ssh-keyscan -p 22 backup.example.com
+```
+
+Every line of the output is accepted, hashed hosts and bare `ssh-ed25519 AAAA…` keys included; comment
+lines are ignored. Agents then refuse to connect to a server presenting another key, and the job fails
+with *knownhosts: key mismatch*. If the server's key changes on purpose, paste the new one.
+
 :::caution
-The SFTP server's host key is not currently verified.
+Without a host key the server's identity is not verified: whoever sits on the network path between the
+agent and the server could receive the SFTP credentials and the backup data (encrypted by restic).
 :::
 
 ### REST Server
