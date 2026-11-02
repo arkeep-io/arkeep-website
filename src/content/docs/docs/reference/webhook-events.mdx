@@ -24,6 +24,7 @@ request carries an `X-Arkeep-Signature` header: see [Signature verification](/do
 | `job_failure` | A job failed | the same, plus `error` |
 | `agent_offline` | An agent stopped responding | `agent_id`, `agent_name` |
 | `agent_online` | An agent reconnected | `agent_id`, `agent_name` |
+| `test` | An admin clicked **Send test webhook** | none |
 
 - `job_type` is `backup`, `restore`, `retention` or `check`.
 - `destination_name` is set when the job ran against a single destination: always for retention and check
