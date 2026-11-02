@@ -39,12 +39,10 @@ sudo journalctl -u arkeep-server -f
 
 ## Helm
 
-From your clone of the repository:
+Upgrade to the chart of the new release (its version is the release without the `v`):
 
 ```bash
-git pull
-helm dependency build ./deploy/helm/arkeep
-helm upgrade arkeep ./deploy/helm/arkeep --reuse-values
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
 kubectl rollout status deployment/arkeep-server
 ```
 

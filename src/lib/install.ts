@@ -25,7 +25,7 @@ export const installTargets: InstallTarget[] = [
     id: 'kubernetes',
     label: 'Kubernetes cluster',
     href: '/docs/installation/kubernetes/',
-    command: 'git clone https://github.com/arkeep-io/arkeep.git && cd arkeep\nhelm install arkeep ./deploy/helm/arkeep -f my-values.yaml',
+    command: 'helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep -f my-values.yaml',
   },
   {
     id: 'board',

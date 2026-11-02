@@ -8,20 +8,16 @@ outside the cluster, and connect to the server's gRPC port.
 
 ## Install
 
-The chart lives in the Arkeep repository at
-[`deploy/helm/arkeep`](https://github.com/arkeep-io/arkeep/tree/main/deploy/helm/arkeep).
-Install it from a clone:
+The chart is published with every release as an OCI artifact on GitHub Container Registry, and on Docker
+Hub as `oci://registry-1.docker.io/arkeepio/arkeep`. Its version is the Arkeep release it deploys, without
+the `v`: chart `0.9.2` runs Arkeep `v0.9.2`. No `helm repo add` is needed (Helm 3.8 or later):
 
 ```bash
-git clone https://github.com/arkeep-io/arkeep.git
-cd arkeep
-helm dependency build ./deploy/helm/arkeep
-helm install arkeep ./deploy/helm/arkeep -f my-values.yaml
+helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.2 -f my-values.yaml
 ```
 
-:::note
-A published chart repository is coming. Until then, install from the repository path as shown above.
-:::
+Leave out `--version` to install the latest release. The chart's source is in the Arkeep repository at
+[`deploy/helm/arkeep`](https://github.com/arkeep-io/arkeep/tree/main/deploy/helm/arkeep).
 
 A minimal `my-values.yaml`:
 
@@ -50,7 +46,9 @@ ingress:
 :::caution[Run a single replica]
 Keep `replicaCount: 1`, with SQLite and with PostgreSQL alike. The server keeps the registry of
 connected agents and download tickets in memory, so agents and browsers must reach the same instance.
-With SQLite a second replica cannot even mount the ReadWriteOnce volume.
+With SQLite a second replica cannot even mount the ReadWriteOnce volume. For the same reason the chart
+upgrades with the `Recreate` strategy: the old pod stops before the new one starts, so the server is
+down for a few seconds. Agents reconnect on their own.
 :::
 
 ## Exposing the gRPC port
@@ -112,12 +110,10 @@ all stored destination credentials unreadable.
 ## Upgrading
 
 Back up the database first (see [Backing up Arkeep itself](/docs/installation/backing-up-arkeep/)).
-Then, from your clone:
+Then upgrade to the new release's chart:
 
 ```bash
-git pull
-helm dependency build ./deploy/helm/arkeep
-helm upgrade arkeep ./deploy/helm/arkeep --reuse-values
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
 kubectl rollout status deployment/arkeep-server
 ```
 
