@@ -40,6 +40,10 @@ Set up the mail server in **Settings → SMTP**:
 | **From Name** | `Arkeep` by default |
 | **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. |
 
+**Send test email** sends a message with the values in the form, saved or not, to your own address (the
+admin who clicks it), and shows the server's answer or the exact error. With the password left blank it
+uses the saved one, but only for the saved host: to test another server, type its password.
+
 The same SMTP server sends [password reset](/docs/guides/users-and-2fa/#forgotten-password) emails.
 
 ## Webhook
@@ -49,6 +53,10 @@ In **Settings → Notifications**, turn on **Send webhook notifications** and se
 - **Webhook URL**: any `http://` or `https://` endpoint. Every event is sent as a `POST` with a JSON body.
 - **Webhook Secret**: optional; when set, every request is signed (see below). Leave it blank to keep the
   current one.
+
+**Send test webhook** posts a `test` event to the URL in the form, saved or not, signed with the secret in
+the form or, when it is blank, with the saved one. It works even with the webhook not saved yet, and shows
+the HTTP status or the network error when the delivery fails.
 
 The payload is described in [Webhook events](/docs/reference/webhook-events/).
 
