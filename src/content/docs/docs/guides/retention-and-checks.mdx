@@ -59,7 +59,7 @@ them. Jobs that wait show **waiting**.
 
 A sweep fails if no policy is attached to the destination, if the repository password is unknown, or if
 no maintenance agent is set. A scheduled sweep is skipped, without recording a job, when the maintenance
-agent is offline.
+agent is offline or the destination is disabled.
 
 **Run Retention Now**, on the destination page, starts a sweep immediately.
 
@@ -94,4 +94,5 @@ The destination page shows **Last check: Passed** or **Failed**, with a link to 
 an **Integrity check failed** badge on the Destinations list and a banner on the Dashboard.
 
 Checks run on append-only destinations too. A check fails if the repository password is unknown (attach a
-policy or import the repository first). A scheduled check is skipped when the maintenance agent is offline.
+policy or import the repository first). A scheduled check is skipped when the maintenance agent is offline
+or the destination is disabled.
