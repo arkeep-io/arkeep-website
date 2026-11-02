@@ -31,8 +31,8 @@ A user cannot change anything, browse or download snapshot contents, restore, or
 - **Active**: inactive users cannot log in.
 
 The list shows each user's role, whether two-factor authentication is on, their status and their last login.
-Actions: **Edit** (display name, role, active), **Reset 2FA** and **Delete**. Deleting a user is permanent,
-and you cannot delete yourself.
+Actions: **Edit** (display name, role, active), **Set password**, **Reset 2FA** and **Delete**. Deleting a
+user is permanent, and you cannot delete yourself.
 
 Deactivating a user blocks new logins and session refreshes immediately; a session already open can last up
 to 15 more minutes.
@@ -55,7 +55,21 @@ This needs two things, both set up by the operator:
 - an SMTP server in **Settings → SMTP**;
 - the server's public URL in `ARKEEP_BASE_URL`, so the link points to the right place.
 
-When either is missing, the page says so and asks the user to contact an administrator.
+When either is missing, the page says so and asks the user to contact an administrator, who can set a new
+password with **Set password**.
+
+## Set a user's password
+
+**Users → ⋯ → Set password** (admin) gives a local account a new password, at least 8 characters. The user
+is signed out of every session.
+
+With **Require a new password** on (the default), the password you set only works once: after signing in
+with it, and after the two-factor code if the account has one, the user must choose a password of their
+own, different from the one you gave, before reaching Arkeep. Until then the list shows **Password change
+pending**. A password reset by email also counts as choosing a new password.
+
+Set password is not offered for accounts managed by an identity provider (OIDC), nor for your own account:
+change yours from **Profile**, which asks for the current password.
 
 The response never reveals whether an email address has an account.
 
