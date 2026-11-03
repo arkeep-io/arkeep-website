@@ -50,6 +50,12 @@ same time, or to use a managed database service. Either way, run a single server
 
 ## Docker Compose variables
 
+With Docker Compose, set the server settings above in `.env`: the compose files pass them to the server
+container. The exceptions are the listen addresses, fixed to `:8080` and `:9090` inside the container
+(publish other ports with `ARKEEP_HTTP_PORT` and `ARKEEP_GRPC_PORT`), `ARKEEP_GRPC_INSECURE`, and the
+gRPC certificate paths, which go in the server's `environment:` (commented in `docker-compose.yml` and
+`docker-compose.postgres.yml`) together with the certificate mount.
+
 The compose files in `deploy/docker` also read:
 
 | Variable | Used for |

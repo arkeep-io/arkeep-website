@@ -88,11 +88,14 @@ kubectl create secret tls arkeep-grpc-tls \
 | `config.dbDriver` | `sqlite` | `sqlite` or `postgres` |
 | `config.secureCookies` | `true` | `Secure` flag on auth cookies |
 | `config.updateCheck` | `true` | Check GitHub for new releases |
+| `config.telemetry` | `true` | Anonymous daily usage statistics; see [Telemetry](/docs/reference/telemetry/) |
+| `config.trustedProxies` | empty | Proxies whose `X-Forwarded-For` is trusted; empty means loopback and private networks |
 | `config.httpAddr` / `config.grpcAddr` | `:8080` / `:9090` | Listen addresses inside the container |
 | `grpc.tls.existingSecret` | empty | TLS Secret for gRPC; empty means auto-PKI |
 | `grpc.tls.mountPath` | `/etc/arkeep/tls` | Where that Secret is mounted |
-| `secret.existingSecret` | empty | Use your own Secret with `ARKEEP_SECRET_KEY`, `ARKEEP_AGENT_SECRET` (and `ARKEEP_DB_DSN` for PostgreSQL) |
+| `secret.existingSecret` | empty | Use your own Secret with `ARKEEP_SECRET_KEY`, `ARKEEP_AGENT_SECRET` (and `ARKEEP_DB_DSN` for PostgreSQL, optionally `ARKEEP_METRICS_TOKEN`) |
 | `secret.secretKey` / `secret.agentSecret` | empty | Values for the Secret the chart creates |
+| `secret.metricsToken` | empty | Bearer token required on `/metrics`; empty leaves it public |
 | `persistence.enabled` | `true` | PVC for the database and data directory |
 | `persistence.size` | `10Gi` | PVC size |
 | `persistence.mountPath` | `/var/lib/arkeep` | Mount path |
