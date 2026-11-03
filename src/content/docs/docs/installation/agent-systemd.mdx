@@ -30,6 +30,17 @@ sudo systemctl enable --now arkeep-agent
 sudo journalctl -u arkeep-agent -f
 ```
 
+The agent runs as root. A backup agent has to read every file it backs up, including those only root
+can read (`/etc/shadow`, `/root`, database directories), and to restore files anywhere with their
+original owners and permissions. Hooks and command sources therefore run as root too; only admins can set
+them (see [Security model](/docs/concepts/security/#hooks-and-command-sources)). Docker is reachable without
+joining a group. The unit leaves the filesystem unrestricted on purpose, so that restores can write
+anywhere, including the default `/tmp/arkeep-restore`.
+
+The agent keeps its certificates and state in `/var/lib/arkeep-agent`. For [Rclone
+destinations](/docs/guides/destinations/), configure the remote in `/root/.config/rclone/rclone.conf`.
+Any other agent setting can go in `/etc/arkeep/agent.env`, for example `ARKEEP_LOG_LEVEL=debug`.
+
 ## ARM and MIPS boards
 
 In addition to `linux_amd64` and `linux_arm64`, the agent is also published for `linux_arm`
