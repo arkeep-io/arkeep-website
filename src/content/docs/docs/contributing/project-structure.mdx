@@ -7,13 +7,13 @@ description: How the Arkeep repository is organised, and where to add a new dest
 arkeep/
 ├── agent/                      # Agent binary
 │   ├── cmd/agent/              # Entry point
-│   └── internal/
-│       ├── connection/         # gRPC client, job stream, state persistence
-│       ├── executor/           # Job queue and execution
-│       ├── restic/             # restic/rclone wrapper (binary extraction, backup, forget, check)
-│       ├── docker/             # Docker volume discovery
-│       ├── hooks/              # Pre/post backup hook runner
-│       └── metrics/            # Host metrics (CPU, RAM, disk)
+│   ├── internal/
+│   │   ├── connection/         # gRPC client, job stream, state persistence
+│   │   ├── executor/           # Job queue and execution
+│   │   ├── restic/             # restic/rclone wrapper (binary extraction, backup, forget, check)
+│   │   ├── docker/             # Docker volume discovery
+│   │   ├── hooks/              # Pre/post backup hook runner
+│   │   └── metrics/            # Host metrics (CPU, RAM, disk)
 │   └── scripts/                # download_deps.go: fetches restic and rclone to embed
 ├── server/                     # Server binary
 │   ├── cmd/server/             # Entry point, with the interface embedded
@@ -50,12 +50,19 @@ arkeep/
 │       ├── stores/             # Pinia stores
 │       ├── services/           # API and WebSocket clients
 │       ├── composables/        # Vue composables
+│       ├── lib/                # Shared helpers, including validation rules mirroring the server
 │       ├── router/             # Vue Router configuration
+│       ├── test/               # Component test helpers (mountPage, submitForm)
 │       └── types/              # TypeScript interfaces
 ├── deploy/
 │   ├── docker/                 # Docker Compose files
 │   ├── systemd/                # systemd unit for the agent
 │   └── helm/                   # Helm chart
+├── docs/
+│   ├── adr/                    # Architecture decision records
+│   └── operations/             # Operations notes kept in the repository
+├── scripts/                    # Repository scripts (database backup, dependency pin checks)
+├── tools/                      # Pinned development tools (go.mod with tool directives)
 ├── go.work                     # Go workspace (agent + server + shared)
 └── Taskfile.yml                # Task runner
 ```

@@ -35,10 +35,10 @@ Cron expressions use the standard five fields, or descriptors such as `@daily`.
 |---|---|
 | **Last** | the newest *n* snapshots |
 | **Hourly** | the newest snapshot of each of the last *n* hours that have one |
-| **Daily** | the newest snapshot of each of the last *n* days |
-| **Weekly** | the newest snapshot of each of the last *n* ISO weeks |
-| **Monthly** | the newest snapshot of each of the last *n* months |
-| **Yearly** | the newest snapshot of each of the last *n* years |
+| **Daily** | the newest snapshot of each of the last *n* days that have one |
+| **Weekly** | the newest snapshot of each of the last *n* ISO weeks that have one |
+| **Monthly** | the newest snapshot of each of the last *n* months that have one |
+| **Yearly** | the newest snapshot of each of the last *n* years that have one |
 
 The defaults are 7 daily, 4 weekly, 6 monthly and 1 yearly. Each rule accepts 0 to 1000; set a rule to 0
 to turn it off. With retention enabled, at least one rule must be above 0: with none, a sweep would remove
@@ -88,7 +88,8 @@ intact and its data still readable. It is **on by default for new destinations**
 ### Schedule
 
 Presets: **Daily at 03:00**, **Weekly (Sunday)** (default, `0 3 * * 0`), **Monthly** (`0 3 1 * *`), or a
-cron expression. A check with no schedule only runs when you click **Run Check Now**.
+cron expression. For checks only on demand, turn **Enable integrity check** off and use **Run Check Now**,
+which works whenever the destination has a maintenance agent.
 
 ### Results
 

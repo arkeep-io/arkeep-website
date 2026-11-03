@@ -12,7 +12,7 @@ request carries an `X-Arkeep-Signature` header: see [Signature verification](/do
 |---|---|---|
 | `type` | string | The event type, see below |
 | `title` | string | A short summary, such as `Backup failed: web-server` |
-| `text` | string | A human-readable sentence with full context. Named for Slack and Discord compatibility. |
+| `text` | string | A human-readable sentence with full context. Named for Slack compatibility, which Discord also accepts on its `/slack` endpoint. |
 | `payload` | object | Event-specific fields |
 | `timestamp` | string | RFC 3339, UTC |
 

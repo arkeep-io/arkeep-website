@@ -48,7 +48,8 @@ The user menu also switches between the light and dark theme.
 ## Forgotten password
 
 Local accounts can reset a forgotten password with **Forgot password?** on the login page. Arkeep emails a
-link, valid for one hour, and the reset signs out every session of that account.
+link, valid for one hour, and the reset signs out every session of that account. The response never
+reveals whether an email address has an account.
 
 This needs two things, both set up by the operator:
 
@@ -70,8 +71,6 @@ pending**. A password reset by email also counts as choosing a new password.
 
 Set password is not offered for accounts managed by an identity provider (OIDC), nor for your own account:
 change yours from **Profile**, which asks for the current password.
-
-The response never reveals whether an email address has an account.
 
 ## Two-factor authentication
 
@@ -104,3 +103,5 @@ An admin can use **Reset 2FA** on the Users page. It turns two-factor authentica
 signs out all its sessions; the user can enable it again afterwards.
 
 Two-factor authentication applies to local accounts. For OIDC accounts, use your identity provider's MFA.
+A local account with 2FA that is later linked to an identity provider keeps asking for the code; only an
+admin can turn it off, with **Reset 2FA**.

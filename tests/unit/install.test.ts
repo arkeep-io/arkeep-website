@@ -17,6 +17,12 @@ describe('install targets', () => {
     const board = getInstallTarget('board');
     expect(board.label).not.toMatch(/MIPS/);
   });
+  it('the Docker command sets both required secrets before starting', () => {
+    const lines = getInstallTarget('docker').command.split('\n');
+    const up = lines.findIndex((l) => l.startsWith('docker compose'));
+    expect(lines.slice(0, up).join('\n')).toMatch(/ARKEEP_SECRET_KEY=\$\(openssl rand -hex 32\)/);
+    expect(lines.slice(0, up).join('\n')).toMatch(/ARKEEP_AGENT_SECRET=\$\(openssl rand -hex 24\)/);
+  });
   it('unknown ids fall back to Docker', () => {
     expect(getInstallTarget('nope').id).toBe('docker');
   });

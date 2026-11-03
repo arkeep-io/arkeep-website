@@ -35,7 +35,9 @@ a temporary file. Ideal for database dumps. See [Backing up databases](/docs/gui
 
 - **Name** is required: letters, digits, `.`, `_` and `-`, starting with a letter or digit, up to 64
   characters, unique within the policy. It becomes the file name inside the snapshot.
-- **Command** runs on the agent. A non-zero exit code aborts the backup.
+- **Command** runs on the agent. A non-zero exit code aborts the backup. It follows the same rules as
+  [hooks](#hooks): no `$(…)`, backticks, `..` or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`,
+  and at most 1024 characters.
 
 Each command source produces its own snapshot on each destination.
 

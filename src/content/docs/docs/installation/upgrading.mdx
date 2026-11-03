@@ -21,11 +21,17 @@ major version. The **Agents** page marks agents older than the latest release wi
 
 ## Docker Compose
 
+The compose files pin the image version. Set the new release on every `image:` line (for example
+`ghcr.io/arkeep-io/arkeep-server:v0.9.3`), then:
+
 ```bash
 docker compose pull
 docker compose up -d
-docker compose logs -f arkeep-server   # watch for "migrations applied" and "server started"
+docker compose logs -f server   # watch for "database migrations applied successfully" and "http server listening"
 ```
+
+Compose files downloaded before the version was pinned use `:latest`: for those, `pull` and `up -d` are
+enough.
 
 ## Standalone binary
 
@@ -43,7 +49,7 @@ Upgrade to the chart of the new release (its version is the release without the 
 
 ```bash
 helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
-kubectl rollout status deployment/arkeep-server
+kubectl rollout status deployment/arkeep
 ```
 
 ## Update notifications

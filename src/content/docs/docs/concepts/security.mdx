@@ -85,7 +85,7 @@ destination in Arkeep does not invalidate them.
 | Token | Lifetime | Stored in | Revocation |
 |---|---|---|---|
 | Access token (JWT) | 15 minutes | Browser memory | In-memory denylist on logout |
-| Refresh token | 7 days, rotated on use | `httpOnly` cookie | Deleted from the database |
+| Refresh token | 7 days, rotated on use | `httpOnly` cookie | Revoked in the database (deleted on logout) |
 
 A session started through an [OIDC provider](/docs/guides/oidc/#session-duration) also ends after the
 provider's session duration (12 hours by default), however often it is refreshed, so the user signs in at
@@ -93,9 +93,15 @@ the provider again and their groups are checked again. A login refused because o
 [allowed groups](/docs/guides/oidc/#restrict-access-by-group) signs out the account's other sessions.
 
 Logging out revokes both. Changing your password signs out your other sessions; resetting a forgotten
-password, an admin's 2FA reset and deactivating a user sign out every session. Access tokens already
+password, an admin's **Set password** or 2FA reset and deactivating a user sign out every session. Access tokens already
 issued at that moment can stay valid until they expire (at most 15 minutes), and the access-token
 denylist is cleared when the server restarts.
+
+Public endpoints are rate limited per client IP (read from `X-Forwarded-For` only for
+[trusted proxies](/docs/installation/reverse-proxy-tls/#the-web-interface-over-https)), per minute: 5 for
+login and the password reset request and confirmation together, 30 for token refresh, 10 each for the
+2FA step and the required password change, 20 for logout and 5 for the first-admin setup. Sending a test
+email or test webhook is limited to 5 per minute.
 
 ## Two-factor authentication
 

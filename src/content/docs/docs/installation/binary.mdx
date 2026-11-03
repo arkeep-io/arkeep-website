@@ -3,8 +3,8 @@ title: Install the standalone binary
 description: Run the Arkeep server and agent as plain binaries, with auto-PKI TLS by default.
 ---
 
-Pre-built binaries for Linux, macOS, and Windows are available on the
-[Releases](https://github.com/arkeep-io/arkeep/releases) page.
+Pre-built binaries are available on the [Releases](https://github.com/arkeep-io/arkeep/releases) page:
+the server for Linux and macOS, the agent for Linux, macOS and Windows.
 
 ## Server
 
@@ -15,6 +15,10 @@ curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-serv
 # Generate secrets
 export ARKEEP_SECRET_KEY=$(openssl rand -hex 32)
 export ARKEEP_AGENT_SECRET=$(openssl rand -hex 32)
+
+# The server creates the database file but not its directory
+sudo mkdir -p /var/lib/arkeep
+sudo chown "$USER" /var/lib/arkeep
 
 ./arkeep-server \
   --db-dsn /var/lib/arkeep/arkeep.db \

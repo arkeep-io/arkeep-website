@@ -126,8 +126,9 @@ Arkeep's `text` field is Slack's message body, so nothing else is needed.
 ### Discord
 
 1. In your server, open **Channel Settings → Integrations → Webhooks** and create a webhook.
-2. Paste its URL into **Webhook URL**. For richer formatting, append `/slack`: Discord accepts
-   Slack-compatible payloads there.
+2. Paste its URL into **Webhook URL** and append `/slack`. Discord's own endpoint expects a `content`
+   field and rejects Arkeep's payload as an empty message; the `/slack` endpoint accepts Slack-compatible
+   payloads, whose `text` field Arkeep sends.
 
 ```text
 https://discord.com/api/webhooks/<id>/<token>/slack

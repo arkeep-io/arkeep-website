@@ -25,8 +25,10 @@ Both are on the HTTP port (default `:8080`) and need no authentication.
 ```
 
 It returns `503` with `"status": "unhealthy"` when a check fails, for example when the database is
-unreachable. The Docker Compose files and the Helm chart probe `/health/ready`, so the container is restarted
-or taken out of rotation when the database is down.
+unreachable. The Docker Compose files use `/health/ready` as the container healthcheck: the all-in-one agent waits for
+it before starting, and the container shows as unhealthy while the database is down (Docker does not
+restart it). The Helm chart probes `/health/ready` for readiness, so the pod leaves the Service while the
+database is down, and `/health/live` for liveness, so it is restarted only when the process stops answering.
 
 ## Prometheus metrics
 

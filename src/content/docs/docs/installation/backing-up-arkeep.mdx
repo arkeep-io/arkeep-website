@@ -43,7 +43,7 @@ echo "0 3 * * * root /usr/local/bin/arkeep-backup" | sudo tee /etc/cron.d/arkeep
 
 ## SQLite
 
-A one-off copy is safe while the server runs (SQLite WAL mode):
+A one-off copy is safe while the server runs: `.backup` uses SQLite's online backup API.
 
 ```bash
 sqlite3 /var/lib/arkeep/arkeep.db \
@@ -113,6 +113,9 @@ spec:
     spec:
       template:
         spec:
+          securityContext:
+            runAsUser: 1000   # the chart's user, owner of the volume
+            runAsGroup: 1000
           containers:
             - name: backup
               image: keinos/sqlite3:latest
@@ -120,6 +123,8 @@ spec:
                 - sh
                 - -c
                 - |
+                  set -e
+                  mkdir -p /data/backups
                   sqlite3 /data/arkeep.db ".backup '/data/backups/arkeep-$(date +%Y%m%d-%H%M%S).db'"
                   find /data/backups -name "arkeep-*.db" -mtime +7 -delete
               volumeMounts:
@@ -129,7 +134,7 @@ spec:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: arkeep-data   # adjust to your release name
+                claimName: arkeep   # the release name; <release>-arkeep if it does not contain "arkeep"
 ```
 
 With the bundled PostgreSQL, run `pg_dump` from a temporary pod and copy the dump out of the cluster.
@@ -166,9 +171,9 @@ The CA that signed the agents' certificates is gone, so agents cannot reconnect.
 
 1. Restore the database.
 2. Start the server without a data directory: it creates a new CA.
-3. Re-enroll each agent by deleting its certificates and restarting it:
+3. Re-enroll each agent by deleting its certificates from its state directory and restarting it:
    ```bash
-   rm -rf /var/lib/arkeep-agent/certs/
+   rm -f /var/lib/arkeep-agent/grpc-ca.crt /var/lib/arkeep-agent/grpc-client.crt /var/lib/arkeep-agent/grpc-client.key
    systemctl restart arkeep-agent
    ```
 4. Agents that were bound to their old certificate need **Reset identity** on the Agents page.

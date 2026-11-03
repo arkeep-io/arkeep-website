@@ -27,7 +27,7 @@ The server generates a private CA and server certificate on first startup (auto-
 
 For the server you can alternatively use an external certificate:
 
-- **Reverse proxy (recommended):** put Caddy or Nginx in front and let it handle TLS termination for both ports. No certificate configuration inside the containers.
+- **Reverse proxy (recommended):** put Caddy or Nginx in front of port 8080 and let it terminate TLS for the web interface. Keep gRPC (9090) end to end: with auto-PKI the agents present client certificates, so expose 9090 directly or as plain TCP passthrough. See [Reverse proxy and TLS](/docs/installation/reverse-proxy-tls/).
 - **Direct TLS:** mount a certificate and set `ARKEEP_GRPC_TLS_CERT`/`ARKEEP_GRPC_TLS_KEY` on the server container (see the commented lines in `docker-compose.yml` and `.env.example`).
 
 In the **all-in-one** file the agent reaches the server by its service name (`server:9090`) and enrolls like any other agent, so the connection uses mTLS too.
@@ -96,7 +96,7 @@ For binary, systemd, and Helm deployments leave it unset: paths are used as-is.
 
 To restore Docker volumes in place:
 
-1. Change `:ro` to `:rw` for the `/var/lib/docker/volumes` mount in `docker-compose.yml`
+1. Change `:ro` to `:rw` for the `/var/lib/docker/volumes` mount in `docker-compose.agent.yml` (or `docker-compose.all.yml`)
 2. Stop the containers whose volumes you want to restore
 3. Run the in-place restore from the UI
 4. Restart the containers

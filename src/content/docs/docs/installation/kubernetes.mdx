@@ -101,7 +101,7 @@ kubectl create secret tls arkeep-grpc-tls \
 | `ingress.*` | disabled | Standard ingress for the HTTP port |
 | `postgresql.enabled` | `false` | Deploy a bundled PostgreSQL 17 from the official image (set `config.dbDriver: postgres`) |
 | `postgresql.auth.password` | empty | Required with `postgresql.enabled`; also `auth.username` and `auth.database` (both `arkeep`) |
-| `postgresql.persistence.size` | `8Gi` | PVC size of the bundled database; `persistence.storageClass` empty means the cluster default |
+| `postgresql.persistence.size` | `8Gi` | PVC size of the bundled database; `postgresql.persistence.storageClass` empty means the cluster default |
 | `postgresql.image` | `postgres:17.11-alpine3.24@sha256:…` | Pinned by digest; a new major version needs a dump and restore |
 | `externalPostgresql.url` | empty | Full DSN of an external PostgreSQL; or set `host`, `port`, `database`, `username`, `password`, `sslMode` |
 | `resources` | empty | Suggested start: requests 100m / 128Mi, limits 500m / 512Mi |
