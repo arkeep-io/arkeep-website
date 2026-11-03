@@ -93,8 +93,12 @@ default 30), a **Command** and optional **Arguments**. They run on the agent thr
 accepts 0 to 86400 (24 hours); 0 uses the agent's default of 5 minutes.
 
 - A failing pre-backup hook aborts the backup.
-- The post-backup hook always runs, even after a failed backup. Its failure is reported but does not fail
-  the job.
+- The post-backup hook always runs, so it can start again what the pre-backup hook stopped: after a
+  successful or failed backup, after a failing pre-backup hook, and when the job is cancelled or the agent
+  stops. Its failure is reported in the job log but does not fail the job. When the agent stops, it waits
+  at most 30 seconds for the job to finish, and less if its service or container is stopped sooner.
+- When a hook times out, every process it started is stopped with it. A process a hook leaves running in
+  the background once it exits, such as a service it starts with `&`, is left running.
 
 ```bash
 # Stop a container before the backup, start it after (needs the Docker socket mounted :rw)
