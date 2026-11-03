@@ -33,6 +33,10 @@ what those calls can do.
 An agent installed as a binary needs to be in the `docker` group (or run as root) to read volume
 mountpoints.
 
+If a volume's directory is not reachable from the agent (for example the volumes directory is not mounted
+into its container, or the agent runs natively on Windows), the backup still saves the other sources, but
+the job is marked **failed** and names the volumes it left out, so the failure notification goes out.
+
 ## Pick volumes in a policy
 
 **Add Source → Docker Volume** lists the volumes the agent reports. Select one or more; each becomes its
