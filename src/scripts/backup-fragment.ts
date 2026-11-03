@@ -144,7 +144,7 @@ if (app && tryBox) {
     target.querySelector<HTMLButtonElement>('.missing .button')?.setAttribute('disabled', '');
     reveal(target);
     try {
-      for (const line of restoreLog(`/arkeep.io/${name}.html`, saved.id)) {
+      for (const line of restoreLog(saved.id)) {
         append([line]);
         await wait(350);
       }

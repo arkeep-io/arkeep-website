@@ -145,7 +145,7 @@ kubectl scale deployment/arkeep --replicas=0
 
 # 2. Dump the database from the Bitnami pod
 kubectl exec arkeep-postgresql-0 -- sh -c \
-  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -Fc' > arkeep.dump
+  'PGPASSWORD="$(cat "$POSTGRES_PASSWORD_FILE")" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -Fc' > arkeep.dump
 
 # 3. Remove the Bitnami StatefulSet; its volume (data-arkeep-postgresql-0) is kept
 kubectl delete statefulset arkeep-postgresql
