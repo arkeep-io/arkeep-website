@@ -13,7 +13,7 @@ Every option can be set with a flag or an environment variable. When both are se
 | `--grpc-tls-key` | `ARKEEP_GRPC_TLS_KEY` | | PEM private key for gRPC TLS (requires `--grpc-tls-cert`) |
 | `--grpc-insecure` | `ARKEEP_GRPC_INSECURE` | `false` | Disable TLS for gRPC. Same machine or trusted private network only. |
 | `--db-driver` | `ARKEEP_DB_DRIVER` | `sqlite` | `sqlite` or `postgres` |
-| `--db-dsn` | `ARKEEP_DB_DSN` | `./arkeep.db` | SQLite file path or PostgreSQL DSN |
+| `--db-dsn` | `ARKEEP_DB_DSN` | `./arkeep.db` | SQLite file path or PostgreSQL DSN. At startup the server waits up to 60 seconds for PostgreSQL to accept connections |
 | `--secret-key` | `ARKEEP_SECRET_KEY` | | **Required.** Master key for AES-256-GCM credential encryption. Must never change. |
 | `--agent-secret` | `ARKEEP_AGENT_SECRET` | | **Required.** Shared secret agents present to enroll and authenticate |
 | `--data-dir` | `ARKEEP_DATA_DIR` | `./data` | Server state: the private CA and certificates of the auto-PKI |
