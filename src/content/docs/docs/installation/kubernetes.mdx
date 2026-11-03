@@ -96,7 +96,10 @@ kubectl create secret tls arkeep-grpc-tls \
 | `service.type` | `ClusterIP` | Service type |
 | `service.httpPort` / `service.grpcPort` | `8080` / `9090` | Service ports |
 | `ingress.*` | disabled | Standard ingress for the HTTP port |
-| `postgresql.enabled` | `false` | Deploy the bundled Bitnami PostgreSQL (set `config.dbDriver: postgres`) |
+| `postgresql.enabled` | `false` | Deploy a bundled PostgreSQL 17 from the official image (set `config.dbDriver: postgres`) |
+| `postgresql.auth.password` | empty | Required with `postgresql.enabled`; also `auth.username` and `auth.database` (both `arkeep`) |
+| `postgresql.persistence.size` | `8Gi` | PVC size of the bundled database; `persistence.storageClass` empty means the cluster default |
+| `postgresql.image` | `postgres:17.11-alpine3.24@sha256:…` | Pinned by digest; a new major version needs a dump and restore |
 | `externalPostgresql.url` | empty | Full DSN of an external PostgreSQL; or set `host`, `port`, `database`, `username`, `password`, `sslMode` |
 | `resources` | empty | Suggested start: requests 100m / 128Mi, limits 500m / 512Mi |
 | `livenessProbe` / `readinessProbe` | `/health/live` / `/health/ready` | Probes |
@@ -114,8 +117,48 @@ Then upgrade to the new release's chart:
 
 ```bash
 helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
-kubectl rollout status deployment/arkeep-server
+kubectl rollout status deployment/arkeep
 ```
 
 After upgrading, check that `GET /health/ready` returns `"status": "healthy"`. Schema migrations run
 automatically on startup.
+
+### Moving from the Bitnami PostgreSQL subchart
+
+Earlier charts deployed the bundled database with the Bitnami subchart, whose images are no longer
+published. The chart now runs the official PostgreSQL image instead, on a new volume, so an install
+with `postgresql.enabled=true` moves its data once with `pg_dump` and `pg_restore`. Installs with
+SQLite or an external PostgreSQL upgrade as usual.
+
+The commands assume a release named `arkeep`. If you set `postgresql.primary.persistence.*`, move
+those values to `postgresql.persistence.*` first.
+
+```bash
+# 1. Stop the server, so nothing is written after the dump
+kubectl scale deployment/arkeep --replicas=0
+
+# 2. Dump the database from the Bitnami pod
+kubectl exec arkeep-postgresql-0 -- sh -c \
+  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -Fc' > arkeep.dump
+
+# 3. Remove the Bitnami StatefulSet; its volume (data-arkeep-postgresql-0) is kept
+kubectl delete statefulset arkeep-postgresql
+
+# 4. Upgrade with the server still stopped. --reset-then-reuse-values (Helm 3.14+)
+#    keeps your values and picks up the chart's new defaults, such as postgresql.image
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version <new-version> \
+  --reset-then-reuse-values --set replicaCount=0
+kubectl rollout status statefulset/arkeep-postgresql
+
+# 5. Restore into the new, empty database
+kubectl exec -i arkeep-postgresql-0 -- sh -c \
+  'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --exit-on-error' < arkeep.dump
+
+# 6. Start the server again
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version <new-version> \
+  --reuse-values --set replicaCount=1
+```
+
+Log in and check your policies and job history. The old volume stays until you delete it with
+`kubectl delete pvc data-arkeep-postgresql-0`: keep it until you are sure, since a rollback to the
+previous chart needs it.
