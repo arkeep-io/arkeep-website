@@ -16,7 +16,7 @@ Every option can be set with a flag or an environment variable. When both are se
 | `--db-dsn` | `ARKEEP_DB_DSN` | `./arkeep.db` | SQLite file path or PostgreSQL DSN |
 | `--secret-key` | `ARKEEP_SECRET_KEY` | | **Required.** Master key for AES-256-GCM credential encryption. Must never change. |
 | `--agent-secret` | `ARKEEP_AGENT_SECRET` | | **Required.** Shared secret agents present to enroll and authenticate |
-| `--data-dir` | `ARKEEP_DATA_DIR` | `./data` | Server state: JWT signing keys, the private CA and certificates |
+| `--data-dir` | `ARKEEP_DATA_DIR` | `./data` | Server state: the private CA and certificates of the auto-PKI |
 | `--base-url` | `ARKEEP_BASE_URL` | | Public URL, such as `https://arkeep.example.com`. Required for password reset emails; links are never built from request headers. |
 | `--log-level` | `ARKEEP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `--secure-cookies` | `ARKEEP_SECURE_COOKIES` | `false` | `Secure` flag on auth cookies. Turn on when served over HTTPS. |

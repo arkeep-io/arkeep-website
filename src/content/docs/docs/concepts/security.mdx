@@ -94,8 +94,11 @@ the provider again and their groups are checked again. A login refused because o
 
 Logging out revokes both. Changing your password signs out your other sessions; resetting a forgotten
 password, an admin's **Set password** or 2FA reset and deactivating a user sign out every session. Access tokens already
-issued at that moment can stay valid until they expire (at most 15 minutes), and the access-token
-denylist is cleared when the server restarts.
+issued at that moment can stay valid until they expire (at most 15 minutes).
+
+Access tokens are signed with keys the server generates in memory at every start, so a restart ends
+every access token, including revoked ones. The interface renews its token from the refresh cookie, and
+users stay signed in.
 
 Public endpoints are rate limited per client IP (read from `X-Forwarded-For` only for
 [trusted proxies](/docs/installation/reverse-proxy-tls/#the-web-interface-over-https)), per minute: 5 for
