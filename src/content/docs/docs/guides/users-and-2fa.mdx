@@ -32,7 +32,8 @@ A user cannot change anything, browse or download snapshot contents, restore, or
 
 The list shows each user's role, whether two-factor authentication is on, their status and their last login.
 Actions: **Edit** (display name, role, active), **Set password**, **Reset 2FA** and **Delete**. Deleting a
-user is permanent, and you cannot delete yourself.
+user is permanent, and you cannot delete yourself. The last active admin can be neither demoted nor
+deactivated, so Arkeep always keeps an administrator.
 
 Deactivating a user blocks new logins and session refreshes immediately; a session already open can last up
 to 15 more minutes.
