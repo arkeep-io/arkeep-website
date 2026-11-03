@@ -3,8 +3,11 @@ title: Install on Kubernetes with Helm
 description: Deploy the Arkeep server on Kubernetes with the Helm chart, and the values you can set.
 ---
 
-The Helm chart deploys the Arkeep **server**. Agents run on the machines you back up, inside or
-outside the cluster, and connect to the server's gRPC port.
+The Helm chart deploys the Arkeep **server** only. Agents are not part of the chart: install them on the
+machines you back up, with [systemd](/docs/installation/agent-systemd/) or
+[Docker Compose](/docs/installation/docker-compose/#agent-only), and point them at the server's gRPC
+port (see [Exposing the gRPC port](#exposing-the-grpc-port)). There is no chart for running agents inside
+the cluster: they back up host paths and Docker volumes, not Kubernetes PersistentVolumeClaims.
 
 ## Install
 
