@@ -20,7 +20,9 @@ A directory on the agent's host.
 | **Path** | yes | For example `/mnt/backups`. With a Docker agent, type the host path; see [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker). |
 
 The path is resolved on the agent that runs the job, so a local destination only makes sense for policies
-on that machine (or a path every agent can reach, such as an NFS mount).
+on that machine (or a path every agent can reach, such as an NFS mount). If the path is a mount point, a
+backup that runs while the disk or share is not mounted fails; see
+[When the repository is missing](#when-the-repository-is-missing).
 
 ### S3 / Object Storage
 
@@ -138,10 +140,27 @@ Admin actions: **Edit**, **Duplicate** (copies the settings without the credenti
 
 The destination page shows **Used by N policies**, the repository size, the retention schedule, the last
 integrity check and the recent jobs on it. Admins also get **Run Retention Now**, **Run Check Now**,
-**Sync Snapshots**, **Edit** and **Delete**.
+**Sync Snapshots**, **New Repository** (see below), **Edit** and **Delete**.
 
 While a job holds the repository, the page explains which job and since when; other jobs on the
 destination wait for it (see [Jobs](/docs/guides/jobs/#statuses)).
+
+## When the repository is missing
+
+The first backup to a destination creates its restic repository. From the moment anything succeeds on
+it (a backup, a retention sweep, an integrity check, an import or a snapshot sync), Arkeep never creates
+it again: if the repository is gone, backups to the destination fail with *repository not found* and send
+the usual failure notification. This protects against writing into the wrong place, for example an
+unmounted USB disk or NFS share, where a new empty repository would otherwise be created in the bare
+mount point and the backups would go to the system disk instead.
+
+When the repository is missing, check that the storage is mounted and reachable from the agent, then run
+the backup again. If you replaced the storage on purpose and want to start over at the same location, use
+**New Repository** on the destination page: the next backup creates a new, empty repository there, and
+snapshots that are not in it leave the snapshot list. Nothing on the storage is deleted, and the action
+is recorded in the audit log. Changing the destination's
+location (path, bucket, prefix, URL or remote) has the same effect, since the new location holds a new
+repository.
 
 ## Delete a destination
 
