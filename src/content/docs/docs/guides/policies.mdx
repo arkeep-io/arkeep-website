@@ -102,9 +102,13 @@ docker stop my-container
 docker start my-container
 ```
 
-Hooks run with the agent's privileges. The server refuses commands that contain `$(…)` or backticks, `..`,
-or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024 characters. See
-[Security model](/docs/concepts/security/#hooks-and-command-sources).
+Hooks run with the agent's privileges. The server refuses commands and arguments that contain `$(…)` or
+backticks, `..`, or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024
+characters. See [Security model](/docs/concepts/security/#hooks-and-command-sources).
+
+Only admins see hook commands, the commands of command sources and the healthcheck URL: users see the
+policy without them, and the job log names a hook without its command. A command line may still hold a
+password, so the read-only role is kept away from it.
 
 :::tip
 To back up a database, prefer a [command source](/docs/guides/databases/) over a `pg_dump` hook: the

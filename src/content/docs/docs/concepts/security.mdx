@@ -27,7 +27,7 @@ Arkeep has two roles.
 | Role | Can |
 |---|---|
 | **admin** | Everything: configure agents, destinations and policies, run and cancel jobs, browse, download and restore snapshots, manage users and settings, read the audit log. |
-| **user** | Read-only: view the dashboard, agents, destinations, policies, jobs and snapshots. |
+| **user** | Read-only: view the dashboard, agents, destinations, policies (without hook and command-source commands or the healthcheck URL), jobs and snapshots. |
 
 Objects have no owner, so any write would affect every agent. That is why every change, and every
 action that makes an agent do something (browsing a snapshot, listing Docker volumes, restoring,
