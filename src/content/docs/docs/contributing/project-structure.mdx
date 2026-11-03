@@ -33,6 +33,7 @@ arkeep/
 │       ├── policyutil/         # Flattens policy sources (paths, command sources)
 │       ├── snapshotsync/       # Keeps snapshot records in step with the repository
 │       ├── logretention/       # Prunes old job log rows
+│       ├── housekeeping/       # Daily deletion of expired refresh tokens and old read notifications
 │       ├── notification/       # Email and webhook senders
 │       ├── healthcheck/        # Healthchecks.io pings (start, success, failure)
 │       ├── telemetry/          # Anonymous daily usage ping (opt-out)
@@ -41,7 +42,6 @@ arkeep/
 │       └── integration/        # In-process server + gRPC integration tests
 ├── shared/                     # Code shared between server and agent
 │   ├── proto/                  # Protobuf definitions and generated code
-│   ├── types/                  # Shared types
 │   └── validation/             # Rules enforced identically on server and agent
 ├── gui/                        # Vue 3 PWA
 │   └── src/
