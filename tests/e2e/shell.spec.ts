@@ -4,7 +4,7 @@ test('nav links and footer are present', async ({ page }) => {
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Main' });
   await expect(nav.locator('a.wordmark')).toContainText('Arkeep');
-  await expect(nav.locator('a.install')).toHaveAttribute('href', '/docs/installation/docker-compose/');
+  await expect(nav.locator('a.install')).toHaveAttribute('href', '/docs/quickstart/');
   await expect(page.getByRole('link', { name: 'Sponsor the work' })).toHaveAttribute('href', 'https://github.com/sponsors/arkeep-io');
   await expect(page.locator('footer .release a')).toBeVisible();
   await expect(page.locator('footer').getByRole('navigation', { name: 'Docs' }).getByRole('link')).toHaveCount(5);
