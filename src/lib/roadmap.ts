@@ -13,7 +13,8 @@ export const roadmap: RoadmapVersion[] = [
     version: 'v1.0',
     theme: 'Production-ready core',
     items: [
-      { text: 'Restore & restore test', done: true },
+      { text: 'Restore: browse, download, restore in place or elsewhere', done: true },
+      { text: 'Automated restore test: restore a snapshot to a scratch location and verify it', done: false },
       { text: 'Helm chart', done: true },
       { text: 'Comprehensive test coverage (server + agent + GUI)', done: false },
       { text: 'Full documentation site', done: true },

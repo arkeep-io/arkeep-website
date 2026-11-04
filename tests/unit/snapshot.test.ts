@@ -53,8 +53,11 @@ describe('backupLog', () => {
 });
 
 describe('restoreLog', () => {
-  it('names the restored file', () => {
-    expect(restoreLog('/arkeep.io/hero.html', 'a3f9c1d2').map((l) => l.msg)).toContain('restoring /arkeep.io/hero.html');
+  it('uses the agent\'s restore messages', () => {
+    expect(restoreLog('a3f9c1d2').map((l) => l.msg)).toEqual([
+      'restore started: snapshot a3f9c1d2 → /tmp/arkeep-restore',
+      'restore completed successfully: files written to /tmp/arkeep-restore',
+    ]);
   });
 });
 

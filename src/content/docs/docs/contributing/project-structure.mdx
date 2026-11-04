@@ -7,13 +7,13 @@ description: How the Arkeep repository is organised, and where to add a new dest
 arkeep/
 ├── agent/                      # Agent binary
 │   ├── cmd/agent/              # Entry point
-│   └── internal/
-│       ├── connection/         # gRPC client, job stream, state persistence
-│       ├── executor/           # Job queue and execution
-│       ├── restic/             # restic/rclone wrapper (binary extraction, backup, forget, check)
-│       ├── docker/             # Docker volume discovery
-│       ├── hooks/              # Pre/post backup hook runner
-│       └── metrics/            # Host metrics (CPU, RAM, disk)
+│   ├── internal/
+│   │   ├── connection/         # gRPC client, job stream, state persistence
+│   │   ├── executor/           # Job queue and execution
+│   │   ├── restic/             # restic/rclone wrapper (binary extraction, backup, forget, check)
+│   │   ├── docker/             # Docker volume discovery
+│   │   ├── hooks/              # Pre/post backup hook runner
+│   │   └── metrics/            # Host metrics (CPU, RAM, disk)
 │   └── scripts/                # download_deps.go: fetches restic and rclone to embed
 ├── server/                     # Server binary
 │   ├── cmd/server/             # Entry point, with the interface embedded
@@ -33,6 +33,7 @@ arkeep/
 │       ├── policyutil/         # Flattens policy sources (paths, command sources)
 │       ├── snapshotsync/       # Keeps snapshot records in step with the repository
 │       ├── logretention/       # Prunes old job log rows
+│       ├── housekeeping/       # Daily deletion of expired refresh tokens and old read notifications
 │       ├── notification/       # Email and webhook senders
 │       ├── healthcheck/        # Healthchecks.io pings (start, success, failure)
 │       ├── telemetry/          # Anonymous daily usage ping (opt-out)
@@ -41,7 +42,6 @@ arkeep/
 │       └── integration/        # In-process server + gRPC integration tests
 ├── shared/                     # Code shared between server and agent
 │   ├── proto/                  # Protobuf definitions and generated code
-│   ├── types/                  # Shared types
 │   └── validation/             # Rules enforced identically on server and agent
 ├── gui/                        # Vue 3 PWA
 │   └── src/
@@ -50,12 +50,19 @@ arkeep/
 │       ├── stores/             # Pinia stores
 │       ├── services/           # API and WebSocket clients
 │       ├── composables/        # Vue composables
+│       ├── lib/                # Shared helpers, including validation rules mirroring the server
 │       ├── router/             # Vue Router configuration
+│       ├── test/               # Component test helpers (mountPage, submitForm)
 │       └── types/              # TypeScript interfaces
 ├── deploy/
 │   ├── docker/                 # Docker Compose files
 │   ├── systemd/                # systemd unit for the agent
 │   └── helm/                   # Helm chart
+├── docs/
+│   ├── adr/                    # Architecture decision records
+│   └── operations/             # Operations notes kept in the repository
+├── scripts/                    # Repository scripts (database backup, dependency pin checks)
+├── tools/                      # Pinned development tools (go.mod with tool directives)
 ├── go.work                     # Go workspace (agent + server + shared)
 └── Taskfile.yml                # Task runner
 ```

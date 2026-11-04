@@ -18,11 +18,11 @@ Behind a reverse proxy, set `ARKEEP_TRUSTED_PROXIES` so the recorded IP is the c
 
 | Area | Actions |
 |---|---|
-| Agents | create, update, delete, reset identity |
+| Agents | rename, delete, reset identity (registration is not recorded) |
 | Destinations | create, update, delete, import, sync, run retention, run check |
 | Policies | create, update, delete, run now |
 | Snapshots | delete, restore, download |
-| Users | create, update, delete, password changed, failed password change, 2FA reset |
-| Auth | login (including the 2FA step and whether a recovery code was used), logout, 2FA enabled, disabled, recovery codes regenerated or used, password reset requested and confirmed |
-| Settings | OIDC providers, SMTP, webhook, notifications, log retention and cleanup, job queue, snapshot sync |
+| Users | create, update, delete, password set by an admin, password changed, failed password change, 2FA reset |
+| Auth | login (including the 2FA step and whether a recovery code was used), wrong 2FA code, logout, 2FA enabled, disabled, recovery codes regenerated or used, password reset requested and confirmed |
+| Settings | OIDC providers, SMTP, webhook, notifications, log retention and cleanup, job queue, snapshot sync, test email and test webhook sent |
 | Setup | creation of the first admin |

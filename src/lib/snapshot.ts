@@ -49,11 +49,11 @@ export function backupLog(files: SourceFile[], id: string, destinations: Destina
   return [start, ...perDest, [{ level: 'INFO', msg: 'backup completed successfully' }]];
 }
 
-export function restoreLog(path: string, id: string): LogLine[] {
+/** The two lines the agent logs for a restore, to the GUI's default custom path. */
+export function restoreLog(id: string, target = '/tmp/arkeep-restore'): LogLine[] {
   return [
-    { level: 'INFO', msg: `restore started (snapshot: ${id})` },
-    { level: 'INFO', msg: `restoring ${path}` },
-    { level: 'INFO', msg: 'restore completed: 1 file restored' },
+    { level: 'INFO', msg: `restore started: snapshot ${id} → ${target}` },
+    { level: 'INFO', msg: `restore completed successfully: files written to ${target}` },
   ];
 }
 

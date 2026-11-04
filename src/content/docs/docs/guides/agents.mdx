@@ -30,7 +30,8 @@ Agents send a heartbeat every 30 seconds. An agent is marked **Offline**:
 
 When an agent goes offline, jobs it was running become **interrupted** and can be resumed when it comes
 back (see [Jobs](/docs/guides/jobs/#interrupted-jobs)), and an *agent offline* notification is sent. Jobs
-created while it is offline wait as **pending** and start as soon as it reconnects.
+created while it is offline wait as **pending** and start as soon as it reconnects, unless they wait
+longer than the [queue timeout](/docs/guides/jobs/#queue-timeout) (24 hours by default): then they fail.
 
 ## The Agents list
 
@@ -55,8 +56,12 @@ it from following hostname changes.
 
 ## Delete
 
-Deleting an agent removes it from the list. Its existing jobs and snapshots stay. Policies assigned to it
-are left as they are: edit them to pick another agent.
+Deleting an agent removes it from the list. Its existing jobs and snapshots stay.
+
+An agent still in use cannot be deleted: policies that back up on it, and destinations that use it as
+their [maintenance agent](/docs/guides/retention-and-checks/), would stop running without any error. The
+delete dialog lists them with links. Move each policy to another agent (or delete it) and pick another
+maintenance agent for each destination, then delete the agent.
 
 If the same machine connects again later, it registers as a new agent.
 

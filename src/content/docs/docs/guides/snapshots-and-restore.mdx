@@ -47,6 +47,16 @@ verifying the repository's data.
 
 ### Restore with a Docker agent
 
+An agent in Docker reads the host through its `/hostfs` mount, so its snapshots store host paths with that
+prefix: browsing shows `/hostfs/etc/hostname` for the host's `/etc/hostname` (`/hostfs/c/…` for drive C: on
+Docker Desktop). Docker volumes keep their own path, `/var/lib/docker/volumes/…`. What this means for
+restores:
+
+- **Original location** puts files back on the host, through the same mount. Use a Docker agent with the
+  same mount: an agent installed as a binary would write them to a `/hostfs` folder.
+- **Custom path** recreates the prefix too: restoring `/hostfs/etc/hostname` to `/tmp/arkeep-restore`
+  gives `/tmp/arkeep-restore/hostfs/etc/hostname` on the host.
+
 A custom path is written through the agent's host mount, which must be `:rw`. Restoring Docker volumes in
 place has its own rules: see [Docker volumes](/docs/guides/docker-volumes/#restore-volumes).
 

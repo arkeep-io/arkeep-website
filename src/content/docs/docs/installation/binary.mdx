@@ -3,8 +3,8 @@ title: Install the standalone binary
 description: Run the Arkeep server and agent as plain binaries, with auto-PKI TLS by default.
 ---
 
-Pre-built binaries for Linux, macOS, and Windows are available on the
-[Releases](https://github.com/arkeep-io/arkeep/releases) page.
+Pre-built binaries are available on the [Releases](https://github.com/arkeep-io/arkeep/releases) page:
+the server for Linux and macOS, the agent for Linux, macOS and Windows.
 
 ## Server
 
@@ -15,6 +15,10 @@ curl -L https://github.com/arkeep-io/arkeep/releases/latest/download/arkeep-serv
 # Generate secrets
 export ARKEEP_SECRET_KEY=$(openssl rand -hex 32)
 export ARKEEP_AGENT_SECRET=$(openssl rand -hex 32)
+
+# The server creates the database file but not its directory
+sudo mkdir -p /var/lib/arkeep
+sudo chown "$USER" /var/lib/arkeep
 
 ./arkeep-server \
   --db-dsn /var/lib/arkeep/arkeep.db \
@@ -32,6 +36,44 @@ with no manual certificate management.
 To use an external certificate instead (for example Let's Encrypt via Caddy), pass
 `--grpc-tls-cert` and `--grpc-tls-key`. Auto-PKI is then skipped entirely.
 :::
+
+### Run the server with systemd
+
+The server archive includes a systemd unit, `deploy/systemd/arkeep-server.service`:
+
+```bash
+sudo cp arkeep-server /usr/local/bin/arkeep-server
+sudo cp deploy/systemd/arkeep-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# Secrets: keep a copy of ARKEEP_SECRET_KEY somewhere safe, it can never change
+sudo mkdir -p /etc/arkeep
+sudo tee /etc/arkeep/server.env > /dev/null <<EOF
+ARKEEP_SECRET_KEY=$(openssl rand -hex 32)
+ARKEEP_AGENT_SECRET=$(openssl rand -hex 24)
+EOF
+sudo chmod 600 /etc/arkeep/server.env
+
+sudo systemctl enable --now arkeep-server
+sudo journalctl -u arkeep-server -f
+```
+
+The server runs as an unprivileged user that systemd creates on start, so there is no account to set up.
+It keeps the database and the data directory in `/var/lib/arkeep` (stored in `/var/lib/private/arkeep`),
+the paths used by [Backing up Arkeep itself](/docs/installation/backing-up-arkeep/), and can write nowhere
+else. Put any other setting in `/etc/arkeep/server.env`, for example `ARKEEP_BASE_URL`, or
+`ARKEEP_DB_DRIVER=postgres` with `ARKEEP_DB_DSN` for PostgreSQL.
+
+The service cannot read files owned by root. To serve gRPC with your own certificate, hand it over with
+`sudo systemctl edit arkeep-server`:
+
+```ini
+[Service]
+LoadCredential=grpc.crt:/etc/arkeep/tls.crt
+LoadCredential=grpc.key:/etc/arkeep/tls.key
+Environment=ARKEEP_GRPC_TLS_CERT=%d/grpc.crt
+Environment=ARKEEP_GRPC_TLS_KEY=%d/grpc.key
+```
 
 ## Agent
 

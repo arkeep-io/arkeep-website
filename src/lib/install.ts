@@ -13,7 +13,13 @@ export const installTargets: InstallTarget[] = [
     id: 'docker',
     label: 'Docker host',
     href: '/docs/installation/docker-compose/',
-    command: `curl -O ${RAW}/docker-compose.all.yml\ndocker compose -f docker-compose.all.yml up -d`,
+    command: [
+      `curl -O ${RAW}/docker-compose.all.yml`,
+      `curl -o .env ${RAW}/.env.example`,
+      'sed -i "s|^ARKEEP_SECRET_KEY=.*|ARKEEP_SECRET_KEY=$(openssl rand -hex 32)|" .env',
+      'sed -i "s|^ARKEEP_AGENT_SECRET=.*|ARKEEP_AGENT_SECRET=$(openssl rand -hex 24)|" .env',
+      'docker compose -f docker-compose.all.yml up -d',
+    ].join('\n'),
   },
   {
     id: 'linux',
@@ -25,7 +31,7 @@ export const installTargets: InstallTarget[] = [
     id: 'kubernetes',
     label: 'Kubernetes cluster',
     href: '/docs/installation/kubernetes/',
-    command: 'git clone https://github.com/arkeep-io/arkeep.git && cd arkeep\nhelm install arkeep ./deploy/helm/arkeep -f my-values.yaml',
+    command: 'helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep -f my-values.yaml',
   },
   {
     id: 'board',

@@ -16,7 +16,7 @@ passed you see *the setup window has expired*: restart the server and create the
 | Role | Can |
 |---|---|
 | **Admin** | Everything, including users, settings and the audit log |
-| **User** | Read-only: the dashboard, agents, destinations, policies, jobs and snapshots |
+| **User** | Read-only: the dashboard, agents, destinations, policies (without hook and command-source commands or the healthcheck URL), jobs and snapshots |
 
 A user cannot change anything, browse or download snapshot contents, restore, or run and cancel jobs. The
 **Users**, **Settings** and **Audit Log** pages are hidden from them.
@@ -31,8 +31,9 @@ A user cannot change anything, browse or download snapshot contents, restore, or
 - **Active**: inactive users cannot log in.
 
 The list shows each user's role, whether two-factor authentication is on, their status and their last login.
-Actions: **Edit** (display name, role, active), **Reset 2FA** and **Delete**. Deleting a user is permanent,
-and you cannot delete yourself.
+Actions: **Edit** (display name, role, active), **Set password**, **Reset 2FA** and **Delete**. Deleting a
+user is permanent, and you cannot delete yourself. The last active admin can be neither demoted nor
+deactivated, so Arkeep always keeps an administrator.
 
 Deactivating a user blocks new logins and session refreshes immediately; a session already open can last up
 to 15 more minutes.
@@ -48,16 +49,29 @@ The user menu also switches between the light and dark theme.
 ## Forgotten password
 
 Local accounts can reset a forgotten password with **Forgot password?** on the login page. Arkeep emails a
-link, valid for one hour, and the reset signs out every session of that account.
+link, valid for one hour, and the reset signs out every session of that account. The response never
+reveals whether an email address has an account.
 
 This needs two things, both set up by the operator:
 
 - an SMTP server in **Settings → SMTP**;
 - the server's public URL in `ARKEEP_BASE_URL`, so the link points to the right place.
 
-When either is missing, the page says so and asks the user to contact an administrator.
+When either is missing, the page says so and asks the user to contact an administrator, who can set a new
+password with **Set password**.
 
-The response never reveals whether an email address has an account.
+## Set a user's password
+
+**Users → ⋯ → Set password** (admin) gives a local account a new password, at least 8 characters. The user
+is signed out of every session.
+
+With **Require a new password** on (the default), the password you set only works once: after signing in
+with it, and after the two-factor code if the account has one, the user must choose a password of their
+own, different from the one you gave, before reaching Arkeep. Until then the list shows **Password change
+pending**. A password reset by email also counts as choosing a new password.
+
+Set password is not offered for accounts managed by an identity provider (OIDC), nor for your own account:
+change yours from **Profile**, which asks for the current password.
 
 ## Two-factor authentication
 
@@ -90,3 +104,5 @@ An admin can use **Reset 2FA** on the Users page. It turns two-factor authentica
 signs out all its sessions; the user can enable it again afterwards.
 
 Two-factor authentication applies to local accounts. For OIDC accounts, use your identity provider's MFA.
+A local account with 2FA that is later linked to an identity provider keeps asking for the code; only an
+admin can turn it off, with **Reset 2FA**.

@@ -35,7 +35,9 @@ a temporary file. Ideal for database dumps. See [Backing up databases](/docs/gui
 
 - **Name** is required: letters, digits, `.`, `_` and `-`, starting with a letter or digit, up to 64
   characters, unique within the policy. It becomes the file name inside the snapshot.
-- **Command** runs on the agent. A non-zero exit code aborts the backup.
+- **Command** runs on the agent. A non-zero exit code aborts the backup. It follows the same rules as
+  [hooks](#hooks): no `$(…)`, backticks, `..` or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`,
+  and at most 1024 characters.
 
 Each command source produces its own snapshot on each destination.
 
@@ -81,7 +83,8 @@ While you type, Arkeep checks each destination:
 - *existing repository found, password verified*: fine;
 - a wrong password blocks the policy until you fix it.
 
-The password is set when the policy is created and cannot be changed from the interface afterwards.
+The password is set when the policy is created and cannot be changed afterwards, from the interface or the
+API: it is the key of the restic repository, shared with every policy writing there.
 
 ## Hooks
 
@@ -90,8 +93,12 @@ default 30), a **Command** and optional **Arguments**. They run on the agent thr
 accepts 0 to 86400 (24 hours); 0 uses the agent's default of 5 minutes.
 
 - A failing pre-backup hook aborts the backup.
-- The post-backup hook always runs, even after a failed backup. Its failure is reported but does not fail
-  the job.
+- The post-backup hook always runs, so it can start again what the pre-backup hook stopped: after a
+  successful or failed backup, after a failing pre-backup hook, and when the job is cancelled or the agent
+  stops. Its failure is reported in the job log but does not fail the job. When the agent stops, it waits
+  at most 30 seconds for the job to finish, and less if its service or container is stopped sooner.
+- When a hook times out, every process it started is stopped with it. A process a hook leaves running in
+  the background once it exits, such as a service it starts with `&`, is left running.
 
 ```bash
 # Stop a container before the backup, start it after (needs the Docker socket mounted :rw)
@@ -99,9 +106,13 @@ docker stop my-container
 docker start my-container
 ```
 
-Hooks run with the agent's privileges. The server refuses commands that contain `$(…)` or backticks, `..`,
-or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024 characters. See
-[Security model](/docs/concepts/security/#hooks-and-command-sources).
+Hooks run with the agent's privileges. The server refuses commands and arguments that contain `$(…)` or
+backticks, `..`, or references to `$RESTIC_*`, `$RCLONE_*` or `$ARKEEP_*`, and commands longer than 1024
+characters. See [Security model](/docs/concepts/security/#hooks-and-command-sources).
+
+Only admins see hook commands, the commands of command sources and the healthcheck URL: users see the
+policy without them, and the job log names a hook without its command. A command line may still hold a
+password, so the read-only role is kept away from it.
 
 :::tip
 To back up a database, prefer a [command source](/docs/guides/databases/) over a `pg_dump` hook: the

@@ -11,10 +11,12 @@ description: Build and run Arkeep from source, with hot reload on the server, th
 | Node.js | 26 (as in CI) | [nodejs.org](https://nodejs.org/) |
 | pnpm | 12 (pinned in `gui/package.json`) | `npm install -g pnpm` |
 | Docker | any | [docker.com](https://www.docker.com/) |
-| Task | latest | `go install github.com/go-task/task/v3/cmd/task@latest` |
-| protoc | latest | `apt install protobuf-compiler` or `brew install protobuf` |
-| protoc-gen-go | latest | `go install google.golang.org/protobuf/cmd/protoc-gen-go@latest` |
-| protoc-gen-go-grpc | latest | `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest` |
+| protoc | 29.3 (as in CI) | [GitHub releases](https://github.com/protocolbuffers/protobuf/releases/tag/v29.3) |
+| Task, protoc-gen-go, protoc-gen-go-grpc, govulncheck, gosec | pinned in `tools/go.mod` | `cd tools && GOWORK=off go install tool` |
+
+Every tool is pinned ([ADR 0013](https://github.com/arkeep-io/arkeep/blob/main/docs/adr/0013-pin-and-verify-every-dependency.md)).
+Go follows the `toolchain` in `go.work` and downloads it on its own. After the first install,
+`task tools:install` keeps the Go tools in sync with `tools/go.mod`.
 
 Node.js 25 and later no longer ship Corepack, so install pnpm directly; it switches to the version pinned by
 `packageManager` in `gui/package.json` on its own.
@@ -57,7 +59,8 @@ ARKEEP_TELEMETRY=false
 
 ### First login
 
-Open `http://localhost:8080`. The first visit redirects to the setup page, where you create the admin
+Open the interface's dev server at `http://localhost:5173` (port 8080 serves the interface only after
+`task build:server`). The first visit redirects to the setup page, where you create the admin
 account. It only accepts the account within 15 minutes of the server starting; restart the server if the
 window has passed.
 
@@ -80,6 +83,8 @@ task run:gui        # Run the interface dev server with hot reload
 task run:dev        # Run the server and the interface together
 
 task deps:download  # Download restic and rclone for the current platform
+task tools:install  # Install the pinned Go tools from tools/go.mod
+task deps:pins:check  # Fail if a dependency is not pinned (ADR 0013)
 ```
 
 ## Tests
@@ -95,7 +100,7 @@ task test:gui       # interface only
 The three Go modules are separate, so run a single test from inside its module:
 
 ```bash
-cd server && go test -v -run TestAgentHandler_Create ./internal/api/
+cd server && go test -v -run TestAgentHandler_List   ./internal/api/
 cd agent  && go test -v -run TestResolveSources      ./internal/executor/
 ```
 

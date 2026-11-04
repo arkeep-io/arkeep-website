@@ -25,10 +25,17 @@ The volumes path must be the same inside and outside the container, because the 
 paths from Docker. If your Docker data root is not `/var/lib/docker`, check it with
 `docker info | grep "Docker Root Dir"` and mount that path instead.
 
-The socket only needs `:ro` for listing volumes. Hooks that run `docker stop` or `docker start` need `:rw`.
+Whatever the mount mode, the Docker socket gives full control of Docker: `:ro` only makes the socket
+file read-only, not the API calls made through it. Mount it only on agents that need volume backups or
+hooks that run `docker` commands, and put a Docker socket proxy in front of it if you need to restrict
+what those calls can do.
 
 An agent installed as a binary needs to be in the `docker` group (or run as root) to read volume
 mountpoints.
+
+If a volume's directory is not reachable from the agent (for example the volumes directory is not mounted
+into its container, or the agent runs natively on Windows), the backup still saves the other sources, but
+the job is marked **failed** and names the volumes it left out, so the failure notification goes out.
 
 ## Pick volumes in a policy
 

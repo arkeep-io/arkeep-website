@@ -31,6 +31,10 @@ with *timed out waiting for destination* or *timed out waiting for the agent to 
 Set the limit in **Settings → Job Queue** with **Queue timeout (minutes)**: 1440 (24 hours) by default, 0 to
 wait forever, at most 43200 (30 days).
 
+An agent runs one job at a time and holds at most 16 more in its own queue. A job sent to an agent whose
+queue is full is marked **failed** at once with *the agent's job queue is full*, and releases its
+destinations.
+
 ## The Jobs list
 
 Filter by **status** and **type**. Columns: **Policy**, **Type**, **Agent**, **Status**, **Started** and

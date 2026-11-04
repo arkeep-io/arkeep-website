@@ -38,8 +38,9 @@ To pick those changes up without waiting:
   enabled one.
 
 The repository is the source of truth: snapshots no longer in it are removed from the list, and snapshots
-Arkeep has never seen are added as imported. The result reads, for example, *Sync complete — 2 removed, 1
-added. 48 snapshots in the repository.*
+Arkeep has never seen are added as imported. The result reads, for example, *Sync complete — 2 snapshots
+removed, 1 snapshot added. 48 snapshots in the repository.*, or *Already up to date — 48 snapshots in the
+repository.* when nothing changed.
 
 The repository is read, never locked, by an online agent: the destination's maintenance agent if it is
 connected, otherwise the agent of any policy writing there. A sync is refused when:

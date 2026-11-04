@@ -3,25 +3,24 @@ title: Install on Kubernetes with Helm
 description: Deploy the Arkeep server on Kubernetes with the Helm chart, and the values you can set.
 ---
 
-The Helm chart deploys the Arkeep **server**. Agents run on the machines you back up, inside or
-outside the cluster, and connect to the server's gRPC port.
+The Helm chart deploys the Arkeep **server** only. Agents are not part of the chart: install them on the
+machines you back up, with [systemd](/docs/installation/agent-systemd/) or
+[Docker Compose](/docs/installation/docker-compose/#agent-only), and point them at the server's gRPC
+port (see [Exposing the gRPC port](#exposing-the-grpc-port)). There is no chart for running agents inside
+the cluster: they back up host paths and Docker volumes, not Kubernetes PersistentVolumeClaims.
 
 ## Install
 
-The chart lives in the Arkeep repository at
-[`deploy/helm/arkeep`](https://github.com/arkeep-io/arkeep/tree/main/deploy/helm/arkeep).
-Install it from a clone:
+The chart is published with every release as an OCI artifact on GitHub Container Registry, and on Docker
+Hub as `oci://registry-1.docker.io/arkeepio/arkeep`. Its version is the Arkeep release it deploys, without
+the `v`: chart `0.9.2` runs Arkeep `v0.9.2`. No `helm repo add` is needed (Helm 3.8 or later):
 
 ```bash
-git clone https://github.com/arkeep-io/arkeep.git
-cd arkeep
-helm dependency build ./deploy/helm/arkeep
-helm install arkeep ./deploy/helm/arkeep -f my-values.yaml
+helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.2 -f my-values.yaml
 ```
 
-:::note
-A published chart repository is coming. Until then, install from the repository path as shown above.
-:::
+Leave out `--version` to install the latest release. The chart's source is in the Arkeep repository at
+[`deploy/helm/arkeep`](https://github.com/arkeep-io/arkeep/tree/main/deploy/helm/arkeep).
 
 A minimal `my-values.yaml`:
 
@@ -50,7 +49,9 @@ ingress:
 :::caution[Run a single replica]
 Keep `replicaCount: 1`, with SQLite and with PostgreSQL alike. The server keeps the registry of
 connected agents and download tickets in memory, so agents and browsers must reach the same instance.
-With SQLite a second replica cannot even mount the ReadWriteOnce volume.
+With SQLite a second replica cannot even mount the ReadWriteOnce volume. For the same reason the chart
+upgrades with the `Recreate` strategy: the old pod stops before the new one starts, so the server is
+down for a few seconds. Agents reconnect on their own.
 :::
 
 ## Exposing the gRPC port
@@ -87,18 +88,24 @@ kubectl create secret tls arkeep-grpc-tls \
 | `config.dbDriver` | `sqlite` | `sqlite` or `postgres` |
 | `config.secureCookies` | `true` | `Secure` flag on auth cookies |
 | `config.updateCheck` | `true` | Check GitHub for new releases |
+| `config.telemetry` | `true` | Anonymous daily usage statistics; see [Telemetry](/docs/reference/telemetry/) |
+| `config.trustedProxies` | empty | Proxies whose `X-Forwarded-For` is trusted; empty means loopback and private networks |
 | `config.httpAddr` / `config.grpcAddr` | `:8080` / `:9090` | Listen addresses inside the container |
 | `grpc.tls.existingSecret` | empty | TLS Secret for gRPC; empty means auto-PKI |
 | `grpc.tls.mountPath` | `/etc/arkeep/tls` | Where that Secret is mounted |
-| `secret.existingSecret` | empty | Use your own Secret with `ARKEEP_SECRET_KEY`, `ARKEEP_AGENT_SECRET` (and `ARKEEP_DB_DSN` for PostgreSQL) |
+| `secret.existingSecret` | empty | Use your own Secret with `ARKEEP_SECRET_KEY`, `ARKEEP_AGENT_SECRET` (and `ARKEEP_DB_DSN` for PostgreSQL, optionally `ARKEEP_METRICS_TOKEN`) |
 | `secret.secretKey` / `secret.agentSecret` | empty | Values for the Secret the chart creates |
+| `secret.metricsToken` | empty | Bearer token required on `/metrics`; empty leaves it public |
 | `persistence.enabled` | `true` | PVC for the database and data directory |
 | `persistence.size` | `10Gi` | PVC size |
 | `persistence.mountPath` | `/var/lib/arkeep` | Mount path |
 | `service.type` | `ClusterIP` | Service type |
 | `service.httpPort` / `service.grpcPort` | `8080` / `9090` | Service ports |
 | `ingress.*` | disabled | Standard ingress for the HTTP port |
-| `postgresql.enabled` | `false` | Deploy the bundled Bitnami PostgreSQL (set `config.dbDriver: postgres`) |
+| `postgresql.enabled` | `false` | Deploy a bundled PostgreSQL 17 from the official image (set `config.dbDriver: postgres`) |
+| `postgresql.auth.password` | empty | Required with `postgresql.enabled`; also `auth.username` and `auth.database` (both `arkeep`) |
+| `postgresql.persistence.size` | `8Gi` | PVC size of the bundled database; `postgresql.persistence.storageClass` empty means the cluster default |
+| `postgresql.image` | `postgres:17.11-alpine3.24@sha256:…` | Pinned by digest; a new major version needs a dump and restore |
 | `externalPostgresql.url` | empty | Full DSN of an external PostgreSQL; or set `host`, `port`, `database`, `username`, `password`, `sslMode` |
 | `resources` | empty | Suggested start: requests 100m / 128Mi, limits 500m / 512Mi |
 | `livenessProbe` / `readinessProbe` | `/health/live` / `/health/ready` | Probes |
@@ -112,14 +119,52 @@ all stored destination credentials unreadable.
 ## Upgrading
 
 Back up the database first (see [Backing up Arkeep itself](/docs/installation/backing-up-arkeep/)).
-Then, from your clone:
+Then upgrade to the new release's chart:
 
 ```bash
-git pull
-helm dependency build ./deploy/helm/arkeep
-helm upgrade arkeep ./deploy/helm/arkeep --reuse-values
-kubectl rollout status deployment/arkeep-server
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
+kubectl rollout status deployment/arkeep
 ```
 
 After upgrading, check that `GET /health/ready` returns `"status": "healthy"`. Schema migrations run
 automatically on startup.
+
+### Moving from the Bitnami PostgreSQL subchart
+
+Earlier charts deployed the bundled database with the Bitnami subchart, whose images are no longer
+published. The chart now runs the official PostgreSQL image instead, on a new volume, so an install
+with `postgresql.enabled=true` moves its data once with `pg_dump` and `pg_restore`. Installs with
+SQLite or an external PostgreSQL upgrade as usual.
+
+The commands assume a release named `arkeep`. If you set `postgresql.primary.persistence.*`, move
+those values to `postgresql.persistence.*` first.
+
+```bash
+# 1. Stop the server, so nothing is written after the dump
+kubectl scale deployment/arkeep --replicas=0
+
+# 2. Dump the database from the Bitnami pod
+kubectl exec arkeep-postgresql-0 -- sh -c \
+  'PGPASSWORD="$(cat "$POSTGRES_PASSWORD_FILE")" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -Fc' > arkeep.dump
+
+# 3. Remove the Bitnami StatefulSet; its volume (data-arkeep-postgresql-0) is kept
+kubectl delete statefulset arkeep-postgresql
+
+# 4. Upgrade with the server still stopped. --reset-then-reuse-values (Helm 3.14+)
+#    keeps your values and picks up the chart's new defaults, such as postgresql.image
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version <new-version> \
+  --reset-then-reuse-values --set replicaCount=0
+kubectl rollout status statefulset/arkeep-postgresql
+
+# 5. Restore into the new, empty database
+kubectl exec -i arkeep-postgresql-0 -- sh -c \
+  'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --exit-on-error' < arkeep.dump
+
+# 6. Start the server again
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version <new-version> \
+  --reuse-values --set replicaCount=1
+```
+
+Log in and check your policies and job history. The old volume stays until you delete it with
+`kubectl delete pvc data-arkeep-postgresql-0`: keep it until you are sure, since a rollback to the
+previous chart needs it.

@@ -40,6 +40,10 @@ Set up the mail server in **Settings → SMTP**:
 | **From Name** | `Arkeep` by default |
 | **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. |
 
+**Send test email** sends a message with the values in the form, saved or not, to your own address (the
+admin who clicks it), and shows the server's answer or the exact error. With the password left blank it
+uses the saved one, but only for the saved host: to test another server, type its password.
+
 The same SMTP server sends [password reset](/docs/guides/users-and-2fa/#forgotten-password) emails.
 
 ## Webhook
@@ -49,6 +53,10 @@ In **Settings → Notifications**, turn on **Send webhook notifications** and se
 - **Webhook URL**: any `http://` or `https://` endpoint. Every event is sent as a `POST` with a JSON body.
 - **Webhook Secret**: optional; when set, every request is signed (see below). Leave it blank to keep the
   current one.
+
+**Send test webhook** posts a `test` event to the URL in the form, saved or not, signed with the secret in
+the form or, when it is blank, with the saved one. It works even with the webhook not saved yet, and shows
+the HTTP status or the network error when the delivery fails.
 
 The payload is described in [Webhook events](/docs/reference/webhook-events/).
 
@@ -102,8 +110,9 @@ Email and webhook deliveries are retried up to three times: immediately, after 5
 ## In-app notifications
 
 The bell in the interface shows the latest 20 notifications to **administrators**, with an unread counter.
+Users with the read-only `user` role receive no in-app notifications and do not see the bell.
 Click one to mark it read, or **Mark all as read**. In-app notifications are always created, whatever the
-event toggles say.
+event toggles say. Read notifications are deleted 30 days after they were read; unread ones are kept.
 
 ## Integrations
 
@@ -117,8 +126,9 @@ Arkeep's `text` field is Slack's message body, so nothing else is needed.
 ### Discord
 
 1. In your server, open **Channel Settings → Integrations → Webhooks** and create a webhook.
-2. Paste its URL into **Webhook URL**. For richer formatting, append `/slack`: Discord accepts
-   Slack-compatible payloads there.
+2. Paste its URL into **Webhook URL** and append `/slack`. Discord's own endpoint expects a `content`
+   field and rejects Arkeep's payload as an empty message; the `/slack` endpoint accepts Slack-compatible
+   payloads, whose `text` field Arkeep sends.
 
 ```text
 https://discord.com/api/webhooks/<id>/<token>/slack

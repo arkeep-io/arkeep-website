@@ -22,14 +22,14 @@ import NotifyFragment from './NotifyFragment.astro';
       <article class="card tile docker" data-reveal style="--reveal-delay: 70ms">
         <div class="text">
           <h3 class="title-md">Docker volumes, discovered</h3>
-          <p>Arkeep lists containers and volumes on each host and follows them as services come and go.</p>
+          <p>Pick named volumes from the live list each host's Docker reports, and see at a glance when one is gone.</p>
         </div>
         <div class="ui-card" data-ui>
           <p class="ui-head">Add source <span>· web-01</span></p>
           <ul class="volumes">
-            <li><span class="box checked" aria-hidden="true"></span>postgres_data<span class="meta">postgres:16</span></li>
-            <li><span class="box checked" aria-hidden="true"></span>nextcloud_html<span class="meta">nextcloud:29</span></li>
-            <li><span class="box" aria-hidden="true"></span>gitea_data<span class="meta">gitea:1.22</span></li>
+            <li><span class="box checked" aria-hidden="true"></span>postgres_data<span class="meta">local</span></li>
+            <li><span class="box checked" aria-hidden="true"></span>nextcloud_html<span class="meta">local</span></li>
+            <li><span class="box" aria-hidden="true"></span>gitea_data<span class="meta">Not found</span></li>
           </ul>
         </div>
       </article>
@@ -69,7 +69,7 @@ import NotifyFragment from './NotifyFragment.astro';
       <article class="card tile auth" data-reveal>
         <div class="text">
           <h3 class="title-md">Your login, your rules</h3>
-          <p>Sign in with your identity provider, require two-factor for everyone, and give auditors read-only accounts.</p>
+          <p>Sign in with your identity provider or with two-factor (TOTP), and give auditors read-only accounts.</p>
           <ul class="tags" aria-label="Supported">
             <li>OIDC</li><li>Keycloak</li><li>Authentik</li><li>Zitadel</li><li>TOTP 2FA</li><li>Read-only users</li><li>Audit log</li>
           </ul>
