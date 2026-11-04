@@ -22,7 +22,7 @@ major version. The **Agents** page marks agents older than the latest release wi
 ## Docker Compose
 
 The compose files pin the image version. Set the new release on every `image:` line (for example
-`ghcr.io/arkeep-io/arkeep-server:v0.9.3`), then:
+`ghcr.io/arkeep-io/arkeep-server:vX.Y.Z`), then:
 
 ```bash
 docker compose pull
@@ -50,7 +50,7 @@ sudo journalctl -u arkeep-server -f
 Upgrade to the chart of the new release (its version is the release without the `v`):
 
 ```bash
-helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version X.Y.Z --reuse-values
 kubectl rollout status deployment/arkeep
 ```
 

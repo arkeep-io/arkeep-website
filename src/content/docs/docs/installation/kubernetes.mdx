@@ -13,10 +13,10 @@ the cluster: they back up host paths and Docker volumes, not Kubernetes Persiste
 
 The chart is published with every release as an OCI artifact on GitHub Container Registry, and on Docker
 Hub as `oci://registry-1.docker.io/arkeepio/arkeep`. Its version is the Arkeep release it deploys, without
-the `v`: chart `0.9.2` runs Arkeep `v0.9.2`. No `helm repo add` is needed (Helm 3.8 or later):
+the `v`: chart `X.Y.Z` runs Arkeep `vX.Y.Z`. No `helm repo add` is needed (Helm 3.8 or later):
 
 ```bash
-helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.2 -f my-values.yaml
+helm install arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version X.Y.Z -f my-values.yaml
 ```
 
 Leave out `--version` to install the latest release. The chart's source is in the Arkeep repository at
@@ -122,7 +122,7 @@ Back up the database first (see [Backing up Arkeep itself](/docs/installation/ba
 Then upgrade to the new release's chart:
 
 ```bash
-helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version 0.9.3 --reuse-values
+helm upgrade arkeep oci://ghcr.io/arkeep-io/charts/arkeep --version X.Y.Z --reuse-values
 kubectl rollout status deployment/arkeep
 ```
 
