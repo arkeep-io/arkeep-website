@@ -4,7 +4,7 @@ export const DISCUSSIONS_URL = `${GITHUB_URL}/discussions`;
 export const ISSUES_URL = `${GITHUB_URL}/issues`;
 export const SPONSORS_URL = 'https://github.com/sponsors/arkeep-io';
 export const DOCKER_HUB_URL = 'https://hub.docker.com/repositories/arkeepio';
-export const GET_STARTED_URL = '/docs/installation/docker-compose/';
+export const GET_STARTED_URL = '/docs/quickstart/';
 
 export const navLinks = [
   { label: 'How it works', href: '/#how-it-works' },
