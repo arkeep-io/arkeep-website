@@ -26,6 +26,18 @@ Each policy can override the two job events with **On success** and **On failure
 
 These toggles and overrides decide what is sent by email and webhook.
 
+## Channels
+
+Email and webhook are independent: use either, both or neither. In **Settings → Notifications**:
+
+- **Send email notifications** (on by default) emails every enabled event. Turn it off to keep only the
+  webhook: no email is attempted and no SMTP error is logged. Password reset emails are still sent.
+- **Send webhook notifications** (off by default) posts every enabled event to your endpoint. See
+  [Webhook](#webhook).
+
+A channel turned off also drops its deliveries still waiting for a retry, so turning it back on never sends
+old notifications. In-app notifications are always created.
+
 ## Email
 
 Set up the mail server in **Settings → SMTP**:
@@ -38,7 +50,7 @@ Set up the mail server in **Settings → SMTP**:
 | **Authentication** | Turn on to enter **Username** and **Password**. Leave the password blank to keep the current one. |
 | **From Address** | Required |
 | **From Name** | `Arkeep` by default |
-| **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. |
+| **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. Not used when **Send email notifications** is off. |
 
 **Send test email** sends a message with the values in the form, saved or not, to your own address (the
 admin who clicks it), and shows the server's answer or the exact error. With the password left blank it
