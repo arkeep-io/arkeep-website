@@ -16,9 +16,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 
-# environment variables
+# environment variables (keep the example file tracked)
 .env
-.env.production
+.env.*
+!.env.example
 
 # macOS-specific files
 .DS_Store

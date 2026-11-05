@@ -1,0 +1,54 @@
+name: Website problem
+description: Something on arkeep.io looks or behaves wrong (layout, navigation, links, demos)
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem with the website.
+        Bugs in the Arkeep application itself (server, agent, GUI) belong in
+        [arkeep-io/arkeep](https://github.com/arkeep-io/arkeep/issues).
+        For mistakes in the documentation text, use the **Documentation fix** template instead.
+
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      placeholder: https://arkeep.io/docs/quickstart/
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the page on a phone
+        2. Tap the menu button
+        3. ...
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: Firefox 140 on Windows 11, Safari on iPhone 15
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Optional. Drag and drop images here.

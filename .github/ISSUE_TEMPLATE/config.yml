@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Arkeep application bug or feature request
+    url: https://github.com/arkeep-io/arkeep/issues
+    about: Problems with the Arkeep server, agent or GUI belong in the main repository.
+  - name: Usage questions
+    url: https://github.com/arkeep-io/arkeep/discussions
+    about: Ask how to use Arkeep in Arkeep Discussions.

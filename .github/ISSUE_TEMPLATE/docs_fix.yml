@@ -1,0 +1,40 @@
+name: Documentation fix
+description: A documentation page is wrong, outdated, unclear or missing something
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the documentation. For a small wording fix you can also
+        use the **Edit page** link at the bottom of any docs page and open a pull request directly.
+
+        Bugs in the Arkeep application itself belong in
+        [arkeep-io/arkeep](https://github.com/arkeep-io/arkeep/issues).
+
+  - type: input
+    id: page
+    attributes:
+      label: Affected page
+      placeholder: https://arkeep.io/docs/guides/destinations/
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Arkeep version
+      description: Optional. The Arkeep version you were using, if the problem depends on it.
+      placeholder: v1.4.0
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested fix
+      description: Optional. Proposed wording, corrected command or configuration.
