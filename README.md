@@ -1,49 +1,117 @@
-# Starlight Starter Kit: Basics
+# Arkeep Website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+> The website and documentation for Arkeep.
 
+[![CI](https://github.com/arkeep-io/arkeep-website/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/arkeep-io/arkeep-website/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/arkeep-io/arkeep-website)](LICENSE)
+
+Source code for **[arkeep.io](https://arkeep.io)**: the product website, interactive demos and documentation for Arkeep, the open-source, self-hosted backup manager built on Restic and Rclone.
+
+Built with [Astro](https://astro.build/) and [Starlight](https://starlight.astro.build/), published as a static site through Cloudflare Workers.
+
+**[Website](https://arkeep.io)** · **[Documentation](https://arkeep.io/docs/)** · **[Arkeep repository](https://github.com/arkeep-io/arkeep)** · **[Report an issue](https://github.com/arkeep-io/arkeep-website/issues)**
+
+---
+
+## What's here
+
+- **Product website** — features, architecture, installation options and roadmap.
+- **Documentation** — quickstart, deployment guides, backup and restore workflows, and configuration reference.
+- **Interactive demos** — examples of backup progress, retention rules and notifications.
+- **Automated checks** — unit tests, production build, internal link validation and browser tests for desktop and mobile.
+
+## Quickstart
+
+You need **Node.js 26** and the **pnpm version declared in `package.json`**.
+
+```bash
+git clone https://github.com/arkeep-io/arkeep-website.git
+cd arkeep-website
+pnpm install --frozen-lockfile
+pnpm dev
 ```
-pnpm create astro@latest -- --template starlight
+
+Open **http://localhost:4321**.
+
+The site can run without credentials. Release information and the GitHub star count are fetched from public APIs, with fallbacks when those requests fail.
+
+An optional `GITHUB_TOKEN` environment variable raises the API rate limit for build-time requests. It is used by server-side build code and must never be placed in browser code or committed to the repository.
+
+## Project structure
+
+| Path | Purpose |
+|---|---|
+| `src/content/docs/docs/` | Documentation pages, written in Markdown and MDX |
+| `src/pages/` | Homepage, privacy page and custom 404 |
+| `src/components/home/` | Homepage sections and interactive demo markup |
+| `src/components/site/` | Shared navigation, footer and site components |
+| `src/components/starlight/` | Documentation theme overrides |
+| `src/lib/` | Shared logic and build-time data |
+| `src/scripts/` | Browser interactions |
+| `src/styles/` | Design tokens, typography and styles |
+| `public/` | Static files, headers, icons and robots configuration |
+| `tests/` | Unit tests and Playwright browser tests |
+| `scripts/` | Internal link checks and screenshot tooling |
+| `astro.config.mjs` | Astro, Starlight, navigation and sitemap configuration |
+| `wrangler.toml` | Cloudflare Workers static assets configuration |
+
+Documentation pages live under the nested `src/content/docs/docs/` directory. For example, `src/content/docs/docs/quickstart.mdx` produces `/docs/quickstart/`.
+
+## Checks
+
+Run these commands from the repository root:
+
+| Command | Purpose |
+|---|---|
+| `pnpm dev` | Start the local development server |
+| `pnpm test` | Run unit tests |
+| `pnpm build` | Build the static site into `dist/` |
+| `pnpm check:links` | Check internal links in the built site |
+| `pnpm preview` | Preview the production build |
+| `pnpm test:e2e` | Run Playwright browser tests |
+
+For a standard local check:
+
+```bash
+pnpm test
+pnpm build
+pnpm check:links
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Install Chromium before running browser tests:
 
-## 🚀 Project Structure
-
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+On Linux, Playwright may also require system dependencies:
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+```bash
+pnpm exec playwright install --with-deps chromium
+```
 
-Static assets, like favicons, can be placed in the `public/` directory.
+Browser tests build the site and use a dedicated preview server on port **4399**. They cover desktop and mobile layouts.
 
-## 🧞 Commands
+## Contributing
 
-All commands are run from the root of the project, from a terminal:
+Corrections, clearer examples, accessibility improvements and bug fixes are welcome.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+1. Fork the repository and create a branch from `develop`.
+2. Make a focused change.
+3. Preview affected pages locally and run the relevant checks.
+4. Open a pull request targeting **`develop`**.
 
-## 👀 Want to learn more?
+Use descriptive branch names such as:
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+- `docs/clarify-s3-setup`
+- `fix/mobile-navigation`
+- `feat/restore-guide`
+- `ci/update-workflow`
+
+For documentation changes:
+
+- Verify commands and configuration against the applicable Arkeep version.
+- Distinguish available functionality from planned work.
+- Use fictional values in examples.
+- Preserve existing page URLs where possible
