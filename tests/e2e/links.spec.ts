@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const isExternal = (href: string) => /^https?:\/\//.test(href) && !href.startsWith('https://arkeep.io');
+// Compares the parsed host, not a prefix: "https://arkeep.io.example.com" is external.
+const isExternal = (href: string) => /^https?:\/\//.test(href) && new URL(href).hostname !== 'arkeep.io';
 
 async function anchors(page: Page) {
   return page.locator('a[href]').evaluateAll((els) =>
