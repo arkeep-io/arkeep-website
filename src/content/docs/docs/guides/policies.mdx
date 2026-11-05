@@ -153,12 +153,24 @@ Disabled policies are paused: they do not run on schedule, and **Run Now** is un
 Admins can start a backup at any time with **Run Now**, on the list or on the policy page. It is refused when
 the policy is disabled, or when a run of the policy is already queued.
 
+## The policies list
+
+Each row shows the policy's agent, schedule and status, and how its backups have been going:
+
+- **Last Run**: when the latest backup started, or was queued if it has not started yet. Backups started
+  with **Run Now** count too. *Never* when the policy has not run.
+- **Recent Runs**: the last five backups as dots, oldest to newest from left to right, coloured like the
+  [job statuses](/docs/guides/jobs/#statuses): green succeeded, red failed, blue running, amber pending or
+  interrupted, violet waiting, grey cancelled. Hover a dot for its status and date, click it to open the
+  job. Empty slots mean the policy has run fewer than five times. Restores are not counted.
+
+Click a row to open the policy page. List actions: **Run Now**, **Edit**, **Duplicate** and **Delete**
+(admin).
+
 ## The policy page
 
 - **Schedule**, **Last Run**, **Next Run** (empty while disabled) and **Created**.
 - The sources, the destinations in priority order and the recent jobs.
-
-List actions: **Run Now**, **Edit**, **Duplicate** and **Delete** (admin).
 
 ## Delete a policy
 

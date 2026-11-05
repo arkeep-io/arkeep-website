@@ -1,0 +1,22 @@
+version: 2
+
+# Version updates target develop, like any other contribution. Security updates
+# are configured in the repository settings and open against the default branch.
+updates:
+  - package-ecosystem: npm # reads package.json and pnpm-lock.yaml
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
