@@ -34,7 +34,8 @@ Click **Restore** on a snapshot, or select files while browsing and click **Rest
   - **Custom path** (default `/tmp/arkeep-restore`, or `C:\Users\Public\arkeep-restore` on Windows): an
     absolute path on the target agent. The original folder structure is recreated inside it.
   - **Original location**: writes files back where they came from, **overwriting existing data**. Not
-    available on Windows agents.
+    available on Windows agents. On a Docker host, data that running containers are using is skipped:
+    see [what an in-place restore never overwrites](/docs/guides/docker-volumes/#what-an-in-place-restore-never-overwrites).
 - **Files to restore**: leave empty for the whole snapshot, or pick files with **Browse files**.
 
 The restore runs as a job and opens in the job view when it starts. It needs the target agent online.
