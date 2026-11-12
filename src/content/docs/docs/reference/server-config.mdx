@@ -20,7 +20,7 @@ Every option can be set with a flag or an environment variable. When both are se
 | `--base-url` | `ARKEEP_BASE_URL` | | Public URL, such as `https://arkeep.example.com`. Required for password reset emails; links are never built from request headers. |
 | `--log-level` | `ARKEEP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `--secure-cookies` | `ARKEEP_SECURE_COOKIES` | `false` | `Secure` flag on auth cookies. Turn on when served over HTTPS. |
-| `--trusted-proxies` | `ARKEEP_TRUSTED_PROXIES` | loopback and private networks | Comma-separated IPs or CIDRs of reverse proxies whose `X-Forwarded-For` is trusted, for rate limits and the audit log. `none` trusts no proxy. |
+| `--trusted-proxies` | `ARKEEP_TRUSTED_PROXIES` | loopback only | Comma-separated IPs or CIDRs of reverse proxies whose `X-Forwarded-For` is trusted, for rate limits and the audit log. A proxy in another container, pod or host must be listed. `none` trusts no proxy. |
 | `--metrics-token` | `ARKEEP_METRICS_TOKEN` | | When set, `/metrics` requires `Authorization: Bearer <token>`. When empty, `/metrics` is public. |
 | `--telemetry` | `ARKEEP_TELEMETRY` | `true` | Send anonymous usage statistics. See [Telemetry](/docs/reference/telemetry/). |
 | `--update-check` | `ARKEEP_UPDATE_CHECK` | `true` | Check the GitHub releases API (cached 1 hour) to show an update indicator. `false` never contacts GitHub. |

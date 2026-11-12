@@ -23,7 +23,8 @@ volumes:
 
 The volumes path must be the same inside and outside the container, because the agent receives host
 paths from Docker. If your Docker data root is not `/var/lib/docker`, check it with
-`docker info | grep "Docker Root Dir"` and mount that path instead.
+`docker info | grep "Docker Root Dir"` and mount that path instead. In-place restores find the data root
+through the socket on their own, but backups need the mount to match.
 
 Whatever the mount mode, the Docker socket gives full control of Docker: `:ro` only makes the socket
 file read-only, not the API calls made through it. Mount it only on agents that need volume backups or
@@ -77,3 +78,27 @@ To restore volumes in place:
 
 Volumes of containers still running when the restore starts are skipped with a log entry naming the
 container; the rest of the restore completes normally.
+
+### What an in-place restore never overwrites
+
+An in-place restore skips the data that running containers are using, wherever the snapshot holds it, and
+logs one warning per path with the container's name. Everything else in the snapshot is restored as usual.
+
+- **Volumes of running containers**, both under `/var/lib/docker/volumes` and under `/hostfs`. A snapshot of
+  a path source such as `/` or `/var/lib` holds the volumes as `/hostfs/var/lib/docker/volumes/…`, and
+  they are protected there too.
+- **Writable bind mounts of running containers**, for example `./data:/var/lib/postgresql/data` in a
+  compose file. Read-only bind mounts are restored normally. Also restored normally: the agent's own
+  mounts, a bind of exactly the volumes directory or the Docker data root, sockets such as `docker.sock`,
+  and `/` or a whole drive.
+- **The whole volumes directory, when the agent cannot check which containers are running**: the Docker
+  socket is not mounted, or Docker does not answer. The job log says why. To restore those volumes, mount
+  the socket, or stop the containers, restore to a custom path and copy the files back.
+
+Without the socket the agent cannot see bind mounts either, so running containers' bind mounts are only
+protected when the socket is mounted.
+
+If you select files to restore and one of the selected folders contains data of a running container, the
+job fails with `cannot restore … in place: it contains …`, because restic cannot combine the files you
+picked with the paths to skip. Select more specific files, stop the container, or restore to a custom
+path.

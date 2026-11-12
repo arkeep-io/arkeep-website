@@ -46,6 +46,11 @@ ingress:
         - arkeep.example.com
 ```
 
+With an ingress, also set `config.trustedProxies` to the network of the ingress controller pods, often
+the cluster pod CIDR (for example `10.42.0.0/16`). Otherwise every user shares the controller's address
+for login rate limits and the audit log, and one user's failed logins slow down everyone. Any pod in the
+network you list can claim any client address, so keep it as narrow as your cluster allows.
+
 :::caution[Run a single replica]
 Keep `replicaCount: 1`, with SQLite and with PostgreSQL alike. The server keeps the registry of
 connected agents and download tickets in memory, so agents and browsers must reach the same instance.
@@ -89,7 +94,7 @@ kubectl create secret tls arkeep-grpc-tls \
 | `config.secureCookies` | `true` | `Secure` flag on auth cookies |
 | `config.updateCheck` | `true` | Check GitHub for new releases |
 | `config.telemetry` | `true` | Anonymous daily usage statistics; see [Telemetry](/docs/reference/telemetry/) |
-| `config.trustedProxies` | empty | Proxies whose `X-Forwarded-For` is trusted; empty means loopback and private networks |
+| `config.trustedProxies` | empty | Proxies whose `X-Forwarded-For` is trusted; empty means loopback only |
 | `config.httpAddr` / `config.grpcAddr` | `:8080` / `:9090` | Listen addresses inside the container |
 | `grpc.tls.existingSecret` | empty | TLS Secret for gRPC; empty means auto-PKI |
 | `grpc.tls.mountPath` | `/etc/arkeep/tls` | Where that Secret is mounted |
