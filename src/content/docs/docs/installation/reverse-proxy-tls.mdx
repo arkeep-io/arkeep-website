@@ -20,7 +20,10 @@ Then set:
   right address. Arkeep never builds those links from request headers.
 - `--trusted-proxies` (`ARKEEP_TRUSTED_PROXIES`) to the proxy's address. Arkeep reads the client IP
   from `X-Forwarded-For` only for trusted proxies; it is used by login rate limits and the audit log.
-  The default trusts loopback and private networks; `none` trusts no proxy.
+  The default trusts loopback only, which covers a proxy on the same host. A proxy in another container,
+  pod or host must be listed, or every user shares the proxy's address and one user's failed logins slow
+  down everyone. List only addresses the proxy alone uses: a trusted peer can claim any client address.
+  `none` trusts no proxy.
 
 The proxy must pass WebSocket upgrades: the interface uses `/api/v1/ws` for live updates.
 
@@ -77,7 +80,7 @@ leaves the host, or a private network you trust.
 - [ ] HTTPS in front of port 8080, WebSocket upgrades allowed
 - [ ] `ARKEEP_SECURE_COOKIES=true`
 - [ ] `ARKEEP_BASE_URL` set to the public URL
-- [ ] `ARKEEP_TRUSTED_PROXIES` narrowed to the proxy's address
+- [ ] `ARKEEP_TRUSTED_PROXIES` set to the proxy's address, unless the proxy runs on the same host
 - [ ] Port 9090 reachable by agents without TLS termination (or your own certificate configured)
 - [ ] Agents behind the HTTPS-only setup started with `--server-http-addr https://…`
 - [ ] `/metrics` and `/health/*` restricted at the proxy, or `ARKEEP_METRICS_TOKEN` set
