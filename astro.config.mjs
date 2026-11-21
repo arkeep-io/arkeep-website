@@ -61,6 +61,7 @@ export default defineConfig({
             { label: 'Agents', slug: 'docs/guides/agents' },
             { label: 'Destinations', slug: 'docs/guides/destinations' },
             { label: 'Retention and integrity checks', slug: 'docs/guides/retention-and-checks' },
+            { label: 'Repairing a repository', slug: 'docs/guides/repairing-a-repository' },
             { label: 'Policies', slug: 'docs/guides/policies' },
             { label: 'Backing up databases', slug: 'docs/guides/databases' },
             { label: 'Docker volumes', slug: 'docs/guides/docker-volumes' },
