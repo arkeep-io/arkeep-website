@@ -10,14 +10,16 @@ or typing the repository password and storage credentials by hand.
 
 Repairs run on the destination's **Maintenance Agent**, like retention and integrity checks. The section
 is shown to admins only. A repair needs a maintenance agent that is connected and recent enough to run
-repairs; otherwise the section says why it cannot start one.
+repairs. When there is no maintenance agent, or it is too old, the section says so up front; when it is
+offline, or the repository password is not known, the error appears when you run the repair.
 
 ## Maintenance mode
 
 While a destination is in maintenance, **no job can use it**: backups, retention sweeps and integrity
-checks that need it wait, shown as **waiting**, and start in order once the maintenance ends. Scheduled
-jobs are not lost, and they do not pile up: a policy has at most one backup waiting, and a destination
-at most one check and one sweep. A job with several destinations waits as a whole, and can be cancelled
+checks that need it wait, shown as **waiting**, and start in order once the maintenance ends. They do
+not pile up: a policy has at most one backup waiting, and a destination at most one check and one sweep.
+A job that waits longer than the [queue timeout](/docs/guides/jobs/#queue-timeout) (24 hours by default)
+fails, as it would behind a busy destination: keep long maintenances below it, or raise it. A job with several destinations waits as a whole, and can be cancelled
 while it waits.
 
 **Start maintenance** puts the destination in maintenance until you select **End maintenance**. If jobs
@@ -25,8 +27,14 @@ are running on the destination at that moment, they finish first: the section sh
 maintenance**, and repairs start once it reads **In maintenance**.
 
 A repair started on a destination that is not in maintenance puts it in maintenance for as long as it
-runs. Select **Keep in maintenance after the repair** to keep it there afterwards, for instance to run
-the next step of the procedure below without a backup slipping in between.
+runs. While it runs, the section offers **Keep in maintenance after the repair**: select it to keep the
+destination there afterwards, for instance to run the next step of the procedure below without a backup
+slipping in between. **End maintenance** is not available while a repair runs.
+
+That maintenance ends with the repair's job, also when the job is marked **interrupted** because the
+server restarted or the agent disconnected, although restic may still be repairing on the agent.
+Scheduled jobs can then start on the repository. Before a repair that cannot be undone, select **Start
+maintenance** yourself: the confirmation reminds you when you have not.
 
 Restores, snapshot browsing and downloads are not stopped by the maintenance mode.
 
