@@ -119,6 +119,12 @@ within 15 minutes, the code step of that account is refused until the 15 minutes
 who knows the password reaches that step, so nobody can use it to lock you out with your email alone;
 wrong passwords are limited per address only. See [Users, roles and 2FA](/docs/guides/users-and-2fa/).
 
+## API tokens
+
+[API tokens](/docs/guides/api-tokens/) let programs read the API. They are read-only: `GET` and `HEAD` with the
+rights of the `user` role, whatever their owner's role. Only their SHA-256 hash is stored, and they stop working
+when they expire, are revoked, or their owner is disabled. A token cannot manage tokens.
+
 ## Initial setup
 
 The setup endpoint that creates the first admin is public, so it only works within **15 minutes of the

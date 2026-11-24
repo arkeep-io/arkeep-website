@@ -69,6 +69,7 @@ export default defineConfig({
             { label: 'Importing and syncing snapshots', slug: 'docs/guides/importing-and-sync' },
             { label: 'Users, roles and 2FA', slug: 'docs/guides/users-and-2fa' },
             { label: 'Single sign-on (OIDC)', slug: 'docs/guides/oidc' },
+            { label: 'API tokens', slug: 'docs/guides/api-tokens' },
             { label: 'Notifications', slug: 'docs/guides/notifications' },
             { label: 'Healthchecks.io', slug: 'docs/guides/healthchecks' },
             { label: 'Settings', slug: 'docs/guides/settings' },
