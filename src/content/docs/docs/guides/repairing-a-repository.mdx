@@ -1,0 +1,75 @@
+---
+title: Repairing a repository
+description: Put a destination in maintenance and repair a damaged restic repository from the web interface.
+---
+
+A restic repository can lose data: a storage backend that loses blocks, an interrupted upload, a disk
+error. An [integrity check](/docs/guides/retention-and-checks/#integrity-checks) reports it, and the
+**Maintenance & Repair** section of the destination page repairs it, without installing restic elsewhere
+or typing the repository password and storage credentials by hand.
+
+Repairs run on the destination's **Maintenance Agent**, like retention and integrity checks. The section
+is shown to admins only. A repair needs a maintenance agent that is connected and recent enough to run
+repairs; otherwise the section says why it cannot start one.
+
+## Maintenance mode
+
+While a destination is in maintenance, **no job can use it**: backups, retention sweeps and integrity
+checks that need it wait, shown as **waiting**, and start in order once the maintenance ends. Scheduled
+jobs are not lost, and they do not pile up: a policy has at most one backup waiting, and a destination
+at most one check and one sweep. A job with several destinations waits as a whole, and can be cancelled
+while it waits.
+
+**Start maintenance** puts the destination in maintenance until you select **End maintenance**. If jobs
+are running on the destination at that moment, they finish first: the section shows **Entering
+maintenance**, and repairs start once it reads **In maintenance**.
+
+A repair started on a destination that is not in maintenance puts it in maintenance for as long as it
+runs. Select **Keep in maintenance after the repair** to keep it there afterwards, for instance to run
+the next step of the procedure below without a backup slipping in between.
+
+Restores, snapshot browsing and downloads are not stopped by the maintenance mode.
+
+## Repair actions
+
+| Action | restic command | Changes the repository |
+|---|---|---|
+| **Check** | `restic check`, optionally `--read-data` | No |
+| **Remove stale locks** | `restic unlock` | Removes only the locks of restic processes that no longer run |
+| **Repair index** | `restic repair index`, optionally `--read-all-packs` | Rewrites the index |
+| **Repair snapshots** | `restic repair snapshots`, filtered by host, tag or snapshot ID | Only when applied |
+| **Repair packs** | `restic repair packs <pack IDs>` | Yes |
+
+restic's output streams live on the job page while the command runs. The job records who started it and
+with which parameters, and the audit log records the request. A check run from this section does not
+change the **Last check** result of the destination, which reflects the scheduled checks and **Run Check
+Now**.
+
+**Repair snapshots** and **Repair packs** start with a preview that changes nothing: a dry run of
+`repair snapshots`, and `restic find --pack` for `repair packs`, which lists the files and snapshots
+stored in those packs. **Apply** is offered once a preview of the same settings has succeeded. Applying
+**Repair snapshots** with **Remove the original snapshots** (`--forget`), or applying **Repair packs**,
+cannot be undone: the confirmation asks you to type the destination's name.
+
+Only one repair runs on a destination at a time, and a repair never waits in the queue: if the
+destination is busy, the request is refused, so a repair cannot start later on its own.
+
+## Repairing a repository that lost data
+
+This follows restic's
+[troubleshooting guide](https://restic.readthedocs.io/en/stable/077_troubleshooting.html). Run each step
+once the previous one has succeeded, and read its output on the job page.
+
+1. Select **Start maintenance**, and wait until the section shows **In maintenance**.
+2. Run **Check**. Its output lists the missing or damaged pack files.
+3. If packs are damaged rather than missing, run **Repair packs** on them: preview, then apply.
+4. Run **Repair index**, so that the index no longer refers to the lost packs.
+5. End the maintenance and run a backup of the affected sources, so that the data that is still on the
+   machines is stored again. Then start the maintenance again.
+6. Run **Repair snapshots** as a preview, check which files would be removed, then apply it with
+   **Remove the original snapshots**.
+7. Run **Check** with **Read all data**. It must pass.
+8. Select **End maintenance**: the jobs that waited start.
+
+Files whose only copy was in the lost packs, and that are no longer on the backed-up machines, cannot be
+recovered: the repaired snapshots leave them out.
