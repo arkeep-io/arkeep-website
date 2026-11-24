@@ -17,7 +17,7 @@ A directory on the agent's host.
 
 | Field | Required | Notes |
 |---|---|---|
-| **Path** | yes | For example `/mnt/backups`. With a Docker agent, type the host path; see [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker). |
+| **Path** | yes | For example `/mnt/backups`. With a Docker agent, type the host path; see [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker). An agent in a container refuses a path that is not on a bind mount or a volume, where the repository would be lost when the container is recreated. |
 
 The path is resolved on the agent that runs the job, so a local destination only makes sense for policies
 on that machine (or a path every agent can reach, such as an NFS mount). If the path is a mount point, a
