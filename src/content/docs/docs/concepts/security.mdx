@@ -124,9 +124,11 @@ wrong passwords are limited per address only. See [Users, roles and 2FA](/docs/g
 
 ## API tokens
 
-[API tokens](/docs/guides/api-tokens/) let programs read the API. They are read-only: `GET` and `HEAD` with the
+[API tokens](/docs/guides/api-tokens/) let programs read the API. They are read-only: `GET` only, with the
 rights of the `user` role, whatever their owner's role. Only their SHA-256 hash is stored, and they stop working
-when they expire, are revoked, or their owner is disabled. A token cannot manage tokens.
+when they expire, are revoked, or their owner is disabled. An admin's password set or 2FA reset, a password
+reset by email and an OIDC sign-in refused by the allowed groups revoke all the tokens of the account. A token
+cannot manage tokens.
 
 ## Initial setup
 

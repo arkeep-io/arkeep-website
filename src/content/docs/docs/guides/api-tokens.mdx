@@ -27,8 +27,8 @@ curl -H "Authorization: Bearer ark_…" https://arkeep.example.com/api/v1/polici
 A token can read agents, destinations, policies, jobs and their logs, snapshots, the dashboard and your
 notifications. It cannot:
 
-- send anything but `GET` and `HEAD` requests: the others answer `403` with the code `api_token_read_only`,
-  so it cannot start a job, change a setting or mark a notification as read;
+- send anything but `GET` requests: the others, `HEAD` included, answer `403` with the code
+  `api_token_read_only`, so it cannot start a job, change a setting or mark a notification as read;
 - read admin-only data (users, settings, audit log), even when you are an admin;
 - list, create or revoke API tokens;
 - open the live WebSocket: poll the API instead.
@@ -37,6 +37,14 @@ notifications. It cannot:
 
 Click **Revoke** next to it on your profile: it stops working at once. A token also stops working when it
 expires, while its owner's account is disabled, and when the account is deleted.
+
+Every token of an account is also revoked when an admin uses **Set password** or **Reset 2FA** on it, when
+its password is reset by email, and when an OIDC sign-in is refused because the account is no longer in an
+allowed group. Changing your own password from the profile keeps your tokens.
+
+Tokens do not follow the session duration of an [OIDC provider](/docs/guides/oidc/#session-duration): a user
+removed from the allowed groups keeps their tokens until their next sign-in is refused. To cut access at
+once, deactivate the user on the Users page: their tokens are refused from the next request.
 
 Admins see every user's tokens under **Settings → API Tokens**, and can revoke any of them. Creating and revoking
 a token are recorded in the [audit log](/docs/guides/audit-log/).
