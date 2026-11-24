@@ -47,6 +47,9 @@ Mitigations in place:
 - The server rejects commands that contain command substitution (`$(...)`, backticks), path
   traversal (`..`) or references to internal credential variables (`$RESTIC_*`, `$RCLONE_*`, `$ARKEEP_*`).
 - Commands are limited to 1024 characters.
+- Hooks and command sources inherit the agent's environment without its own `ARKEEP_*` variables, so
+  the agent secret never reaches them, nor the job log through their output. Command sources also do
+  not receive the repository password and backend credentials that restic is given.
 
 Run the agent as a dedicated low-privilege user with access only to what it needs to back up. Avoid
 root unless you need full-system backups.
