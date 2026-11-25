@@ -5,7 +5,7 @@ description: Email, webhook, push and chat (Gotify, ntfy, Telegram, Discord…) 
 
 Arkeep notifies you when jobs finish and when agents go offline or come back, by **email**, **webhook**,
 **notification providers** (push and chat services such as Gotify, ntfy, Telegram or Discord) and **in-app**
-notification. A [job report](#job-report) can also email a summary of all finished jobs every hour or every day.
+notification. A [job report](#job-report) can also email a summary of all finished jobs every hour, day, week or month.
 
 ## Events
 
@@ -77,6 +77,8 @@ Set it in **Settings → Notifications → Job report**:
 | **Off** | Never (default) |
 | **Hourly** | Every hour at the set **Minute** (0 to 59), e.g. `30` for 08:30, 09:30… |
 | **Daily** | Every day at the set **Time** (`07:00` by default), in the server's time zone, shown next to the field |
+| **Weekly** | Every week on the set **Day** (Monday by default) at the set **Time** |
+| **Monthly** | Every month on the set **Day of the month** (1 to 28, so it exists in every month; the 1st by default) at the set **Time** |
 
 The email shows the number of jobs, succeeded and failed (cancelled and interrupted only when there are
 any), and one table per job type: backups, retention sweeps, integrity checks and restores. Each row has the
@@ -207,8 +209,9 @@ the saved values, on the saved server only.
 
 Email, webhook and notification provider deliveries are retried up to three times: immediately, after 5 minutes and after 30 minutes.
 
-A [job report](#job-report) that could not be sent is retried after 5 minutes and, for the daily report,
-again after 30 more minutes. If it still fails, the next report covers its jobs.
+A [job report](#job-report) that could not be sent is retried after 5 minutes. The daily report is retried
+again after 30 more minutes; the weekly and monthly reports after 30 minutes, 2 hours and 6 hours more. If it
+still fails, the next report covers its jobs.
 
 ## In-app notifications
 
