@@ -23,6 +23,11 @@ with [Project structure](/docs/contributing/project-structure/).
 - Sentinel errors per package: `var ErrNotFound = errors.New(...)`.
 - New IDs use `uuid.NewV7()`, never `uuid.New()`.
 - No `gorm.Preload`: relations are loaded with explicit queries in the repository layer.
+- Writes to jobs, agents, policies, destinations, snapshots, users and the audit log go through their
+  repositories, which announce them to the open pages. A new write method on one of these repositories
+  must also be implemented by its decorator in `server/internal/changes`, with a test: otherwise it compiles
+  but the pages showing it stop updating by themselves
+  ([ADR 0028](https://github.com/arkeep-io/arkeep/blob/main/docs/adr/0028-refresh-gui-pages-from-change-events-published-by-the-repositories.md)).
 - Credentials use the `EncryptedString` type.
 - Table-driven tests with the standard `testing` package.
 - `task lint` must pass.

@@ -25,7 +25,9 @@ Then set:
   down everyone. List only addresses the proxy alone uses: a trusted peer can claim any client address.
   `none` trusts no proxy.
 
-The proxy must pass WebSocket upgrades: the interface uses `/api/v1/ws` for live updates.
+The proxy must pass WebSocket upgrades: the interface uses `/api/v1/ws` for live updates. Without them,
+pages no longer update by themselves: they change only when you press their refresh button, which then
+shows *Live updates unavailable*.
 
 The OIDC redirect URI is derived from the request (`X-Forwarded-Proto` and `X-Forwarded-Host`), so the
 proxy must forward those headers. See [Single sign-on](/docs/guides/oidc/).

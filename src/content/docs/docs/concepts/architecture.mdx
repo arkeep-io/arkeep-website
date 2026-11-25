@@ -28,6 +28,14 @@ Agents therefore work behind NAT, firewalls and dynamic IPs without port forward
 4. When a job arrives, the agent runs restic or rclone locally.
 5. It streams logs and reports status back while the job runs, so the GUI shows progress live.
 
+## Live updates
+
+Pages in the GUI update by themselves. After every change (a job created or finished, a policy edited, a
+snapshot synced, an agent going offline…) the server sends the open pages a short WebSocket message with
+the type and ID of what changed, never its data. Each page showing that type fetches it again through the
+REST API, with the rights of the signed-in user, at most once per second. Changes to users and the audit
+log reach administrators only.
+
 <h2 id="retention">Retention</h2>
 
 Retention runs per destination, on its own schedule, with restic's `forget` rules. See
