@@ -78,6 +78,24 @@ volumes:
 
 With this in place you can type any native host path directly in the Arkeep UI as a backup destination (for example `C:\Users\you\Downloads` or `/home/user/backups`) and the agent translates it automatically. No per-directory bind mounts are required.
 
+### The repository must be on a mount
+
+A path that is not on a bind mount or a volume is inside the container's own filesystem. Writing there works,
+but the repository is lost as soon as the container is recreated (`docker compose up --force-recreate`, an
+image update). The same goes for a `tmpfs` mount, kept in memory. So in a container (Docker, Podman,
+Kubernetes) the agent checks where a local destination lives before each backup, and fails the backup with
+`not on a bind mount or a volume` instead of reporting a success that would not last.
+
+To fix it, mount persistent storage at that path: a host folder mounted `:rw` under `/hostfs`, a bind mount
+such as `- /srv/arkeep-backups:/backups:rw`, or a named volume. If the repository already holds snapshots,
+they can still be restored until the container is recreated: copy the repository out first.
+
+The check cannot see every case. A Kubernetes `emptyDir` on disk looks like any other mount, yet it is
+deleted with the pod: use a persistent volume. Destinations of the other types (S3, SFTP, REST, rclone) do
+not depend on the container's storage.
+
+For tests only, `ARKEEP_ALLOW_EPHEMERAL_LOCAL_DESTINATION=true` turns the check off.
+
 :::note[Advanced]
 If you mount the host filesystem at a path other than `/hostfs`, set `ARKEEP_DOCKER_HOST_ROOT` to your custom mount point.
 For binary, systemd, and Helm deployments leave it unset: paths are used as-is.

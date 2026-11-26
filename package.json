@@ -2,7 +2,7 @@
   "name": "arkeep-website",
   "type": "module",
   "version": "0.0.1",
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@12.21.0",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -14,16 +14,16 @@
     "check:links": "node scripts/check-links.mjs dist"
   },
   "dependencies": {
-    "@astrojs/markdown-satteri": "0.4.7",
-    "@astrojs/sitemap": "3.7.4",
-    "@astrojs/starlight": "0.42.10",
+    "@astrojs/markdown-satteri": "0.4.10",
+    "@astrojs/sitemap": "3.7.6",
+    "@astrojs/starlight": "0.43.1",
     "@fontsource/be-vietnam-pro": "5.3.0",
     "@fontsource/jetbrains-mono": "5.3.0",
-    "astro": "7.4.8",
+    "astro": "7.4.13",
     "sharp": "0.35.5"
   },
   "devDependencies": {
-    "@playwright/test": "1.65.0",
-    "vitest": "5.1.0"
+    "@playwright/test": "1.65.1",
+    "vitest": "5.1.1"
   }
 }

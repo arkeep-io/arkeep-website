@@ -1,11 +1,11 @@
 ---
 title: Notifications
-description: Email, webhook, push and chat (Gotify, ntfy, Telegram, Discord…) and in-app notifications, the events that trigger them, priorities, signature verification and ready-made integrations.
+description: Email, webhook, push and chat (Gotify, ntfy, Telegram, Discord…) and in-app notifications, the events that trigger them, the scheduled job report email, priorities, signature verification and ready-made integrations.
 ---
 
 Arkeep notifies you when jobs finish and when agents go offline or come back, by **email**, **webhook**,
 **notification providers** (push and chat services such as Gotify, ntfy, Telegram or Discord) and **in-app**
-notification.
+notification. A [job report](#job-report) can also email a summary of all finished jobs every hour, day, week or month.
 
 ## Events
 
@@ -41,6 +41,9 @@ Email, webhook and notification providers are independent: use any combination. 
 A channel or provider turned off (or a provider deleted) also drops its deliveries still waiting for a retry, so turning it back on never sends
 old notifications. In-app notifications are always created.
 
+The [job report](#job-report) is not an event and has its own setting: it does not depend on these toggles
+and channels.
+
 ## Email
 
 Set up the mail server in **Settings → SMTP**:
@@ -53,13 +56,47 @@ Set up the mail server in **Settings → SMTP**:
 | **Authentication** | Turn on to enter **Username** and **Password**. Leave the password blank to keep the current one, unless you change the host: a new host needs the password again. |
 | **From Address** | Required |
 | **From Name** | `Arkeep` by default |
-| **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. Not used when **Send email notifications** is off. |
+| **Notification Recipients** | Addresses to notify. When empty, every active admin is notified. With **Send email notifications** off, they receive no event emails, but still the [job report](#job-report) when it is on. |
 
 **Send test email** sends a message with the values in the form, saved or not, to your own address (the
 admin who clicks it), and shows the server's answer or the exact error. With the password left blank it
 uses the saved one, but only for the saved host: to test another server, type its password.
 
 The same SMTP server sends [password reset](/docs/guides/users-and-2fa/#forgotten-password) emails.
+
+## Job report
+
+The job report is one email that lists every job that finished since the previous report. Use it instead of
+one email per job, for example with **Job succeeded** turned off, or next to the event emails as a daily
+overview.
+
+Set it in **Settings → Notifications → Job report**:
+
+| Frequency | When it is sent |
+|---|---|
+| **Off** | Never (default) |
+| **Hourly** | Every hour at the set **Minute** (0 to 59), e.g. `30` for 08:30, 09:30… |
+| **Daily** | Every day at the set **Time** (`07:00` by default), in the server's time zone, shown next to the field |
+| **Weekly** | Every week on the set **Day** (Monday by default) at the set **Time** |
+| **Monthly** | Every month on the set **Day of the month** (1 to 28, so it exists in every month; the 1st by default) at the set **Time** |
+
+The email shows the number of jobs, succeeded and failed (cancelled and interrupted only when there are
+any), and one table per job type: backups, retention sweeps, integrity checks and restores. Each row has the
+job (policy or destination name) with its agent, start time, duration and status; the backup table also shows
+the data added to the repositories. A long report is shortened, with the number of jobs left out under each
+table: the full list is on the **Jobs** page.
+
+- **Period:** each report covers the jobs that ended since the previous one, so no job is listed twice or
+  left out, even after a change of frequency. A job still running is in the next report. The first report
+  after turning it on covers the jobs from that moment.
+- **No jobs, no email:** when no job finished in the period, nothing is sent.
+- **Every job:** the report lists all jobs, whatever the [event toggles](#events) and the policy overrides
+  say, and it is sent even when **Send email notifications** is off. To get only the report, turn off the job
+  events or the email channel.
+- **Delivery:** to the **Notification Recipients**, or to every active admin when none are set, through the
+  [SMTP server](#email). While SMTP is not configured nothing is sent, and the next report sent covers the
+  jobs since the last one that went out.
+- **Server downtime:** a report that fell due while the server was down is sent when it starts again.
 
 ## Webhook
 
@@ -171,6 +208,10 @@ the saved values, on the saved server only.
 ## Delivery and retries
 
 Email, webhook and notification provider deliveries are retried up to three times: immediately, after 5 minutes and after 30 minutes.
+
+A [job report](#job-report) that could not be sent is retried after 5 minutes. The daily report is retried
+again after 30 more minutes; the weekly and monthly reports after 30 minutes, 2 hours and 6 hours more. If it
+still fails, the next report covers its jobs.
 
 ## In-app notifications
 

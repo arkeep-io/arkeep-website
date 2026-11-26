@@ -15,6 +15,7 @@ Every option can be set with a flag or an environment variable. When both are se
 | `--grpc-insecure` | `ARKEEP_GRPC_INSECURE` | `false` | Disable TLS for gRPC. Same machine or trusted private network only. |
 | `--docker-socket` | `ARKEEP_DOCKER_SOCKET` | platform default | Docker socket path |
 | `--docker-host-root` | `ARKEEP_DOCKER_HOST_ROOT` | `/hostfs` inside Docker, empty otherwise | Where the host filesystem is mounted inside the agent container. Set it only for a custom mount point. |
+| `--allow-ephemeral-local-destination` | `ARKEEP_ALLOW_EPHEMERAL_LOCAL_DESTINATION` | `false` | In a container, back up to a local destination even when it is not on a bind mount or a volume. Its repository is lost when the container is recreated: tests only. See [Local destinations in Docker](/docs/installation/docker-compose/#local-destinations-in-docker). |
 | `--hostname` | `ARKEEP_AGENT_HOSTNAME` | the host's hostname | Name reported to the server and recorded on snapshots. Inside Docker it is read from the host's `/etc/hostname` through the host mount. |
 | `--log-level` | `ARKEEP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 

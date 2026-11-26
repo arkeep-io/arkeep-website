@@ -3,15 +3,16 @@ title: Jobs
 description: Job types and statuses, following a job live, cancelling it, and the job queue timeout.
 ---
 
-Every action an agent performs is a job: a **backup**, a **restore**, a **retention** sweep or an
-**integrity check**. The **Jobs** page lists them all, newest first.
+Every action an agent performs is a job: a **backup**, a **restore**, a **retention** sweep, an
+**integrity check** or a [repository **repair**](/docs/guides/repairing-a-repository/). The **Jobs** page
+lists them all, newest first.
 
 ## Statuses
 
 | Status | Meaning |
 |---|---|
 | **Pending** | Created, not started yet. If the agent is offline, the job waits and is sent when it reconnects. |
-| **Waiting** | Queued behind another job on the same destination. Backups can share a repository, but retention sweeps and integrity checks need it alone. Starts on its own. |
+| **Waiting** | Queued behind another job on the same destination, or for the destination's [maintenance](/docs/guides/repairing-a-repository/#maintenance-mode) to end. Backups can share a repository, but retention sweeps and integrity checks need it alone. Starts on its own. |
 | **Running** | The agent is working on it. |
 | **Succeeded** | Finished successfully on every destination. |
 | **Failed** | Something failed. For backups: at least one destination failed, even if others succeeded. |

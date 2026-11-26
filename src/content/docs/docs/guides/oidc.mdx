@@ -86,6 +86,10 @@ removed from the allowed groups therefore loses access at the latest when their 
 To cut access at once, also deactivate the user on the Users page: Arkeep then refuses their session within
 15 minutes. Sessions of local accounts are not affected by this setting.
 
+[API tokens](/docs/guides/api-tokens/) do not end with the session: a user removed from the allowed groups
+keeps their tokens until their next sign-in is refused, which revokes them. Deactivating the user refuses
+their tokens at once.
+
 ## Passwords and 2FA
 
 Accounts that sign in with OIDC manage their password at the provider. Use the provider's own MFA for a
